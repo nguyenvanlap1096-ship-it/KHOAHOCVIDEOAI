@@ -2,8 +2,9 @@
 <div class="page">
   <section class="hero">
     <div>
-      <h1><%= user ? `Chào ${user.name}, hôm nay học gì?` : 'Học lập trình & thiết kế theo cách của bạn' %></h1>
-      <p>Bài giảng video ngắn gọn, tóm tắt rõ ràng và theo dõi tiến độ tự động cho từng bài học.</p>
+      <% if (user) { %><span class="eyebrow">Chào <%= user.name %>, hôm nay học gì?</span><% } %>
+      <h1><%= hero.title %></h1>
+      <p><%= hero.text %></p>
     </div>
     <form class="hero-search" action="/" method="get" role="search">
       <label for="q" class="sr-only">Tìm khóa học</label>

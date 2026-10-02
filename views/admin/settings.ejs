@@ -22,6 +22,15 @@
         <p class="field-hint">Dòng chữ nhỏ cạnh tên. Để trống để ẩn.</p>
       </div>
     </div>
+    <div class="field">
+      <label for="hero_title">Tiêu đề trang chủ</label>
+      <input id="hero_title" name="hero_title" maxlength="120" value="<%= values.hero_title %>">
+      <p class="field-hint">Dòng chữ lớn ở đầu trang chủ. Để trống để dùng nội dung mặc định.</p>
+    </div>
+    <div class="field">
+      <label for="hero_text">Mô tả trang chủ</label>
+      <textarea id="hero_text" name="hero_text" rows="2" maxlength="300"><%= values.hero_text %></textarea>
+    </div>
     <%- include('../partials/image-field', {
       name: 'site_logo', label: 'Logo (vuông)', current: values.site_logo, ratio: '1/1', error: errors.site_logo,
       hint: `Ảnh vuông, nền trong suốt càng tốt (PNG/WebP), ví dụ 256×256. Dùng làm logo và biểu tượng tab trình duyệt. Tối đa ${maxImageMb} MB.`,

@@ -84,6 +84,7 @@ module.exports = function createApp() {
     res.locals.siteName = site.name;
     res.locals.siteTagline = site.tagline;
     res.locals.siteLogo = site.logo;
+    res.locals.hero = { title: site.heroTitle, text: site.heroText };
     res.locals.path = req.path;
     res.locals.h = h;
     res.locals.flash = req.session.flash || null;

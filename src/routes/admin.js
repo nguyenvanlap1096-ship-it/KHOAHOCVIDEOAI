@@ -425,6 +425,8 @@ router.post('/settings', acceptFiles(['zalo_qr', 'site_logo']), async (req, res)
   const values = {
     site_name: String(b.site_name || '').trim().slice(0, 60),
     site_tagline: String(b.site_tagline || '').trim().slice(0, 60),
+    hero_title: String(b.hero_title || '').trim().slice(0, 120),
+    hero_text: String(b.hero_text || '').trim().slice(0, 300),
     zalo_phone: String(b.zalo_phone || '').replace(/[^\d+]/g, ''),
     zalo_link: String(b.zalo_link || '').trim(),
     support_title: String(b.support_title || '').trim().slice(0, 80),
