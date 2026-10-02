@@ -4,7 +4,7 @@ const db = require('../db');
 const config = require('../config');
 const h = require('../helpers');
 const { requireAuth } = require('../middleware/auth');
-const { listCourses, lessonsWithProgress, pickResume, isBookmarked } = require('../services/courses');
+const { listCourses, lessonsWithProgress, pickResume, isBookmarked, latestVideos } = require('../services/courses');
 
 async function findCourse(slug, user) {
   const course = await db.get('SELECT * FROM courses WHERE slug = ?', [slug]);
@@ -22,7 +22,16 @@ router.get('/', async (req, res) => {
     .filter(c => c.started && c.percent < 100)
     .sort((a, b) => String(b.last_at).localeCompare(String(a.last_at)))
     .slice(0, 3);
-  res.render('home', { title: 'Khám phá khóa học', courses, continueLearning, q, level });
+  const videos = (q || level) ? [] : await latestVideos(4);
+  res.render('home', { title: 'Khám phá khóa học', courses, continueLearning, videos, q, level });
+});
+
+router.get('/videos', async (req, res) => {
+  res.render('videos', {
+    title: 'Video mới cập nhật',
+    videos: await latestVideos(48),
+    crumbs: [{ label: 'Khóa học', href: '/' }, { label: 'Video mới cập nhật' }],
+  });
 });
 
 router.get('/courses/:slug', async (req, res, next) => {

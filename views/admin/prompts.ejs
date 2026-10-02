@@ -1,0 +1,86 @@
+<%- include('../partials/top', { crumbs: [{ label: 'Quản trị', href: '/admin' }, { label: 'Prompt & ngành nghề' }] }) %>
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Prompt &amp; ngành nghề</h1>
+      <p class="muted"><a href="/prompts">Xem trang thư viện prompt công khai</a></p>
+    </div>
+    <a class="btn btn-primary" href="/admin/prompts/new<%= active ? '?nganh=' + active.id : '' %>"><svg class="i"><use href="#i-plus"/></svg>Thêm prompt</a>
+  </div>
+
+  <div class="admin-split">
+    <aside class="card industry-admin" aria-label="Ngành nghề">
+      <h2>Ngành nghề</h2>
+      <nav class="industry-list">
+        <a href="/admin/prompts" <%- !active ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-grid"/></svg><span>Tất cả</span><span class="chip"><%= categories.reduce((s, c) => s + c.prompt_count, 0) %></span></a>
+        <% categories.forEach(c => { %>
+          <a href="/admin/prompts?nganh=<%= c.id %>" <%- active && active.id === c.id ? 'aria-current="true"' : '' %>><span class="dot" style="background:<%= c.color %>"></span><span><%= c.name %></span><span class="chip"><%= c.prompt_count %></span></a>
+        <% }) %>
+      </nav>
+
+      <form method="post" action="/admin/prompt-categories" class="form industry-new">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="field">
+          <label for="newIndustry">Thêm ngành nghề mới</label>
+          <div class="input-with-color">
+            <input type="color" name="color" value="#4F46E5" aria-label="Màu ngành">
+            <input id="newIndustry" name="name" maxlength="120" placeholder="VD: Du lịch" required>
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" type="submit"><svg class="i"><use href="#i-plus"/></svg>Thêm ngành</button>
+      </form>
+    </aside>
+
+    <section>
+      <% if (active) { %>
+        <form method="post" action="/admin/prompt-categories/<%= active.id %>" class="card industry-edit">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <label for="editIndustry" class="sr-only">Tên ngành</label>
+          <input type="color" name="color" value="<%= active.color %>" aria-label="Màu ngành">
+          <input id="editIndustry" name="name" value="<%= active.name %>" maxlength="120" required>
+          <button class="btn btn-outline btn-sm" type="submit">Lưu tên ngành</button>
+        </form>
+      <% } %>
+
+      <% if (!prompts.length) { %>
+        <div class="empty">
+          <svg class="i"><use href="#i-sparkles"/></svg>
+          <h3>Chưa có prompt<%= active ? ` cho ngành ${active.name}` : '' %></h3>
+          <p><a href="/admin/prompts/new<%= active ? '?nganh=' + active.id : '' %>">Thêm prompt đầu tiên</a></p>
+          <% if (active) { %>
+            <form method="post" action="/admin/prompt-categories/<%= active.id %>/delete" data-confirm="Xóa ngành “<%= active.name %>”?" style="margin-top:12px">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button class="btn btn-sm btn-outline btn-danger" type="submit"><svg class="i"><use href="#i-trash"/></svg>Xóa ngành này</button>
+            </form>
+          <% } %>
+        </div>
+      <% } else { %>
+        <div class="table-wrap card">
+          <table class="table">
+            <thead><tr><th>Prompt</th><th>Ngành</th><th>Công cụ</th><th>Trạng thái</th><th class="ta-right">Thao tác</th></tr></thead>
+            <tbody>
+              <% prompts.forEach(p => { %>
+                <tr>
+                  <td><strong><%= p.title %></strong><small class="muted d-block"><%= p.description %></small></td>
+                  <td><span class="cell-user"><span class="dot" style="background:<%= p.category_color %>"></span><%= p.category_name %></span></td>
+                  <td><%= p.tool || '—' %></td>
+                  <td><span class="badge <%= Number(p.published) ? 'badge-success' : 'badge-warn' %>"><%= Number(p.published) ? 'Hiển thị' : 'Ẩn' %></span></td>
+                  <td>
+                    <div class="row-actions">
+                      <a class="btn btn-sm btn-outline btn-icon" href="/admin/prompts/<%= p.id %>/edit" aria-label="Sửa <%= p.title %>"><svg class="i"><use href="#i-edit"/></svg></a>
+                      <form method="post" action="/admin/prompts/<%= p.id %>/delete" data-confirm="Xóa prompt “<%= p.title %>”?">
+                        <input type="hidden" name="_csrf" value="<%= csrf %>">
+                        <button class="btn btn-sm btn-outline btn-icon btn-danger" type="submit" aria-label="Xóa <%= p.title %>"><svg class="i"><use href="#i-trash"/></svg></button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </section>
+  </div>
+</div>
+<%- include('../partials/bottom') %>

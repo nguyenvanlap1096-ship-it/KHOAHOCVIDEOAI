@@ -5,11 +5,20 @@
     <a class="btn btn-primary" href="/admin/courses/new"><svg class="i"><use href="#i-plus"/></svg>Thêm khóa học</a>
   </div>
 
+  <% if (!zaloConfigured) { %>
+    <a class="promo-strip promo-warn" href="/admin/settings">
+      <span class="promo-ico"><svg class="i"><use href="#i-message"/></svg></span>
+      <span class="body"><strong>Chưa cài đặt Zalo hỗ trợ</strong><small>Nhập số Zalo để hiện nút hỗ trợ ở góc màn hình cho học viên.</small></span>
+      <span class="btn btn-primary btn-sm">Cài đặt ngay</span>
+    </a>
+  <% } %>
+
   <div class="stats">
     <% [
       ['Học viên', stats.users, 'i-users', '/admin/users'],
       ['Khóa học', stats.courses, 'i-layers', '/admin/courses'],
       ['Bài học', stats.lessons, 'i-video', '/admin/courses'],
+      ['Prompt', stats.prompts, 'i-sparkles', '/admin/prompts'],
       ['Lượt hoàn thành bài', stats.completions, 'i-check-circle', null],
     ].forEach(([label, value, icon, href]) => { %>
       <<%= href ? 'a' : 'div' %> class="stat card" <%- href ? `href="${href}"` : '' %>>

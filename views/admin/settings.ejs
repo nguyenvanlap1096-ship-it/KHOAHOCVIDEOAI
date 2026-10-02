@@ -1,0 +1,49 @@
+<%- include('../partials/top', { crumbs: [{ label: 'Quản trị', href: '/admin' }, { label: 'Cài đặt & Zalo' }] }) %>
+<%
+  const err = name => errors[name] ? `<p class="field-error" id="${name}-msg">${errors[name]}</p>` : '';
+  const aria = name => errors[name] ? `aria-invalid="true" aria-describedby="${name}-msg"` : '';
+%>
+<div class="page page-narrow">
+  <h1 class="page-title">Cài đặt hỗ trợ Zalo</h1>
+  <p class="muted">Nút <strong>Zalo</strong> sẽ hiện ở góc phải dưới mọi trang khi bạn nhập số điện thoại hoặc link Zalo.</p>
+
+  <form method="post" action="/admin/settings?_csrf=<%= csrf %>" enctype="multipart/form-data" class="form card form-card" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+    <div class="field-row">
+      <div class="field <%= errors.zalo_phone ? 'has-error' : '' %>">
+        <label for="zalo_phone">Số điện thoại Zalo</label>
+        <input id="zalo_phone" name="zalo_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="09xx xxx xxx" value="<%= values.zalo_phone %>" <%- aria('zalo_phone') %>>
+        <% if (errors.zalo_phone) { %><%- err('zalo_phone') %><% } else { %><p class="field-hint">Học viên bấm sẽ mở chat Zalo tới số này.</p><% } %>
+      </div>
+      <div class="field <%= errors.zalo_link ? 'has-error' : '' %>">
+        <label for="zalo_link">Link Zalo OA / nhóm (không bắt buộc)</label>
+        <input id="zalo_link" name="zalo_link" type="url" placeholder="https://zalo.me/..." value="<%= values.zalo_link %>" <%- aria('zalo_link') %>>
+        <% if (errors.zalo_link) { %><%- err('zalo_link') %><% } else { %><p class="field-hint">Nếu nhập, nút “Nhắn Zalo” sẽ dùng link này thay cho số điện thoại.</p><% } %>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="support_title">Tiêu đề khung hỗ trợ</label>
+      <input id="support_title" name="support_title" maxlength="80" value="<%= values.support_title %>">
+    </div>
+    <div class="field">
+      <label for="support_text">Lời nhắn</label>
+      <textarea id="support_text" name="support_text" rows="2" maxlength="300"><%= values.support_text %></textarea>
+    </div>
+    <div class="field">
+      <label for="support_hours">Giờ hỗ trợ</label>
+      <input id="support_hours" name="support_hours" maxlength="80" value="<%= values.support_hours %>">
+    </div>
+
+    <%- include('../partials/image-field', {
+      name: 'zalo_qr', label: 'Ảnh mã QR Zalo (không bắt buộc)', current: values.zalo_qr, error: errors.zalo_qr, ratio: '1/1',
+      hint: `Mở Zalo → Cá nhân → bấm vào mã QR → Lưu ảnh, rồi tải lên đây. Tối đa ${maxImageMb} MB.`,
+    }) %>
+
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit" data-loading-text="Đang lưu...">Lưu cài đặt</button>
+    </div>
+  </form>
+</div>
+<%- include('../partials/bottom', { scripts: ['/js/admin.js'] }) %>

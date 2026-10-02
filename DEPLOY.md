@@ -94,6 +94,7 @@ Không cần tạo bảng thủ công – website tự tạo bảng và nạp kh
 
    **Không** cần đặt `PORT` – Hostinger tự cấp.
 5. Bấm **Deploy**. Khi xong, mở tên miền để kiểm tra, đăng nhập bằng `ADMIN_EMAIL`/`ADMIN_PASSWORD` rồi vào `/admin`.
+6. Vào **`/admin/settings`** nhập số Zalo (và ảnh QR nếu muốn) để nút hỗ trợ Zalo hiện cho học viên.
 
 Từ đây, mỗi lần `git push` lên nhánh `main`, bạn bấm **Redeploy** (hoặc bật tự động deploy nếu hPanel có tùy chọn này).
 
@@ -101,7 +102,10 @@ Từ đây, mỗi lần `git push` lên nhánh `main`, bạn bấm **Redeploy** 
 
 hPanel → **Security** → **SSL**: bật SSL miễn phí cho tên miền. Website đã cấu hình cookie bảo mật và HSTS khi chạy `production`, nên **bắt buộc phải có HTTPS** – nếu truy cập bằng `http://` thì sẽ không đăng nhập được.
 
-### 3A.4. Video tự upload
+### 3A.4. Video và ảnh tự upload
+
+Ảnh thumbnail, ảnh bìa và mã QR Zalo được lưu trong `UPLOAD_DIR/images`, video lưu trong `UPLOAD_DIR`. Vì vậy `UPLOAD_DIR` cần nằm ngoài thư mục mã nguồn (xem bên dưới) để không mất ảnh khi deploy lại.
+
 
 - Nên dùng **YouTube** (đặt video ở chế độ *Không công khai*) cho phần lớn bài giảng: không tốn dung lượng và băng thông hosting.
 - Nếu tự upload, đặt `UPLOAD_DIR` trỏ ra **ngoài thư mục mã nguồn** (ví dụ `/home/u123456789/demia-uploads`) để video không bị mất khi redeploy. Kiểm tra đường dẫn thư mục home của bạn trong **File Manager**.

@@ -5,7 +5,7 @@
 %>
 <div class="page page-narrow">
   <h1 class="page-title"><%= course ? 'Sửa khóa học' : 'Thêm khóa học' %></h1>
-  <form method="post" action="<%= course ? `/admin/courses/${course.id}` : '/admin/courses' %>" class="form card form-card" novalidate>
+  <form method="post" action="<%= (course ? `/admin/courses/${course.id}` : '/admin/courses') + '?_csrf=' + csrf %>" enctype="multipart/form-data" class="form card form-card" novalidate>
     <input type="hidden" name="_csrf" value="<%= csrf %>">
 
     <div class="field <%= errors.title ? 'has-error' : '' %>">
@@ -24,6 +24,11 @@
       <label for="description">Mô tả ngắn</label>
       <textarea id="description" name="description" rows="3"><%= values.description || '' %></textarea>
     </div>
+
+    <%- include('../partials/image-field', {
+      name: 'cover', label: 'Ảnh bìa (thumbnail khóa học)', current: values.cover_image, error: errors.cover,
+      hint: `JPG, PNG hoặc WebP, tối đa ${maxImageMb} MB. Nên dùng tỉ lệ 16:9, ví dụ 1280×720.`,
+    }) %>
 
     <div class="field-row">
       <div class="field">

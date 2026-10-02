@@ -56,6 +56,11 @@
       <%- err('video_file') %>
     </div>
 
+    <%- include('../partials/image-field', {
+      name: 'thumbnail', label: 'Ảnh thumbnail bài học (không bắt buộc)', current: values.thumbnail, error: errors.thumbnail,
+      hint: `Hiển thị ở mục Video mới cập nhật và làm ảnh chờ của video. Bỏ trống: dùng ảnh YouTube hoặc ảnh bìa khóa học. Tối đa ${maxImageMb} MB.`,
+    }) %>
+
     <div class="field">
       <label for="summary">Tóm tắt bài học</label>
       <textarea id="summary" name="summary" rows="5" placeholder="Nội dung chính của bài học. Để trống một dòng để xuống đoạn."><%= values.summary || '' %></textarea>

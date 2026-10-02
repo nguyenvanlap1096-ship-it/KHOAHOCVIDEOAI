@@ -1,0 +1,25 @@
+<%- include('partials/top') %>
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Video mới cập nhật</h1>
+      <p class="muted">Các bài giảng vừa được thêm hoặc thay video mới, sắp xếp từ mới nhất.</p>
+    </div>
+  </div>
+  <% if (videos.length) { %>
+    <div class="video-grid">
+      <% videos.forEach(v => { %><%- include('partials/video-card', { video: v }) %><% }) %>
+    </div>
+  <% } else { %>
+    <div class="empty">
+      <svg class="i"><use href="#i-video"/></svg>
+      <h3>Chưa có video nào</h3>
+      <% if (user && user.role === 'admin') { %>
+        <p>Vào <a href="/admin/courses">Quản lý khóa học</a>, mở một bài học và dán link YouTube hoặc upload video.</p>
+      <% } else { %>
+        <p>Video mới sẽ xuất hiện ở đây ngay khi được cập nhật.</p>
+      <% } %>
+    </div>
+  <% } %>
+</div>
+<%- include('partials/bottom') %>

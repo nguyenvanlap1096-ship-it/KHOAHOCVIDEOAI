@@ -2,6 +2,9 @@
 const bcrypt = require('bcryptjs');
 const db = require('./index');
 const config = require('../config');
+const { slugify } = require('../helpers');
+const AI_VIDEO_COURSE = require('./seed-data/ai-video-course');
+const PROMPT_LIBRARY = require('./seed-data/prompts');
 
 const SAMPLE_COURSES = [
   {
@@ -72,29 +75,68 @@ async function ensureAdmin() {
   console.log(`[demia] Đã tạo tài khoản admin: ${email}`);
 }
 
-async function ensureSampleCourses() {
-  const { n } = await db.get('SELECT COUNT(*) AS n FROM courses');
-  if (Number(n) > 0) return;
-  // Chèn ngược để khóa học đầu danh sách hiển thị đầu tiên (danh mục sắp xếp mới nhất trước).
-  for (const c of [...SAMPLE_COURSES].reverse()) {
-    const { insertId } = await db.run(
-      'INSERT INTO courses (slug, title, description, level, category, color, published) VALUES (?, ?, ?, ?, ?, ?, 1)',
-      [c.slug, c.title, c.description, c.level, c.category, c.color],
+async function insertCourse(c) {
+  const { insertId } = await db.run(
+    'INSERT INTO courses (slug, title, description, level, category, color, published) VALUES (?, ?, ?, ?, ?, ?, 1)',
+    [c.slug, c.title, c.description, c.level, c.category, c.color],
+  );
+  let position = 1;
+  for (const [title, dur, summary, keyPoints, resources = ''] of c.lessons) {
+    await db.run(
+      "INSERT INTO lessons (course_id, position, title, duration_sec, summary, key_points, resources, video_type) VALUES (?, ?, ?, ?, ?, ?, ?, 'none')",
+      [insertId, position++, title, toSeconds(dur), summary, keyPoints, resources],
     );
-    let position = 1;
-    for (const [title, dur, summary, keyPoints] of c.lessons) {
-      await db.run(
-        "INSERT INTO lessons (course_id, position, title, duration_sec, summary, key_points, video_type) VALUES (?, ?, ?, ?, ?, ?, 'none')",
-        [insertId, position++, title, toSeconds(dur), summary, keyPoints],
-      );
-    }
   }
-  console.log('[demia] Đã nạp khóa học mẫu.');
+}
+
+// Mỗi gói dữ liệu mẫu chỉ nạp một lần (đánh dấu trong bảng settings),
+// để admin xóa nội dung mẫu thì nó không tự xuất hiện lại.
+async function once(flag, fn) {
+  if (await db.get('SELECT 1 AS x FROM settings WHERE name = ?', [flag])) return;
+  await fn();
+  await db.run('INSERT INTO settings (name, value) VALUES (?, ?)', [flag, new Date().toISOString()]);
+}
+
+async function ensureSampleCourses() {
+  await once('seed:sample-courses', async () => {
+    const { n } = await db.get('SELECT COUNT(*) AS n FROM courses');
+    if (Number(n) > 0) return;
+    // Chèn ngược để khóa học đầu danh sách hiển thị đầu tiên (danh mục sắp xếp mới nhất trước).
+    for (const c of [...SAMPLE_COURSES].reverse()) await insertCourse(c);
+    console.log('[demia] Đã nạp khóa học mẫu.');
+  });
+  await once('seed:ai-video-course', async () => {
+    if (await db.get('SELECT 1 AS x FROM courses WHERE slug = ?', [AI_VIDEO_COURSE.slug])) return;
+    await insertCourse(AI_VIDEO_COURSE);
+    console.log('[demia] Đã nạp khóa học "Làm video bằng AI".');
+  });
+}
+
+async function ensurePromptLibrary() {
+  await once('seed:prompts', async () => {
+    const { n } = await db.get('SELECT COUNT(*) AS n FROM prompt_categories');
+    if (Number(n) > 0) return;
+    let position = 1;
+    for (const cat of PROMPT_LIBRARY) {
+      const { insertId } = await db.run(
+        'INSERT INTO prompt_categories (slug, name, color, position) VALUES (?, ?, ?, ?)',
+        [slugify(cat.name), cat.name, cat.color, position++],
+      );
+      for (const p of cat.prompts) {
+        await db.run(
+          'INSERT INTO prompts (category_id, title, description, content, tool) VALUES (?, ?, ?, ?, ?)',
+          [insertId, p.title, p.description, p.content, p.tool],
+        );
+      }
+    }
+    console.log('[demia] Đã nạp thư viện prompt mẫu.');
+  });
 }
 
 async function ensureSeed() {
   await ensureAdmin();
   await ensureSampleCourses();
+  await ensurePromptLibrary();
 }
 
 module.exports = { ensureSeed };

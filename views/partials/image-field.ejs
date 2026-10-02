@@ -1,0 +1,19 @@
+<% const currentUrl = h.imageUrl(locals.current); %>
+<div class="field image-field <%= locals.error ? 'has-error' : '' %>">
+  <span class="label" id="<%= name %>-label"><%= label %></span>
+  <div class="image-field-row">
+    <div class="image-preview" style="aspect-ratio:<%= locals.ratio || '16/9' %>" data-image-preview="<%= name %>">
+      <% if (currentUrl) { %><img src="<%= currentUrl %>" alt="Ảnh hiện tại"><% } else { %><span><svg class="i"><use href="#i-image"/></svg>Chưa có ảnh</span><% } %>
+    </div>
+    <div class="image-actions">
+      <label class="btn btn-outline btn-sm" for="<%= name %>"><svg class="i"><use href="#i-upload"/></svg><%= currentUrl ? 'Đổi ảnh' : 'Chọn ảnh' %></label>
+      <input class="sr-only" type="file" id="<%= name %>" name="<%= name %>" accept="image/jpeg,image/png,image/webp" data-image-input="<%= name %>"
+             aria-labelledby="<%= name %>-label" <% if (locals.error) { %>aria-invalid="true" aria-describedby="<%= name %>-msg"<% } %>>
+      <% if (currentUrl) { %>
+        <label class="check"><input type="checkbox" name="remove_<%= name %>" value="1" data-image-remove="<%= name %>"> Xóa ảnh hiện tại</label>
+      <% } %>
+      <p class="field-hint"><%= locals.hint || '' %></p>
+      <% if (locals.error) { %><p class="field-error" id="<%= name %>-msg"><%= error %></p><% } %>
+    </div>
+  </div>
+</div>

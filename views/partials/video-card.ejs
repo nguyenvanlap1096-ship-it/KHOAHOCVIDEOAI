@@ -1,0 +1,13 @@
+<% const thumb = h.lessonThumb(video); const tag = h.freshness(video); %>
+<article class="video-card">
+  <a class="video-thumb" href="/learn/<%= video.course_slug %>/<%= video.id %>" style="--c:<%= video.color %>" tabindex="-1" aria-hidden="true">
+    <% if (thumb) { %><img src="<%= thumb %>" alt="" loading="lazy" decoding="async"><% } else { %><svg class="i"><use href="#i-video"/></svg><% } %>
+    <span class="video-play"><svg class="i"><use href="#i-play"/></svg></span>
+    <% if (video.duration_sec) { %><span class="video-dur"><%= h.fmtDuration(video.duration_sec) %></span><% } %>
+    <% if (tag) { %><span class="video-tag <%= tag === 'Mới' ? 'is-new' : '' %>"><%= tag %></span><% } %>
+  </a>
+  <div class="video-body">
+    <h3><a href="/learn/<%= video.course_slug %>/<%= video.id %>"><%= video.title %></a></h3>
+    <p><%= video.course_title %></p>
+  </div>
+</article>

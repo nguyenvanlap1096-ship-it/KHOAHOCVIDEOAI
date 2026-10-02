@@ -23,13 +23,16 @@
           </button>
         <% } %>
       </div>
+      <% if (user && started) { %>
+        <div class="card progress-card progress-inline">
+          <%- include('partials/ring', { value: percent, cls: 'ring-lg ring-success' }) %>
+          <div><h2>Tiến độ của bạn</h2><p>Đã hoàn thành <%= lessons.filter(l => l.completed).length %>/<%= lessons.length %> bài học.</p></div>
+        </div>
+      <% } %>
     </div>
-    <% if (user && started) { %>
-      <div class="card progress-card">
-        <%- include('partials/ring', { value: percent, cls: 'ring-lg ring-success' }) %>
-        <div><h2>Tiến độ của bạn</h2><p>Đã hoàn thành <%= lessons.filter(l => l.completed).length %>/<%= lessons.length %> bài học.</p></div>
-      </div>
-    <% } %>
+    <div class="course-hero-cover" aria-hidden="true">
+      <% if (course.cover_image) { %><img src="<%= h.imageUrl(course.cover_image) %>" alt=""><% } else { %><span class="cover-letter"><%= course.title.trim()[0] %></span><% } %>
+    </div>
   </section>
 
   <section class="section">

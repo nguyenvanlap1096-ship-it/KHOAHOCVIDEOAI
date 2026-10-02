@@ -1,6 +1,8 @@
 <%
   const railLinks = [
     { href: '/', label: 'Khám phá khóa học', icon: 'i-home', active: path === '/' || path.startsWith('/courses') || path.startsWith('/learn') },
+    { href: '/videos', label: 'Video mới cập nhật', icon: 'i-video', active: path === '/videos' },
+    { href: '/prompts', label: 'Thư viện prompt', icon: 'i-sparkles', active: path.startsWith('/prompts') },
     { href: '/my', label: 'Khóa học của tôi', icon: 'i-book-open', active: path === '/my' },
   ];
   if (user && user.role === 'admin') {

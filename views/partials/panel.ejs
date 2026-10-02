@@ -7,6 +7,8 @@
   </form>
 
   <a class="nav-item" href="/" <%- path === '/' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-grid"/></svg><span class="t">Tất cả khóa học</span></a>
+  <a class="nav-item" href="/videos" <%- path === '/videos' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-video"/></svg><span class="t">Video mới cập nhật</span></a>
+  <a class="nav-item" href="/prompts" <%- path.startsWith('/prompts') ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-sparkles"/></svg><span class="t">Prompt theo ngành nghề</span></a>
   <a class="nav-item" href="/my" <%- path === '/my' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-clock"/></svg><span class="t">Đang học</span></a>
   <a class="nav-item" href="/my#saved"><svg class="i"><use href="#i-bookmark"/></svg><span class="t">Đã lưu</span></a>
 
@@ -15,7 +17,9 @@
     <div class="section-body" id="sec-admin">
       <a class="nav-item" href="/admin" <%- locals.adminNav === 'dashboard' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-shield"/></svg><span class="t">Tổng quan</span></a>
       <a class="nav-item" href="/admin/courses" <%- locals.adminNav === 'courses' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-layers"/></svg><span class="t">Khóa học &amp; bài học</span></a>
+      <a class="nav-item" href="/admin/prompts" <%- locals.adminNav === 'prompts' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-sparkles"/></svg><span class="t">Prompt &amp; ngành nghề</span></a>
       <a class="nav-item" href="/admin/users" <%- locals.adminNav === 'users' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-users"/></svg><span class="t">Người dùng</span></a>
+      <a class="nav-item" href="/admin/settings" <%- locals.adminNav === 'settings' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-settings"/></svg><span class="t">Cài đặt &amp; Zalo</span></a>
     </div>
   <% } %>
 

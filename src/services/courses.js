@@ -1,7 +1,7 @@
 const db = require('../db');
 const { coursePercent } = require('../helpers');
 
-const COURSE_COLS = 'c.id, c.slug, c.title, c.description, c.level, c.category, c.color, c.published, c.created_at';
+const COURSE_COLS = 'c.id, c.slug, c.title, c.description, c.level, c.category, c.color, c.cover_image, c.published, c.created_at';
 
 // Danh sách khóa học kèm số bài, tổng thời lượng và (nếu có userId) tiến độ của người học.
 async function listCourses({ userId = null, q = '', level = '', publishedOnly = true } = {}) {
@@ -77,4 +77,18 @@ async function isBookmarked(userId, courseId) {
   return Boolean(await db.get('SELECT 1 AS x FROM bookmarks WHERE user_id = ? AND course_id = ?', [userId, courseId]));
 }
 
-module.exports = { listCourses, lessonsWithProgress, pickResume, isBookmarked };
+// Video mới thêm / mới thay của các khóa học đã xuất bản.
+async function latestVideos(limit = 8) {
+  return db.all(
+    `SELECT l.id, l.title, l.duration_sec, l.video_type, l.video_ref, l.thumbnail, l.created_at,
+            COALESCE(l.updated_at, l.created_at) AS updated_at,
+            c.slug AS course_slug, c.title AS course_title, c.color, c.cover_image
+       FROM lessons l JOIN courses c ON c.id = l.course_id
+      WHERE c.published = 1 AND l.video_type <> 'none'
+      ORDER BY COALESCE(l.updated_at, l.created_at) DESC, l.id DESC
+      LIMIT ?`,
+    [Number(limit)],
+  );
+}
+
+module.exports = { listCourses, lessonsWithProgress, pickResume, isBookmarked, latestVideos };

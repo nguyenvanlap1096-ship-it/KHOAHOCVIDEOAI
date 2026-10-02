@@ -16,6 +16,8 @@
       <% lessons.forEach((l, i) => { %>
         <li class="card admin-lesson" id="lesson-<%= l.id %>">
           <span class="num"><%= i + 1 %></span>
+          <% const thumb = h.lessonThumb({ ...l, cover_image: course.cover_image }); %>
+          <span class="admin-thumb" style="--c:<%= course.color %>"><% if (thumb) { %><img src="<%= thumb %>" alt="" loading="lazy"><% } else { %><svg class="i"><use href="#i-video"/></svg><% } %></span>
           <span class="body">
             <strong><%= l.title %></strong>
             <small class="muted"><%= typeLabel[l.video_type] %> · <%= l.duration_sec ? h.fmtDuration(l.duration_sec) : 'chưa có thời lượng' %></small>

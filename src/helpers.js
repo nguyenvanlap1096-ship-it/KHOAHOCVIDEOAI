@@ -82,7 +82,40 @@ function coursePercent(pctSum, lessonCount) {
   return lessonCount ? Math.min(100, Math.round(Number(pctSum || 0) / lessonCount)) : 0;
 }
 
+function imageUrl(filename) {
+  return filename ? `/uploads/images/${filename}` : null;
+}
+
+// Ảnh đại diện của video: thumbnail tự upload → ảnh YouTube → ảnh bìa khóa học.
+function lessonThumb(lesson) {
+  if (lesson.thumbnail) return imageUrl(lesson.thumbnail);
+  if (lesson.video_type === 'youtube' && lesson.video_ref) return `https://i.ytimg.com/vi/${lesson.video_ref}/hqdefault.jpg`;
+  return imageUrl(lesson.cover_image);
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Escape nội dung prompt và tô sáng các biến dạng [Tên sản phẩm] để người dùng biết cần thay.
+function highlightPrompt(text) {
+  return escapeHtml(text).replace(/\[[^\]\n]{1,80}\]/g, m => `<mark>${m}</mark>`);
+}
+
+function daysSince(dateStr) {
+  const t = Date.parse(String(dateStr || '').replace(' ', 'T') + (/[zZ+]/.test(String(dateStr)) ? '' : 'Z'));
+  return Number.isFinite(t) ? (Date.now() - t) / 86400000 : Infinity;
+}
+
+// Nhãn cho video: "Mới" nếu thêm trong 7 ngày, "Cập nhật" nếu vừa thay video.
+function freshness(item) {
+  if (daysSince(item.created_at) <= 7) return 'Mới';
+  if (daysSince(item.updated_at) <= 7) return 'Cập nhật';
+  return null;
+}
+
 module.exports = {
   LEVELS, fmtDuration, fmtTotal, parseDuration, slugify, youtubeId,
   initials, lines, paragraphs, parseResources, coursePercent,
+  imageUrl, lessonThumb, escapeHtml, highlightPrompt, freshness,
 };

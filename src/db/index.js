@@ -61,10 +61,42 @@ function initSqlite() {
   };
 }
 
+async function columnExists(table, column) {
+  if (impl.client === 'mysql') {
+    const rows = await impl.all(
+      'SELECT 1 AS x FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?',
+      [table, column],
+    );
+    return rows.length > 0;
+  }
+  return (await impl.all(`PRAGMA table_info(${table})`)).some(c => c.name === column);
+}
+
+// Bổ sung cột mới cho cơ sở dữ liệu tạo từ phiên bản cũ (CREATE TABLE IF NOT EXISTS không tự thêm cột).
+// SQLite không cho ADD COLUMN với DEFAULT CURRENT_TIMESTAMP nên điền giá trị sau khi thêm.
+const MIGRATIONS = [
+  { table: 'courses', column: 'cover_image', mysql: 'VARCHAR(100)', sqlite: 'TEXT' },
+  { table: 'lessons', column: 'thumbnail', mysql: 'VARCHAR(100)', sqlite: 'TEXT' },
+  {
+    table: 'lessons', column: 'updated_at',
+    mysql: 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP', sqlite: 'TEXT',
+    after: 'UPDATE lessons SET updated_at = created_at WHERE updated_at IS NULL',
+  },
+];
+
+async function migrate() {
+  for (const m of MIGRATIONS) {
+    if (await columnExists(m.table, m.column)) continue;
+    await impl.run(`ALTER TABLE ${m.table} ADD COLUMN ${m.column} ${m[impl.client]}`);
+    if (m.after) await impl.run(m.after);
+  }
+}
+
 async function init() {
   impl = config.db.client === 'mysql' ? await initMysql() : initSqlite();
   const schema = fs.readFileSync(path.join(__dirname, `schema.${impl.client}.sql`), 'utf8');
   await impl.exec(schema);
+  await migrate();
   return impl;
 }
 

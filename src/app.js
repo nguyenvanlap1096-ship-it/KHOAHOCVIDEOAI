@@ -9,6 +9,8 @@ const db = require('./db');
 const h = require('./helpers');
 const { loadUser } = require('./middleware/auth');
 const csrf = require('./middleware/csrf');
+const { imageDir } = require('./uploads');
+const { getSettings, supportInfo } = require('./services/settings');
 
 function sessionStore() {
   if (db.client !== 'mysql') return undefined; // MemoryStore khi chạy thử với SQLite
@@ -58,6 +60,8 @@ module.exports = function createApp() {
   }));
   app.use(compression());
   app.use(express.static(path.join(config.root, 'public'), { maxAge: config.isProd ? '7d' : 0 }));
+  // Ảnh thumbnail / QR do admin upload: tên file ngẫu nhiên nên cache lâu được.
+  app.use('/uploads/images', express.static(imageDir, { maxAge: '30d', immutable: true, index: false }));
   app.use(express.urlencoded({ extended: false, limit: '1mb' }));
   app.use(express.json({ limit: '100kb' }));
 
@@ -81,12 +85,14 @@ module.exports = function createApp() {
     res.locals.flash = req.session.flash || null;
     delete req.session.flash;
     res.locals.sidebar = await sidebarData(req.user && req.user.id);
+    res.locals.support = supportInfo(await getSettings());
     next();
   });
   app.use(csrf);
 
   app.use('/', require('./routes/auth'));
   app.use('/', require('./routes/public'));
+  app.use('/prompts', require('./routes/prompts'));
   app.use('/api', require('./routes/api'));
   app.use('/admin', require('./routes/admin'));
 
@@ -102,6 +108,7 @@ module.exports = function createApp() {
     res.locals.h ??= h;
     res.locals.sidebar ??= { saved: [], learning: [] };
     res.locals.csrf ??= '';
+    res.locals.support ??= null;
     const message = status >= 500 ? 'Đã có lỗi xảy ra. Vui lòng thử lại sau.' : err.message;
     if (req.originalUrl.startsWith('/api/')) return res.status(status).json({ error: message });
     res.status(status).render('error', { title: 'Lỗi', status, message });

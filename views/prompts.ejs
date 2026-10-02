@@ -1,0 +1,55 @@
+<%- include('partials/top', { crumbs: [{ label: 'Khóa học', href: '/' }, { label: 'Thư viện prompt', href: '/prompts' }, ...(active ? [{ label: active.name }] : [])] }) %>
+<div class="page">
+  <section class="hero hero-prompts">
+    <div>
+      <span class="eyebrow"><svg class="i i-sm"><use href="#i-sparkles"/></svg> Thư viện prompt</span>
+      <h1>Prompt AI cho từng ngành nghề</h1>
+      <p><%= total %> câu lệnh mẫu dùng ngay với ChatGPT, Claude, Midjourney, công cụ làm video AI... Bấm <strong>Sao chép</strong> rồi thay các phần <mark>[trong ngoặc vuông]</mark> bằng thông tin của bạn.</p>
+    </div>
+    <form class="hero-search" action="/prompts" method="get" role="search">
+      <label for="pq" class="sr-only">Tìm prompt</label>
+      <svg class="i"><use href="#i-search"/></svg>
+      <input id="pq" type="search" name="q" value="<%= q %>" placeholder="Tìm prompt: quảng cáo, kịch bản, JD...">
+      <% if (active) { %><input type="hidden" name="nganh" value="<%= active.slug %>"><% } %>
+      <button class="btn btn-primary" type="submit">Tìm</button>
+    </form>
+  </section>
+
+  <nav class="industry-chips" aria-label="Lọc theo ngành nghề">
+    <a class="industry-chip" href="/prompts<%= q ? '?q=' + encodeURIComponent(q) : '' %>" <%- !active ? 'aria-current="true"' : '' %>>
+      <svg class="i"><use href="#i-grid"/></svg>Tất cả <span class="chip"><%= total %></span>
+    </a>
+    <% categories.filter(c => c.prompt_count).forEach(c => { const qs = new URLSearchParams(Object.assign({ nganh: c.slug }, q ? { q } : {})).toString(); %>
+      <a class="industry-chip" href="/prompts?<%= qs %>" style="--c:<%= c.color %>" <%- active && active.id === c.id ? 'aria-current="true"' : '' %>>
+        <span class="dot" style="background:<%= c.color %>"></span><%= c.name %> <span class="chip"><%= c.prompt_count %></span>
+      </a>
+    <% }) %>
+  </nav>
+
+  <% if (prompts.length) { %>
+    <div class="prompt-grid">
+      <% prompts.forEach(p => { %>
+        <article class="prompt-card card" style="--c:<%= p.category_color %>">
+          <header>
+            <a class="prompt-industry" href="/prompts?nganh=<%= p.category_slug %>"><span class="dot" style="background:<%= p.category_color %>"></span><%= p.category_name %></a>
+            <% if (p.tool) { %><span class="prompt-tool"><%= p.tool %></span><% } %>
+          </header>
+          <h2><%= p.title %></h2>
+          <% if (p.description) { %><p class="prompt-desc"><%= p.description %></p><% } %>
+          <div class="prompt-content" id="prompt-<%= p.id %>" data-collapsible><pre><%- h.highlightPrompt(p.content) %></pre></div>
+          <footer>
+            <button type="button" class="btn btn-ghost btn-sm" data-expand="prompt-<%= p.id %>" aria-expanded="false" aria-controls="prompt-<%= p.id %>">Xem đầy đủ</button>
+            <button type="button" class="btn btn-primary btn-sm" data-copy="prompt-<%= p.id %>"><svg class="i"><use href="#i-copy"/></svg><span>Sao chép</span></button>
+          </footer>
+        </article>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="empty">
+      <svg class="i"><use href="#i-sparkles"/></svg>
+      <h3>Không tìm thấy prompt phù hợp</h3>
+      <p>Thử từ khóa khác hoặc <a href="/prompts">xem tất cả prompt</a>.</p>
+    </div>
+  <% } %>
+</div>
+<%- include('partials/bottom') %>

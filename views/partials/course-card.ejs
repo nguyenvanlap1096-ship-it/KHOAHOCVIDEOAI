@@ -1,6 +1,10 @@
 <article class="course-card">
   <a class="cover" href="/courses/<%= course.slug %>" style="--c:<%= course.color %>" tabindex="-1" aria-hidden="true">
-    <span class="cover-letter"><%= course.title.trim()[0] %></span>
+    <% if (course.cover_image) { %>
+      <img src="<%= h.imageUrl(course.cover_image) %>" alt="" loading="lazy" decoding="async">
+    <% } else { %>
+      <span class="cover-letter"><%= course.title.trim()[0] %></span>
+    <% } %>
     <% if (course.category) { %><span class="cover-tag"><%= course.category %></span><% } %>
   </a>
   <div class="course-body">

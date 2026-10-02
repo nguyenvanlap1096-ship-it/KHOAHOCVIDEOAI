@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS courses (
   level VARCHAR(40) NOT NULL DEFAULT 'Cơ bản',
   category VARCHAR(80),
   color VARCHAR(9) NOT NULL DEFAULT '#4F46E5',
+  cover_image VARCHAR(100),
   published TINYINT(1) NOT NULL DEFAULT 0,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -31,7 +32,9 @@ CREATE TABLE IF NOT EXISTS lessons (
   resources TEXT,
   video_type VARCHAR(10) NOT NULL DEFAULT 'none',
   video_ref VARCHAR(500),
+  thumbnail VARCHAR(100),
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_lessons_course (course_id, position),
   CONSTRAINT fk_lessons_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -55,4 +58,31 @@ CREATE TABLE IF NOT EXISTS bookmarks (
   PRIMARY KEY (user_id, course_id),
   CONSTRAINT fk_bookmarks_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_bookmarks_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS settings (
+  name VARCHAR(100) NOT NULL PRIMARY KEY,
+  value TEXT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS prompt_categories (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  slug VARCHAR(120) NOT NULL UNIQUE,
+  name VARCHAR(120) NOT NULL,
+  color VARCHAR(9) NOT NULL DEFAULT '#4F46E5',
+  position INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS prompts (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  category_id INT UNSIGNED NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  description TEXT,
+  content TEXT NOT NULL,
+  tool VARCHAR(120),
+  published TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_prompts_category (category_id),
+  CONSTRAINT fk_prompts_category FOREIGN KEY (category_id) REFERENCES prompt_categories(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

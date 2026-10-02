@@ -2,7 +2,7 @@
 <div class="page">
   <section class="hero">
     <div>
-      <h1><%= user ? `Chào ${user.name.split(' ').slice(-1)[0]}, hôm nay học gì?` : 'Học lập trình & thiết kế theo cách của bạn' %></h1>
+      <h1><%= user ? `Chào ${user.name}, hôm nay học gì?` : 'Học lập trình & thiết kế theo cách của bạn' %></h1>
       <p>Bài giảng video ngắn gọn, tóm tắt rõ ràng và theo dõi tiến độ tự động cho từng bài học.</p>
     </div>
     <form class="hero-search" action="/" method="get" role="search">
@@ -27,6 +27,28 @@
         <% }) %>
       </div>
     </section>
+  <% } %>
+
+  <% if (videos.length || (!q && !level && user && user.role === 'admin')) { %>
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">Video mới cập nhật</h2>
+        <a href="/videos" class="link">Xem tất cả <svg class="i i-sm"><use href="#i-arrow-right"/></svg></a>
+      </div>
+      <% if (videos.length) { %>
+        <div class="video-grid"><% videos.forEach(v => { %><%- include('partials/video-card', { video: v }) %><% }) %></div>
+      <% } else { %>
+        <p class="muted">Chưa có video nào. <a href="/admin/courses">Thêm link YouTube hoặc upload video</a> cho bài học để mục này tự hiển thị.</p>
+      <% } %>
+    </section>
+  <% } %>
+
+  <% if (!q && !level) { %>
+    <a class="promo-strip" href="/prompts">
+      <span class="promo-ico"><svg class="i"><use href="#i-sparkles"/></svg></span>
+      <span class="body"><strong>Thư viện prompt AI theo ngành nghề</strong><small>Marketing, bán hàng, giáo dục, bất động sản, làm video AI... sao chép là dùng được ngay.</small></span>
+      <span class="btn btn-primary btn-sm">Khám phá<svg class="i"><use href="#i-arrow-right"/></svg></span>
+    </a>
   <% } %>
 
   <section class="section">

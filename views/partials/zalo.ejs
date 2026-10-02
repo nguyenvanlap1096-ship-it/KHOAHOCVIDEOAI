@@ -1,0 +1,30 @@
+<% if (locals.support) { %>
+<div class="zalo" id="zalo">
+  <div class="zalo-card" id="zaloCard" role="dialog" aria-labelledby="zaloTitle" hidden>
+    <button type="button" class="zalo-close" data-zalo-close aria-label="Đóng"><svg class="i"><use href="#i-x"/></svg></button>
+    <div class="zalo-head">
+      <span class="zalo-badge" aria-hidden="true">Zalo</span>
+      <div>
+        <h2 id="zaloTitle"><%= support.title %></h2>
+        <% if (support.hours) { %><p class="zalo-hours"><span class="dot-online" aria-hidden="true"></span><%= support.hours %></p><% } %>
+      </div>
+    </div>
+    <% if (support.text) { %><p class="zalo-text"><%= support.text %></p><% } %>
+    <% if (support.qr) { %>
+      <figure class="zalo-qr">
+        <img src="<%= h.imageUrl(support.qr) %>" alt="Mã QR Zalo hỗ trợ" width="160" height="160" loading="lazy">
+        <figcaption>Quét bằng ứng dụng Zalo trên điện thoại</figcaption>
+      </figure>
+    <% } %>
+    <a class="btn btn-zalo btn-block" href="<%= support.url %>" target="_blank" rel="noopener noreferrer">
+      <svg class="i"><use href="#i-message"/></svg>Nhắn Zalo ngay
+    </a>
+    <% if (support.phone) { %>
+      <a class="btn btn-outline btn-block" href="tel:<%= support.phone %>"><svg class="i"><use href="#i-phone"/></svg><%= support.phoneDisplay %></a>
+    <% } %>
+  </div>
+  <button type="button" class="zalo-fab" id="zaloFab" aria-expanded="false" aria-controls="zaloCard" aria-label="Hỗ trợ qua Zalo">
+    <span aria-hidden="true">Zalo</span>
+  </button>
+</div>
+<% } %>

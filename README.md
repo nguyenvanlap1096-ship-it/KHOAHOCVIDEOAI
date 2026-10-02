@@ -6,7 +6,12 @@ Website học trực tuyến viết bằng **Node.js (Express + EJS)**, cơ sở
 
 - **Học viên:** đăng ký / đăng nhập, xem danh sách khóa học, tìm kiếm & lọc theo trình độ, học qua video, tự động lưu tiến độ, tiếp tục học từ vị trí đang xem dở, lưu khóa học yêu thích.
 - **Video:** nhúng YouTube *hoặc* tự upload file MP4/WebM lên server (chỉ người đã đăng nhập mới xem được).
-- **Trang quản trị (`/admin`):** thống kê, thêm/sửa/xóa khóa học và bài học, sắp xếp thứ tự bài, cấp quyền admin cho người dùng.
+- **Ảnh thumbnail:** admin tải lên / đổi / xóa ảnh bìa khóa học và ảnh thumbnail từng bài (JPG, PNG, WebP ≤ 5 MB).
+- **Video mới cập nhật:** mục trên trang chủ và trang `/videos`, gắn nhãn "Mới" / "Cập nhật" trong 7 ngày.
+- **Thư viện prompt theo ngành nghề (`/prompts`):** lọc theo ngành, tìm kiếm, sao chép một chạm, tô sáng phần cần điền `[trong ngoặc vuông]`. Có sẵn 23 prompt cho 10 ngành.
+- **Khóa học "Làm video bằng AI":** 9 bài từ kịch bản, giọng đọc, hình ảnh, text-to-video, avatar AI đến dựng và đăng video.
+- **Hỗ trợ Zalo:** nút Zalo nổi ở mọi trang, kèm mã QR và số điện thoại – cấu hình tại `/admin/settings`.
+- **Trang quản trị (`/admin`):** thống kê, thêm/sửa/xóa khóa học và bài học, sắp xếp thứ tự bài, quản lý prompt & ngành nghề, cài đặt Zalo, cấp quyền admin cho người dùng.
 - **Giao diện:** tiếng Việt, responsive (máy tính, tablet, điện thoại), tự chuyển chế độ tối theo hệ điều hành.
 - **Bảo mật:** mật khẩu mã hóa bcrypt, chống CSRF, giới hạn số lần đăng nhập sai, HTTP security headers (Helmet), cookie phiên `httpOnly`.
 

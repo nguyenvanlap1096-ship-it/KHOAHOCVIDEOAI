@@ -122,6 +122,54 @@
     }
   }));
 
+  /* Nút Zalo hỗ trợ */
+  const zaloFab = document.getElementById('zaloFab');
+  const zaloCard = document.getElementById('zaloCard');
+  if (zaloFab && zaloCard) {
+    const setZalo = open => {
+      zaloCard.hidden = !open;
+      zaloFab.setAttribute('aria-expanded', String(open));
+      if (open) zaloCard.querySelector('.btn-zalo')?.focus();
+    };
+    zaloFab.addEventListener('click', () => setZalo(zaloCard.hidden));
+    zaloCard.querySelector('[data-zalo-close]')?.addEventListener('click', () => { setZalo(false); zaloFab.focus(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !zaloCard.hidden) { setZalo(false); zaloFab.focus(); } });
+    document.addEventListener('click', e => { if (!zaloCard.hidden && !e.target.closest('#zalo')) setZalo(false); });
+  }
+
+  /* Prompt: sao chép và xem đầy đủ */
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch { /* fallback bên dưới */ }
+    const ta = Object.assign(document.createElement('textarea'), { value: text });
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  }
+  document.querySelectorAll('[data-copy]').forEach(btn => btn.addEventListener('click', async () => {
+    const text = document.getElementById(btn.dataset.copy).innerText.trim();
+    const label = btn.querySelector('span');
+    if (await copyText(text)) {
+      btn.classList.add('is-copied');
+      label.textContent = 'Đã sao chép';
+      toast('Đã sao chép prompt. Nhớ thay các phần [trong ngoặc vuông].');
+      setTimeout(() => { btn.classList.remove('is-copied'); label.textContent = 'Sao chép'; }, 2000);
+    } else {
+      toast('Không sao chép được, hãy bôi đen và sao chép thủ công.', 'error');
+    }
+  }));
+  document.querySelectorAll('[data-expand]').forEach(btn => {
+    const box = document.getElementById(btn.dataset.expand);
+    if (box.scrollHeight <= box.clientHeight + 4) { box.classList.add('no-overflow'); btn.hidden = true; return; }
+    btn.addEventListener('click', () => {
+      const open = box.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? 'Thu gọn' : 'Xem đầy đủ';
+    });
+  });
+
   /* Tabs (ARIA, arrow keys) */
   const tabs = [...document.querySelectorAll('[role="tab"]')];
   function selectTab(tab, focus = true) {

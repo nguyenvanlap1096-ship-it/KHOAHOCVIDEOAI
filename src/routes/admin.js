@@ -1,71 +1,67 @@
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const multer = require('multer');
 const router = require('express').Router();
 const db = require('../db');
 const config = require('../config');
 const h = require('../helpers');
 const { requireAdmin } = require('../middleware/auth');
+const { acceptFiles, discardUploads, removeFile, MAX_IMAGE_MB } = require('../uploads');
+const { getSettings, setSettings } = require('../services/settings');
+const { listCategories, listPrompts } = require('../services/prompts');
 
 router.use(requireAdmin);
 
-/* ---------- Upload video ---------- */
-const VIDEO_EXT = { 'video/mp4': '.mp4', 'video/webm': '.webm', 'video/ogg': '.ogv' };
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      fs.mkdirSync(config.uploadDir, { recursive: true });
-      cb(null, config.uploadDir);
-    },
-    filename: (req, file, cb) => cb(null, crypto.randomBytes(16).toString('hex') + VIDEO_EXT[file.mimetype]),
-  }),
-  limits: { fileSize: config.maxUploadMb * 1024 * 1024, files: 1 },
-  fileFilter: (req, file, cb) => {
-    if (VIDEO_EXT[file.mimetype]) return cb(null, true);
-    cb(new Error('Chỉ hỗ trợ video MP4, WebM hoặc OGG.'));
-  },
-});
-
-function uploadVideo(req, res, next) {
-  upload.single('video_file')(req, res, err => {
-    if (err) req.uploadError = err.code === 'LIMIT_FILE_SIZE' ? `Video vượt quá ${config.maxUploadMb} MB.` : err.message;
-    next();
-  });
-}
-
-function removeUpload(filename) {
-  if (!filename || !/^[a-f0-9]{32}\.(mp4|webm|ogv)$/.test(filename)) return;
-  fs.unlink(path.join(config.uploadDir, filename), () => {});
-}
-
 const nav = active => ({ adminNav: active });
+const hasErrors = errors => Object.keys(errors).length > 0;
+
+// Xử lý một trường ảnh trong form: ảnh mới → thay; tích "xóa ảnh" → bỏ; không đổi → giữ ảnh cũ.
+function resolveImage(req, field, current, errors) {
+  if (req.uploadErrors[field]) {
+    errors[field] = req.uploadErrors[field];
+    return current || null;
+  }
+  if (req.uploaded[field]) return req.uploaded[field];
+  if (req.body && req.body[`remove_${field}`]) return null;
+  return current || null;
+}
+
+// Sau khi lưu thành công: xóa file ảnh/video cũ không còn dùng.
+function cleanupReplaced(oldValue, newValue) {
+  if (oldValue && oldValue !== newValue) removeFile(oldValue);
+}
 
 /* ---------- Tổng quan ---------- */
 router.get('/', async (req, res) => {
   const count = async sql => Number((await db.get(sql)).n);
-  const [users, courses, lessons, completions] = await Promise.all([
+  const [users, courses, lessons, completions, prompts] = await Promise.all([
     count('SELECT COUNT(*) AS n FROM users'),
     count('SELECT COUNT(*) AS n FROM courses'),
     count('SELECT COUNT(*) AS n FROM lessons'),
     count('SELECT COUNT(*) AS n FROM progress WHERE completed = 1'),
+    count('SELECT COUNT(*) AS n FROM prompts'),
   ]);
   const recentUsers = await db.all('SELECT id, name, email, role, created_at FROM users ORDER BY id DESC LIMIT 6');
-  res.render('admin/dashboard', { title: 'Quản trị', stats: { users, courses, lessons, completions }, recentUsers, ...nav('dashboard') });
+  const settings = await getSettings();
+  res.render('admin/dashboard', {
+    title: 'Quản trị',
+    stats: { users, courses, lessons, completions, prompts },
+    recentUsers,
+    zaloConfigured: Boolean(settings.zalo_phone || settings.zalo_link),
+    ...nav('dashboard'),
+  });
 });
 
 /* ---------- Khóa học ---------- */
 router.get('/courses', async (req, res) => {
   const courses = await db.all(
-    `SELECT c.id, c.slug, c.title, c.level, c.category, c.color, c.published, COUNT(l.id) AS lesson_count
+    `SELECT c.id, c.slug, c.title, c.level, c.category, c.color, c.cover_image, c.published, COUNT(l.id) AS lesson_count
        FROM courses c LEFT JOIN lessons l ON l.course_id = c.id
-      GROUP BY c.id, c.slug, c.title, c.level, c.category, c.color, c.published, c.created_at
+      GROUP BY c.id, c.slug, c.title, c.level, c.category, c.color, c.cover_image, c.published, c.created_at
       ORDER BY c.created_at DESC, c.id DESC`,
   );
   res.render('admin/courses', { title: 'Quản lý khóa học', courses, ...nav('courses') });
 });
 
-function readCourseForm(body) {
+function readCourseForm(req, existing) {
+  const body = req.body || {};
   const values = {
     title: String(body.title || '').trim(),
     slug: h.slugify(body.slug || body.title),
@@ -79,6 +75,7 @@ function readCourseForm(body) {
   if (!values.title) errors.title = 'Vui lòng nhập tên khóa học.';
   else if (values.title.length > 200) errors.title = 'Tên khóa học tối đa 200 ký tự.';
   if (!values.slug) errors.slug = 'Đường dẫn không hợp lệ.';
+  values.cover_image = resolveImage(req, 'cover', existing && existing.cover_image, errors);
   return { values, errors };
 }
 
@@ -86,22 +83,24 @@ async function slugTaken(slug, exceptId = 0) {
   return Boolean(await db.get('SELECT id FROM courses WHERE slug = ? AND id <> ?', [slug, exceptId]));
 }
 
-router.get('/courses/new', (req, res) => {
-  res.render('admin/course-form', {
-    title: 'Thêm khóa học', course: null, errors: {},
-    values: { level: h.LEVELS[0], color: '#4F46E5', published: 0 }, ...nav('courses'),
-  });
+const courseFormLocals = (course, values, errors) => ({
+  title: course ? 'Sửa khóa học' : 'Thêm khóa học', course, values, errors, maxImageMb: MAX_IMAGE_MB, ...nav('courses'),
 });
 
-router.post('/courses', async (req, res) => {
-  const { values, errors } = readCourseForm(req.body);
+router.get('/courses/new', (req, res) => {
+  res.render('admin/course-form', courseFormLocals(null, { level: h.LEVELS[0], color: '#4F46E5', published: 0 }, {}));
+});
+
+router.post('/courses', acceptFiles(['cover']), async (req, res) => {
+  const { values, errors } = readCourseForm(req, null);
   if (!errors.slug && await slugTaken(values.slug)) errors.slug = 'Đường dẫn này đã được dùng cho khóa học khác.';
-  if (Object.keys(errors).length) {
-    return res.status(400).render('admin/course-form', { title: 'Thêm khóa học', course: null, values, errors, ...nav('courses') });
+  if (hasErrors(errors)) {
+    discardUploads(req);
+    return res.status(400).render('admin/course-form', courseFormLocals(null, { ...values, cover_image: null }, errors));
   }
   const { insertId } = await db.run(
-    'INSERT INTO courses (slug, title, description, level, category, color, published) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [values.slug, values.title, values.description, values.level, values.category, values.color, values.published],
+    'INSERT INTO courses (slug, title, description, level, category, color, cover_image, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [values.slug, values.title, values.description, values.level, values.category, values.color, values.cover_image, values.published],
   );
   req.flash('success', 'Đã tạo khóa học. Hãy thêm bài học đầu tiên.');
   res.redirect(`/admin/courses/${insertId}/lessons`);
@@ -114,28 +113,35 @@ async function loadCourse(req, res, next) {
 }
 
 router.get('/courses/:id/edit', loadCourse, (req, res) => {
-  res.render('admin/course-form', { title: 'Sửa khóa học', course: req.course, values: req.course, errors: {}, ...nav('courses') });
+  res.render('admin/course-form', courseFormLocals(req.course, req.course, {}));
 });
 
-router.post('/courses/:id', loadCourse, async (req, res) => {
-  const { values, errors } = readCourseForm(req.body);
+router.post('/courses/:id', loadCourse, acceptFiles(['cover']), async (req, res) => {
+  const { values, errors } = readCourseForm(req, req.course);
   if (!errors.slug && await slugTaken(values.slug, req.course.id)) errors.slug = 'Đường dẫn này đã được dùng cho khóa học khác.';
-  if (Object.keys(errors).length) {
-    return res.status(400).render('admin/course-form', { title: 'Sửa khóa học', course: req.course, values, errors, ...nav('courses') });
+  if (hasErrors(errors)) {
+    discardUploads(req);
+    return res.status(400).render('admin/course-form', courseFormLocals(req.course, { ...values, cover_image: req.course.cover_image }, errors));
   }
   await db.run(
-    `UPDATE courses SET slug = ?, title = ?, description = ?, level = ?, category = ?, color = ?, published = ?, updated_at = CURRENT_TIMESTAMP
+    `UPDATE courses SET slug = ?, title = ?, description = ?, level = ?, category = ?, color = ?, cover_image = ?, published = ?,
+            updated_at = CURRENT_TIMESTAMP
       WHERE id = ?`,
-    [values.slug, values.title, values.description, values.level, values.category, values.color, values.published, req.course.id],
+    [values.slug, values.title, values.description, values.level, values.category, values.color, values.cover_image, values.published, req.course.id],
   );
+  cleanupReplaced(req.course.cover_image, values.cover_image);
   req.flash('success', 'Đã lưu thay đổi.');
   res.redirect('/admin/courses');
 });
 
 router.post('/courses/:id/delete', loadCourse, async (req, res) => {
-  const files = await db.all("SELECT video_ref FROM lessons WHERE course_id = ? AND video_type = 'upload'", [req.course.id]);
+  const lessonFiles = await db.all('SELECT video_type, video_ref, thumbnail FROM lessons WHERE course_id = ?', [req.course.id]);
   await db.run('DELETE FROM courses WHERE id = ?', [req.course.id]);
-  files.forEach(f => removeUpload(f.video_ref));
+  removeFile(req.course.cover_image);
+  lessonFiles.forEach(f => {
+    if (f.video_type === 'upload') removeFile(f.video_ref);
+    removeFile(f.thumbnail);
+  });
   req.flash('success', `Đã xóa khóa học “${req.course.title}”.`);
   res.redirect('/admin/courses');
 });
@@ -143,7 +149,7 @@ router.post('/courses/:id/delete', loadCourse, async (req, res) => {
 /* ---------- Bài học ---------- */
 router.get('/courses/:id/lessons', loadCourse, async (req, res) => {
   const lessons = await db.all(
-    'SELECT id, position, title, duration_sec, video_type FROM lessons WHERE course_id = ? ORDER BY position, id',
+    'SELECT id, position, title, duration_sec, video_type, video_ref, thumbnail FROM lessons WHERE course_id = ? ORDER BY position, id',
     [req.course.id],
   );
   res.render('admin/lessons', { title: `Bài học · ${req.course.title}`, course: req.course, lessons, ...nav('courses') });
@@ -171,18 +177,20 @@ function readLessonForm(req, existing) {
     videoRef = h.youtubeId(values.youtube_url);
     if (!videoRef) errors.youtube_url = 'Link YouTube không hợp lệ.';
   } else if (values.video_type === 'upload') {
-    if (req.uploadError) errors.video_file = req.uploadError;
-    else if (req.file) videoRef = req.file.filename;
+    if (req.uploadErrors.video_file) errors.video_file = req.uploadErrors.video_file;
+    else if (req.uploaded.video_file) videoRef = req.uploaded.video_file;
     else if (existing && existing.video_type === 'upload' && existing.video_ref) videoRef = existing.video_ref;
     else errors.video_file = 'Vui lòng chọn file video.';
   }
+  const thumbnail = resolveImage(req, 'thumbnail', existing && existing.thumbnail, errors);
 
   return {
-    values, errors,
+    values: { ...values, thumbnail },
+    errors,
     data: {
       title: values.title, duration_sec: durationSec || 0, summary: values.summary,
       key_points: values.key_points, resources: values.resources,
-      video_type: values.video_type, video_ref: videoRef,
+      video_type: values.video_type, video_ref: videoRef, thumbnail,
     },
   };
 }
@@ -197,24 +205,26 @@ function lessonFormValues(lesson) {
 
 const lessonFormLocals = (course, lesson, values, errors) => ({
   title: lesson ? 'Sửa bài học' : 'Thêm bài học',
-  course, lesson, values, errors, maxUploadMb: config.maxUploadMb, ...nav('courses'),
+  course, lesson, values, errors, maxUploadMb: config.maxUploadMb, maxImageMb: MAX_IMAGE_MB, ...nav('courses'),
 });
+
+const lessonUploads = acceptFiles(['video_file', 'thumbnail']);
 
 router.get('/courses/:id/lessons/new', loadCourse, (req, res) => {
   res.render('admin/lesson-form', lessonFormLocals(req.course, null, { video_type: 'youtube' }, {}));
 });
 
-router.post('/courses/:id/lessons', loadCourse, uploadVideo, async (req, res) => {
+router.post('/courses/:id/lessons', loadCourse, lessonUploads, async (req, res) => {
   const { values, errors, data } = readLessonForm(req, null);
-  if (Object.keys(errors).length) {
-    if (req.file) removeUpload(req.file.filename);
-    return res.status(400).render('admin/lesson-form', lessonFormLocals(req.course, null, values, errors));
+  if (hasErrors(errors)) {
+    discardUploads(req);
+    return res.status(400).render('admin/lesson-form', lessonFormLocals(req.course, null, { ...values, thumbnail: null }, errors));
   }
   const { pos } = await db.get('SELECT COALESCE(MAX(position), 0) + 1 AS pos FROM lessons WHERE course_id = ?', [req.course.id]);
   await db.run(
-    `INSERT INTO lessons (course_id, position, title, duration_sec, summary, key_points, resources, video_type, video_ref)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [req.course.id, Number(pos), data.title, data.duration_sec, data.summary, data.key_points, data.resources, data.video_type, data.video_ref],
+    `INSERT INTO lessons (course_id, position, title, duration_sec, summary, key_points, resources, video_type, video_ref, thumbnail, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+    [req.course.id, Number(pos), data.title, data.duration_sec, data.summary, data.key_points, data.resources, data.video_type, data.video_ref, data.thumbnail],
   );
   req.flash('success', `Đã thêm bài học “${data.title}”.`);
   res.redirect(`/admin/courses/${req.course.id}/lessons`);
@@ -231,25 +241,30 @@ router.get('/lessons/:id/edit', loadLesson, (req, res) => {
   res.render('admin/lesson-form', lessonFormLocals(req.course, req.lesson, lessonFormValues(req.lesson), {}));
 });
 
-router.post('/lessons/:id', loadLesson, uploadVideo, async (req, res) => {
+router.post('/lessons/:id', loadLesson, lessonUploads, async (req, res) => {
   const { values, errors, data } = readLessonForm(req, req.lesson);
-  if (Object.keys(errors).length) {
-    if (req.file) removeUpload(req.file.filename);
-    return res.status(400).render('admin/lesson-form', lessonFormLocals(req.course, req.lesson, values, errors));
+  if (hasErrors(errors)) {
+    discardUploads(req);
+    return res.status(400).render('admin/lesson-form', lessonFormLocals(req.course, req.lesson, { ...values, thumbnail: req.lesson.thumbnail }, errors));
   }
+  // Chỉ đánh dấu "cập nhật" khi video thực sự thay đổi, để mục Video mới không bị nhiễu khi sửa chính tả.
+  const videoChanged = data.video_type !== req.lesson.video_type || data.video_ref !== req.lesson.video_ref;
   await db.run(
-    `UPDATE lessons SET title = ?, duration_sec = ?, summary = ?, key_points = ?, resources = ?, video_type = ?, video_ref = ?
+    `UPDATE lessons SET title = ?, duration_sec = ?, summary = ?, key_points = ?, resources = ?, video_type = ?, video_ref = ?, thumbnail = ?
+            ${videoChanged ? ', updated_at = CURRENT_TIMESTAMP' : ''}
       WHERE id = ?`,
-    [data.title, data.duration_sec, data.summary, data.key_points, data.resources, data.video_type, data.video_ref, req.lesson.id],
+    [data.title, data.duration_sec, data.summary, data.key_points, data.resources, data.video_type, data.video_ref, data.thumbnail, req.lesson.id],
   );
-  if (req.lesson.video_type === 'upload' && req.lesson.video_ref !== data.video_ref) removeUpload(req.lesson.video_ref);
+  if (req.lesson.video_type === 'upload') cleanupReplaced(req.lesson.video_ref, data.video_ref);
+  cleanupReplaced(req.lesson.thumbnail, data.thumbnail);
   req.flash('success', 'Đã lưu bài học.');
   res.redirect(`/admin/courses/${req.course.id}/lessons`);
 });
 
 router.post('/lessons/:id/delete', loadLesson, async (req, res) => {
   await db.run('DELETE FROM lessons WHERE id = ?', [req.lesson.id]);
-  if (req.lesson.video_type === 'upload') removeUpload(req.lesson.video_ref);
+  if (req.lesson.video_type === 'upload') removeFile(req.lesson.video_ref);
+  removeFile(req.lesson.thumbnail);
   req.flash('success', `Đã xóa bài học “${req.lesson.title}”.`);
   res.redirect(`/admin/courses/${req.course.id}/lessons`);
 });
@@ -265,6 +280,172 @@ router.post('/lessons/:id/move', loadLesson, async (req, res) => {
     }
   }
   res.redirect(`/admin/courses/${req.course.id}/lessons#lesson-${req.lesson.id}`);
+});
+
+/* ---------- Thư viện prompt ---------- */
+router.get('/prompts', async (req, res) => {
+  const categories = await listCategories({ publicOnly: false });
+  const active = categories.find(c => String(c.id) === String(req.query.nganh)) || null;
+  const prompts = await listPrompts({ categoryId: active && active.id, publicOnly: false });
+  res.render('admin/prompts', { title: 'Thư viện prompt', categories, active, prompts, ...nav('prompts') });
+});
+
+function readPromptForm(body, categories) {
+  const values = {
+    category_id: Number(body.category_id) || 0,
+    title: String(body.title || '').trim(),
+    description: String(body.description || '').trim(),
+    content: String(body.content || '').replace(/\r\n/g, '\n').trim(),
+    tool: String(body.tool || '').trim().slice(0, 120),
+    published: body.published ? 1 : 0,
+  };
+  const errors = {};
+  if (!categories.some(c => c.id === values.category_id)) errors.category_id = 'Vui lòng chọn ngành nghề.';
+  if (!values.title) errors.title = 'Vui lòng nhập tên prompt.';
+  else if (values.title.length > 200) errors.title = 'Tên prompt tối đa 200 ký tự.';
+  if (!values.content) errors.content = 'Vui lòng nhập nội dung prompt.';
+  return { values, errors };
+}
+
+const promptFormLocals = (prompt, values, errors, categories) => ({
+  title: prompt ? 'Sửa prompt' : 'Thêm prompt', prompt, values, errors, categories, ...nav('prompts'),
+});
+
+router.get('/prompts/new', async (req, res) => {
+  const categories = await listCategories({ publicOnly: false });
+  if (!categories.length) {
+    req.flash('error', 'Hãy tạo ít nhất một ngành nghề trước khi thêm prompt.');
+    return res.redirect('/admin/prompts');
+  }
+  res.render('admin/prompt-form', promptFormLocals(null, { category_id: Number(req.query.nganh) || categories[0].id, published: 1 }, {}, categories));
+});
+
+router.post('/prompts', async (req, res) => {
+  const categories = await listCategories({ publicOnly: false });
+  const { values, errors } = readPromptForm(req.body, categories);
+  if (hasErrors(errors)) return res.status(400).render('admin/prompt-form', promptFormLocals(null, values, errors, categories));
+  await db.run(
+    'INSERT INTO prompts (category_id, title, description, content, tool, published) VALUES (?, ?, ?, ?, ?, ?)',
+    [values.category_id, values.title, values.description, values.content, values.tool, values.published],
+  );
+  req.flash('success', `Đã thêm prompt “${values.title}”.`);
+  res.redirect(`/admin/prompts?nganh=${values.category_id}`);
+});
+
+async function loadPrompt(req, res, next) {
+  req.prompt = await db.get('SELECT * FROM prompts WHERE id = ?', [Number(req.params.id) || 0]);
+  if (!req.prompt) return next('route');
+  next();
+}
+
+router.get('/prompts/:id/edit', loadPrompt, async (req, res) => {
+  const categories = await listCategories({ publicOnly: false });
+  res.render('admin/prompt-form', promptFormLocals(req.prompt, req.prompt, {}, categories));
+});
+
+router.post('/prompts/:id', loadPrompt, async (req, res) => {
+  const categories = await listCategories({ publicOnly: false });
+  const { values, errors } = readPromptForm(req.body, categories);
+  if (hasErrors(errors)) return res.status(400).render('admin/prompt-form', promptFormLocals(req.prompt, values, errors, categories));
+  await db.run(
+    `UPDATE prompts SET category_id = ?, title = ?, description = ?, content = ?, tool = ?, published = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?`,
+    [values.category_id, values.title, values.description, values.content, values.tool, values.published, req.prompt.id],
+  );
+  req.flash('success', 'Đã lưu prompt.');
+  res.redirect(`/admin/prompts?nganh=${values.category_id}`);
+});
+
+router.post('/prompts/:id/delete', loadPrompt, async (req, res) => {
+  await db.run('DELETE FROM prompts WHERE id = ?', [req.prompt.id]);
+  req.flash('success', `Đã xóa prompt “${req.prompt.title}”.`);
+  res.redirect(`/admin/prompts?nganh=${req.prompt.category_id}`);
+});
+
+/* ---------- Ngành nghề (danh mục prompt) ---------- */
+function readCategoryForm(body) {
+  const name = String(body.name || '').trim().slice(0, 120);
+  return {
+    name,
+    slug: h.slugify(name),
+    color: /^#[0-9a-f]{6}$/i.test(body.color || '') ? body.color : '#4F46E5',
+  };
+}
+
+router.post('/prompt-categories', async (req, res) => {
+  const v = readCategoryForm(req.body);
+  if (!v.slug) {
+    req.flash('error', 'Vui lòng nhập tên ngành nghề.');
+  } else if (await db.get('SELECT id FROM prompt_categories WHERE slug = ?', [v.slug])) {
+    req.flash('error', `Ngành “${v.name}” đã tồn tại.`);
+  } else {
+    const { pos } = await db.get('SELECT COALESCE(MAX(position), 0) + 1 AS pos FROM prompt_categories');
+    const { insertId } = await db.run(
+      'INSERT INTO prompt_categories (slug, name, color, position) VALUES (?, ?, ?, ?)',
+      [v.slug, v.name, v.color, Number(pos)],
+    );
+    req.flash('success', `Đã thêm ngành “${v.name}”.`);
+    return res.redirect(`/admin/prompts?nganh=${insertId}`);
+  }
+  res.redirect('/admin/prompts');
+});
+
+router.post('/prompt-categories/:id', async (req, res) => {
+  const id = Number(req.params.id) || 0;
+  const v = readCategoryForm(req.body);
+  if (!v.slug) req.flash('error', 'Tên ngành nghề không được để trống.');
+  else if (await db.get('SELECT id FROM prompt_categories WHERE slug = ? AND id <> ?', [v.slug, id])) req.flash('error', `Ngành “${v.name}” đã tồn tại.`);
+  else {
+    await db.run('UPDATE prompt_categories SET name = ?, slug = ?, color = ? WHERE id = ?', [v.name, v.slug, v.color, id]);
+    req.flash('success', 'Đã lưu ngành nghề.');
+  }
+  res.redirect(`/admin/prompts?nganh=${id}`);
+});
+
+router.post('/prompt-categories/:id/delete', async (req, res) => {
+  const id = Number(req.params.id) || 0;
+  const { n } = await db.get('SELECT COUNT(*) AS n FROM prompts WHERE category_id = ?', [id]);
+  if (Number(n) > 0) {
+    req.flash('error', `Ngành này còn ${n} prompt. Hãy xóa hoặc chuyển prompt sang ngành khác trước.`);
+    return res.redirect(`/admin/prompts?nganh=${id}`);
+  }
+  await db.run('DELETE FROM prompt_categories WHERE id = ?', [id]);
+  req.flash('success', 'Đã xóa ngành nghề.');
+  res.redirect('/admin/prompts');
+});
+
+/* ---------- Cài đặt: Zalo hỗ trợ ---------- */
+router.get('/settings', async (req, res) => {
+  res.render('admin/settings', { title: 'Cài đặt', values: await getSettings(), errors: {}, maxImageMb: MAX_IMAGE_MB, ...nav('settings') });
+});
+
+router.post('/settings', acceptFiles(['zalo_qr']), async (req, res) => {
+  const current = await getSettings();
+  const b = req.body || {};
+  const values = {
+    zalo_phone: String(b.zalo_phone || '').replace(/[^\d+]/g, ''),
+    zalo_link: String(b.zalo_link || '').trim(),
+    support_title: String(b.support_title || '').trim().slice(0, 80),
+    support_text: String(b.support_text || '').trim().slice(0, 300),
+    support_hours: String(b.support_hours || '').trim().slice(0, 80),
+  };
+  const errors = {};
+  const digits = values.zalo_phone.replace(/\D/g, '');
+  if (values.zalo_phone && (digits.length < 9 || digits.length > 12)) errors.zalo_phone = 'Số điện thoại Zalo không hợp lệ.';
+  if (values.zalo_link && !/^https:\/\/(zalo\.me|oa\.zalo\.me|chat\.zalo\.me)\//i.test(values.zalo_link)) {
+    errors.zalo_link = 'Link phải bắt đầu bằng https://zalo.me/ hoặc https://oa.zalo.me/';
+  }
+  values.zalo_qr = resolveImage(req, 'zalo_qr', current.zalo_qr, errors) || '';
+  if (hasErrors(errors)) {
+    discardUploads(req);
+    return res.status(400).render('admin/settings', {
+      title: 'Cài đặt', values: { ...values, zalo_qr: current.zalo_qr }, errors, maxImageMb: MAX_IMAGE_MB, ...nav('settings'),
+    });
+  }
+  await setSettings(values);
+  cleanupReplaced(current.zalo_qr, values.zalo_qr);
+  req.flash('success', 'Đã lưu cài đặt hỗ trợ Zalo.');
+  res.redirect('/admin/settings');
 });
 
 /* ---------- Người dùng ---------- */

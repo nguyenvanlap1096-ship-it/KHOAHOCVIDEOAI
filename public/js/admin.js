@@ -10,6 +10,29 @@
     src.addEventListener('input', () => { if (!touched) target.placeholder = slugify(src.value) || 'tu-dong-tao-tu-ten'; });
   }
 
+  /* Xem trước ảnh thumbnail trước khi lưu */
+  document.querySelectorAll('[data-image-input]').forEach(input => {
+    const name = input.dataset.imageInput;
+    const preview = document.querySelector(`[data-image-preview="${name}"]`);
+    const remove = document.querySelector(`[data-image-remove="${name}"]`);
+    input.addEventListener('change', () => {
+      const f = input.files[0];
+      if (!f) return;
+      if (f.size > 5 * 1024 * 1024) {
+        window.Demia.toast('Ảnh vượt quá 5 MB, hãy chọn ảnh nhỏ hơn.', 'error');
+        input.value = '';
+        return;
+      }
+      const img = document.createElement('img');
+      img.alt = 'Ảnh mới chọn';
+      img.src = URL.createObjectURL(f);
+      preview.replaceChildren(img);
+      preview.classList.remove('is-removed');
+      if (remove) remove.checked = false;
+    });
+    remove?.addEventListener('change', () => preview.classList.toggle('is-removed', remove.checked));
+  });
+
   /* Form bài học */
   const form = document.getElementById('lessonForm');
   if (!form) return;

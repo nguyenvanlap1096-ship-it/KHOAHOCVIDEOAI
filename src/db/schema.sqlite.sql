@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS courses (
   level TEXT NOT NULL DEFAULT 'Cơ bản',
   category TEXT,
   color TEXT NOT NULL DEFAULT '#4F46E5',
+  cover_image TEXT,
   published INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -31,7 +32,9 @@ CREATE TABLE IF NOT EXISTS lessons (
   resources TEXT,
   video_type TEXT NOT NULL DEFAULT 'none',
   video_ref TEXT,
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  thumbnail TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_lessons_course ON lessons (course_id, position);
 
@@ -51,3 +54,29 @@ CREATE TABLE IF NOT EXISTS bookmarks (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, course_id)
 );
+
+CREATE TABLE IF NOT EXISTS settings (
+  name TEXT NOT NULL PRIMARY KEY,
+  value TEXT
+);
+
+CREATE TABLE IF NOT EXISTS prompt_categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  color TEXT NOT NULL DEFAULT '#4F46E5',
+  position INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS prompts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  category_id INTEGER NOT NULL REFERENCES prompt_categories(id),
+  title TEXT NOT NULL,
+  description TEXT,
+  content TEXT NOT NULL,
+  tool TEXT,
+  published INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_prompts_category ON prompts (category_id);

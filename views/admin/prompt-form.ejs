@@ -1,0 +1,54 @@
+<%- include('../partials/top', { crumbs: [{ label: 'Quản trị', href: '/admin' }, { label: 'Prompt', href: '/admin/prompts' }, { label: prompt ? 'Sửa' : 'Thêm mới' }] }) %>
+<%
+  const err = name => errors[name] ? `<p class="field-error" id="${name}-msg">${errors[name]}</p>` : '';
+  const aria = name => errors[name] ? `aria-invalid="true" aria-describedby="${name}-msg"` : '';
+%>
+<div class="page page-narrow">
+  <h1 class="page-title"><%= prompt ? 'Sửa prompt' : 'Thêm prompt' %></h1>
+  <form method="post" action="<%= prompt ? `/admin/prompts/${prompt.id}` : '/admin/prompts' %>" class="form card form-card" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+    <div class="field-row">
+      <div class="field <%= errors.category_id ? 'has-error' : '' %>">
+        <label for="category_id">Ngành nghề <span class="req" aria-hidden="true">*</span></label>
+        <select id="category_id" name="category_id" <%- aria('category_id') %>>
+          <% categories.forEach(c => { %><option value="<%= c.id %>" <%= Number(values.category_id) === c.id ? 'selected' : '' %>><%= c.name %></option><% }) %>
+        </select>
+        <%- err('category_id') %>
+      </div>
+      <div class="field">
+        <label for="tool">Công cụ AI phù hợp</label>
+        <input id="tool" name="tool" maxlength="120" value="<%= values.tool || '' %>" placeholder="VD: ChatGPT, Claude">
+      </div>
+    </div>
+
+    <div class="field <%= errors.title ? 'has-error' : '' %>">
+      <label for="title">Tên prompt <span class="req" aria-hidden="true">*</span></label>
+      <input id="title" name="title" maxlength="200" required value="<%= values.title || '' %>" <%- aria('title') %>>
+      <%- err('title') %>
+    </div>
+
+    <div class="field">
+      <label for="description">Mô tả ngắn / khi nào dùng</label>
+      <input id="description" name="description" maxlength="300" value="<%= values.description || '' %>">
+    </div>
+
+    <div class="field <%= errors.content ? 'has-error' : '' %>">
+      <label for="content">Nội dung prompt <span class="req" aria-hidden="true">*</span></label>
+      <textarea id="content" name="content" rows="14" class="mono" <%- aria('content') %>><%= values.content || '' %></textarea>
+      <% if (errors.content) { %><%- err('content') %><% } else { %><p class="field-hint">Đặt phần người dùng cần tự điền trong ngoặc vuông, ví dụ <code>[tên sản phẩm]</code> – sẽ được tô sáng trên trang công khai.</p><% } %>
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" name="published" value="1" <%= Number(values.published) ? 'checked' : '' %>>
+      <span class="switch-ui" aria-hidden="true"></span>
+      <span><strong>Hiển thị công khai</strong><small class="d-block muted">Tắt để lưu nháp.</small></span>
+    </label>
+
+    <div class="form-actions">
+      <a class="btn btn-ghost" href="/admin/prompts">Hủy</a>
+      <button class="btn btn-primary" type="submit" data-loading-text="Đang lưu..."><%= prompt ? 'Lưu prompt' : 'Thêm prompt' %></button>
+    </div>
+  </form>
+</div>
+<%- include('../partials/bottom') %>

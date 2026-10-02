@@ -29,11 +29,13 @@
         <div id="ytPlayer" data-video-id="<%= lesson.video_ref %>"></div>
         <noscript><a href="https://www.youtube.com/watch?v=<%= lesson.video_ref %>">Xem video trên YouTube</a></noscript>
       <% } else if (lesson.video_type === 'upload') { %>
-        <video id="videoEl" controls preload="metadata" playsinline src="/media/<%= lesson.video_ref %>">
+        <% const poster = h.imageUrl(lesson.thumbnail) || h.imageUrl(course.cover_image); %>
+        <video id="videoEl" controls preload="metadata" playsinline src="/media/<%= lesson.video_ref %>" <% if (poster) { %>poster="<%= poster %>"<% } %>>
           Trình duyệt của bạn không hỗ trợ phát video.
         </video>
       <% } else { %>
-        <div class="player-empty" style="--c:<%= course.color %>">
+        <div class="player-empty <%= course.cover_image ? 'has-cover' : '' %>" style="--c:<%= course.color %>">
+          <% if (course.cover_image) { %><img class="player-cover" src="<%= h.imageUrl(course.cover_image) %>" alt=""><% } %>
           <svg class="i"><use href="#i-file-text"/></svg>
           <strong>Bài đọc</strong>
           <span>Bài học này không có video. Đọc phần tóm tắt bên dưới rồi đánh dấu hoàn thành.</span>
