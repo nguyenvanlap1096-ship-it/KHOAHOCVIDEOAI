@@ -416,13 +416,15 @@ router.post('/prompt-categories/:id/delete', async (req, res) => {
 
 /* ---------- Cài đặt: Zalo hỗ trợ ---------- */
 router.get('/settings', async (req, res) => {
-  res.render('admin/settings', { title: 'Cài đặt', values: await getSettings(), errors: {}, maxImageMb: MAX_IMAGE_MB, ...nav('settings') });
+  res.render('admin/settings', { title: 'Cài đặt', values: await getSettings(), defaultSiteName: config.siteName, errors: {}, maxImageMb: MAX_IMAGE_MB, ...nav('settings') });
 });
 
-router.post('/settings', acceptFiles(['zalo_qr']), async (req, res) => {
+router.post('/settings', acceptFiles(['zalo_qr', 'site_logo']), async (req, res) => {
   const current = await getSettings();
   const b = req.body || {};
   const values = {
+    site_name: String(b.site_name || '').trim().slice(0, 60),
+    site_tagline: String(b.site_tagline || '').trim().slice(0, 60),
     zalo_phone: String(b.zalo_phone || '').replace(/[^\d+]/g, ''),
     zalo_link: String(b.zalo_link || '').trim(),
     support_title: String(b.support_title || '').trim().slice(0, 80),
@@ -436,15 +438,17 @@ router.post('/settings', acceptFiles(['zalo_qr']), async (req, res) => {
     errors.zalo_link = 'Link phải bắt đầu bằng https://zalo.me/ hoặc https://oa.zalo.me/';
   }
   values.zalo_qr = resolveImage(req, 'zalo_qr', current.zalo_qr, errors) || '';
+  values.site_logo = resolveImage(req, 'site_logo', current.site_logo, errors) || '';
   if (hasErrors(errors)) {
     discardUploads(req);
     return res.status(400).render('admin/settings', {
-      title: 'Cài đặt', values: { ...values, zalo_qr: current.zalo_qr }, errors, maxImageMb: MAX_IMAGE_MB, ...nav('settings'),
+      title: 'Cài đặt', defaultSiteName: config.siteName, values: { ...values, zalo_qr: current.zalo_qr, site_logo: current.site_logo }, errors, maxImageMb: MAX_IMAGE_MB, ...nav('settings'),
     });
   }
   await setSettings(values);
   cleanupReplaced(current.zalo_qr, values.zalo_qr);
-  req.flash('success', 'Đã lưu cài đặt hỗ trợ Zalo.');
+  cleanupReplaced(current.site_logo, values.site_logo);
+  req.flash('success', 'Đã lưu cài đặt.');
   res.redirect('/admin/settings');
 });
 

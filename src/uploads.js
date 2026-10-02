@@ -7,7 +7,7 @@ const config = require('./config');
 
 const VIDEO_EXT = { 'video/mp4': '.mp4', 'video/webm': '.webm', 'video/ogg': '.ogv' };
 const IMAGE_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
-const IMAGE_FIELDS = new Set(['cover', 'thumbnail', 'zalo_qr']);
+const IMAGE_FIELDS = new Set(['cover', 'thumbnail', 'zalo_qr', 'site_logo']);
 const MAX_IMAGE_MB = 5;
 const imageDir = path.join(config.uploadDir, 'images');
 const FILE_RE = /^[a-f0-9]{32}\.(mp4|webm|ogv|jpg|png|webp)$/;

@@ -4,11 +4,31 @@
   const aria = name => errors[name] ? `aria-invalid="true" aria-describedby="${name}-msg"` : '';
 %>
 <div class="page page-narrow">
-  <h1 class="page-title">Cài đặt hỗ trợ Zalo</h1>
-  <p class="muted">Nút <strong>Zalo</strong> sẽ hiện ở góc phải dưới mọi trang khi bạn nhập số điện thoại hoặc link Zalo.</p>
+  <h1 class="page-title">Cài đặt</h1>
 
   <form method="post" action="/admin/settings?_csrf=<%= csrf %>" enctype="multipart/form-data" class="form card form-card" novalidate>
     <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+    <h2 class="form-section">Thông tin website</h2>
+    <div class="field-row">
+      <div class="field">
+        <label for="site_name">Tên website</label>
+        <input id="site_name" name="site_name" maxlength="60" value="<%= values.site_name %>" placeholder="<%= defaultSiteName %>">
+        <p class="field-hint">Hiện ở góc trên menu, tiêu đề tab trình duyệt và trang đăng nhập.</p>
+      </div>
+      <div class="field">
+        <label for="site_tagline">Khẩu hiệu</label>
+        <input id="site_tagline" name="site_tagline" maxlength="60" value="<%= values.site_tagline %>" placeholder="VD: Học làm video bằng AI">
+        <p class="field-hint">Dòng chữ nhỏ cạnh tên. Để trống để ẩn.</p>
+      </div>
+    </div>
+    <%- include('../partials/image-field', {
+      name: 'site_logo', label: 'Logo (vuông)', current: values.site_logo, ratio: '1/1', error: errors.site_logo,
+      hint: `Ảnh vuông, nền trong suốt càng tốt (PNG/WebP), ví dụ 256×256. Dùng làm logo và biểu tượng tab trình duyệt. Tối đa ${maxImageMb} MB.`,
+    }) %>
+
+    <h2 class="form-section">Hỗ trợ Zalo</h2>
+    <p class="muted form-section-note">Nút <strong>Zalo</strong> sẽ hiện ở góc phải dưới mọi trang khi bạn nhập số điện thoại hoặc link Zalo.</p>
 
     <div class="field-row">
       <div class="field <%= errors.zalo_phone ? 'has-error' : '' %>">

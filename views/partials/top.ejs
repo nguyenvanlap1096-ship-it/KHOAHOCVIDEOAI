@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="<%= csrf %>">
   <title><%= locals.title ? title + ' · ' : '' %><%= siteName %></title>
-  <meta name="description" content="<%= siteName %> – nền tảng học lập trình và thiết kế trực tuyến.">
-  <link rel="icon" href="/img/logo.svg" type="image/svg+xml">
+  <meta name="description" content="<%= siteName %><%= siteTagline ? ' – ' + siteTagline : '' %>">
+  <link rel="icon" href="<%= siteLogo %>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">

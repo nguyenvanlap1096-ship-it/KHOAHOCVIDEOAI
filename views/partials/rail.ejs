@@ -10,7 +10,7 @@
   }
 %>
 <nav class="rail" aria-label="Điều hướng chính">
-  <a href="/" class="logo" aria-label="<%= siteName %> – Trang chủ"><img src="/img/logo.svg" alt="" width="36" height="36"></a>
+  <a href="/" class="logo" aria-label="<%= siteName %> – Trang chủ"><img class="brand-logo" src="<%= siteLogo %>" alt="" width="36" height="36"></a>
   <% if (user && user.role === 'admin') { %>
     <a class="rail-btn new" href="/admin/courses/new" aria-label="Thêm khóa học" title="Thêm khóa học"><svg class="i"><use href="#i-plus"/></svg></a>
   <% } %>

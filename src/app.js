@@ -10,7 +10,7 @@ const h = require('./helpers');
 const { loadUser } = require('./middleware/auth');
 const csrf = require('./middleware/csrf');
 const { imageDir } = require('./uploads');
-const { getSettings, supportInfo } = require('./services/settings');
+const { getSettings, supportInfo, siteInfo } = require('./services/settings');
 
 function sessionStore() {
   if (db.client !== 'mysql') return undefined; // MemoryStore khi chạy thử với SQLite
@@ -79,13 +79,17 @@ module.exports = function createApp() {
   app.use(async (req, res, next) => {
     req.flash = (type, message) => { req.session.flash = { type, message }; };
     if (req.path.startsWith('/api/') || req.path.startsWith('/media/')) return next();
-    res.locals.siteName = config.siteName;
+    const settings = await getSettings();
+    const site = siteInfo(settings, config.siteName);
+    res.locals.siteName = site.name;
+    res.locals.siteTagline = site.tagline;
+    res.locals.siteLogo = site.logo;
     res.locals.path = req.path;
     res.locals.h = h;
     res.locals.flash = req.session.flash || null;
     delete req.session.flash;
     res.locals.sidebar = await sidebarData(req.user && req.user.id);
-    res.locals.support = supportInfo(await getSettings());
+    res.locals.support = supportInfo(settings);
     next();
   });
   app.use(csrf);
@@ -105,6 +109,8 @@ module.exports = function createApp() {
     const status = err.status || 500;
     if (status >= 500) console.error(err);
     res.locals.siteName ??= config.siteName;
+    res.locals.siteTagline ??= '';
+    res.locals.siteLogo ??= '/img/logo.svg';
     res.locals.h ??= h;
     res.locals.sidebar ??= { saved: [], learning: [] };
     res.locals.csrf ??= '';

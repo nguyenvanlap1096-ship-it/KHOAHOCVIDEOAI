@@ -1,5 +1,5 @@
 <aside class="panel" id="panel" aria-label="Menu khóa học">
-  <div class="panel-head"><%= siteName %> <span class="muted">Học trực tuyến</span></div>
+  <div class="panel-head"><span class="panel-name"><%= siteName %></span><% if (siteTagline) { %> <span class="muted"><%= siteTagline %></span><% } %></div>
   <form class="search" action="/" method="get" role="search">
     <svg class="i"><use href="#i-search"/></svg>
     <label for="panelSearch" class="sr-only">Tìm khóa học</label>

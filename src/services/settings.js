@@ -2,6 +2,9 @@
 const db = require('../db');
 
 const DEFAULTS = {
+  site_name: '',
+  site_tagline: 'Học trực tuyến',
+  site_logo: '',
   zalo_phone: '',
   zalo_link: '',
   zalo_qr: '',
@@ -47,4 +50,13 @@ function supportInfo(s) {
   };
 }
 
-module.exports = { DEFAULTS, getSettings, setSettings, supportInfo };
+// Tên, khẩu hiệu và logo hiển thị trên website (tên rỗng thì dùng SITE_NAME trong biến môi trường).
+function siteInfo(s, fallbackName) {
+  return {
+    name: s.site_name || fallbackName,
+    tagline: s.site_tagline,
+    logo: s.site_logo ? `/uploads/images/${s.site_logo}` : '/img/logo.svg',
+  };
+}
+
+module.exports = { DEFAULTS, getSettings, setSettings, supportInfo, siteInfo };
