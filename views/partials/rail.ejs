@@ -1,0 +1,24 @@
+<%
+  const railLinks = [
+    { href: '/', label: 'Khám phá khóa học', icon: 'i-home', active: path === '/' || path.startsWith('/courses') || path.startsWith('/learn') },
+    { href: '/my', label: 'Khóa học của tôi', icon: 'i-book-open', active: path === '/my' },
+  ];
+  if (user && user.role === 'admin') {
+    railLinks.push({ href: '/admin', label: 'Quản trị', icon: 'i-shield', active: path.startsWith('/admin') });
+  }
+%>
+<nav class="rail" aria-label="Điều hướng chính">
+  <a href="/" class="logo" aria-label="<%= siteName %> – Trang chủ"><img src="/img/logo.svg" alt="" width="36" height="36"></a>
+  <% if (user && user.role === 'admin') { %>
+    <a class="rail-btn new" href="/admin/courses/new" aria-label="Thêm khóa học" title="Thêm khóa học"><svg class="i"><use href="#i-plus"/></svg></a>
+  <% } %>
+  <% railLinks.forEach(l => { %>
+    <a class="rail-btn" href="<%= l.href %>" aria-label="<%= l.label %>" title="<%= l.label %>" <%- l.active ? 'aria-current="page"' : '' %>>
+      <svg class="i"><use href="#<%= l.icon %>"/></svg>
+    </a>
+  <% }) %>
+  <div class="spacer"></div>
+  <% if (!user) { %>
+    <a class="rail-btn" href="/login" aria-label="Đăng nhập" title="Đăng nhập"><svg class="i"><use href="#i-log-in"/></svg></a>
+  <% } %>
+</nav>

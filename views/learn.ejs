@@ -1,0 +1,109 @@
+<%- include('partials/top', {
+  crumbs: [{ label: 'Khóa học', href: '/' }, { label: course.title, href: '/courses/' + course.slug }, { label: lesson.title }],
+}) %>
+<div class="content">
+  <div class="title-row">
+    <div>
+      <h1><%= course.title %></h1>
+      <div class="meta">
+        <span><svg class="i"><use href="#i-signal"/></svg><%= course.level %></span>
+        <span><svg class="i"><use href="#i-book-open"/></svg><%= lessons.length %> bài học</span>
+        <% if (totalSec) { %><span><svg class="i"><use href="#i-clock"/></svg><%= h.fmtTotal(totalSec) %></span><% } %>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline btn-icon" type="button" data-bookmark="<%= course.id %>" aria-pressed="<%= bookmarked %>" aria-label="Lưu khóa học">
+        <svg class="i"><use href="#i-bookmark"/></svg>
+      </button>
+      <button class="btn btn-primary" type="button" data-share><svg class="i"><use href="#i-share"/></svg><span>Chia sẻ</span></button>
+    </div>
+  </div>
+
+  <section aria-labelledby="lessonTitle">
+    <div class="player" id="player"
+         data-lesson-id="<%= lesson.id %>"
+         data-video-type="<%= lesson.video_type %>"
+         data-start="<%= startAt %>"
+         data-duration="<%= lesson.duration_sec %>">
+      <% if (lesson.video_type === 'youtube') { %>
+        <div id="ytPlayer" data-video-id="<%= lesson.video_ref %>"></div>
+        <noscript><a href="https://www.youtube.com/watch?v=<%= lesson.video_ref %>">Xem video trên YouTube</a></noscript>
+      <% } else if (lesson.video_type === 'upload') { %>
+        <video id="videoEl" controls preload="metadata" playsinline src="/media/<%= lesson.video_ref %>">
+          Trình duyệt của bạn không hỗ trợ phát video.
+        </video>
+      <% } else { %>
+        <div class="player-empty" style="--c:<%= course.color %>">
+          <svg class="i"><use href="#i-file-text"/></svg>
+          <strong>Bài đọc</strong>
+          <span>Bài học này không có video. Đọc phần tóm tắt bên dưới rồi đánh dấu hoàn thành.</span>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="lesson-bar">
+      <div>
+        <span class="eyebrow">Bài <%= lessons.indexOf(current) + 1 %>/<%= lessons.length %></span>
+        <h2 id="lessonTitle"><%= lesson.title %></h2>
+      </div>
+      <button class="btn <%= current.completed ? 'btn-success' : 'btn-outline' %>" type="button" id="completeBtn" aria-pressed="<%= current.completed %>">
+        <svg class="i"><use href="#i-check-circle"/></svg><span><%= current.completed ? 'Đã hoàn thành' : 'Đánh dấu hoàn thành' %></span>
+      </button>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Chi tiết bài học">
+      <button class="tab" role="tab" type="button" aria-selected="true" aria-controls="p-summary" id="t-summary"><svg class="i"><use href="#i-grid"/></svg>Tóm tắt</button>
+      <button class="tab" role="tab" type="button" aria-selected="false" aria-controls="p-resources" id="t-resources" tabindex="-1"><svg class="i"><use href="#i-link"/></svg>Tài liệu<% if (resources.length) { %> <span class="chip"><%= resources.length %></span><% } %></button>
+    </div>
+
+    <div class="tabpanel" role="tabpanel" id="p-summary" aria-labelledby="t-summary">
+      <h3>Tóm tắt bài học</h3>
+      <% const paras = h.paragraphs(lesson.summary); %>
+      <% if (paras.length) { paras.forEach(p => { %><p><%= p %></p><% }) } else { %><p class="muted">Bài học này chưa có tóm tắt.</p><% } %>
+      <% if (keyPoints.length) { %>
+        <div class="divider"></div>
+        <h3>Kiến thức chính</h3>
+        <div class="concepts">
+          <% keyPoints.forEach(k => { %><div class="concept"><svg class="i"><use href="#i-check"/></svg><span><%= k %></span></div><% }) %>
+        </div>
+      <% } %>
+    </div>
+    <div class="tabpanel" role="tabpanel" id="p-resources" aria-labelledby="t-resources" hidden>
+      <% if (resources.length) { %>
+        <ul class="resource-list">
+          <% resources.forEach(r => { %>
+            <li><a href="<%= r.url %>" target="_blank" rel="noopener noreferrer"><svg class="i"><use href="#i-link"/></svg><span><strong><%= r.title %></strong><small><%= r.url %></small></span></a></li>
+          <% }) %>
+        </ul>
+      <% } else { %><p class="muted">Chưa có tài liệu đính kèm cho bài học này.</p><% } %>
+    </div>
+
+    <nav class="pager" aria-label="Chuyển bài học">
+      <% if (prev) { %><a class="btn btn-outline" href="/learn/<%= course.slug %>/<%= prev.id %>"><svg class="i"><use href="#i-chevron-left"/></svg>Bài trước</a><% } else { %><span></span><% } %>
+      <% if (next) { %><a class="btn btn-primary" href="/learn/<%= course.slug %>/<%= next.id %>" id="nextLink">Bài tiếp theo<svg class="i"><use href="#i-chevron-right"/></svg></a><% } %>
+    </nav>
+  </section>
+
+  <aside class="side" aria-label="Tiến độ khóa học">
+    <div class="card progress-card">
+      <%- include('partials/ring', { value: percent, cls: 'ring-lg ring-success' }) %>
+      <div>
+        <h2>Tiến độ học tập</h2>
+        <p>Theo dõi các mốc học tập và vị trí bạn đang học dở.</p>
+      </div>
+    </div>
+    <h2 class="list-title">Nội dung khóa học</h2>
+    <ol class="lessons">
+      <% lessons.forEach((l, i) => { %>
+        <li>
+          <a class="lesson" href="/learn/<%= course.slug %>/<%= l.id %>" <%- l.id === lesson.id ? 'aria-current="true"' : '' %> data-lesson-row="<%= l.id %>">
+            <span class="num"><%= i + 1 %></span>
+            <span class="body"><span class="name"><%= l.title %></span><span class="dur"><%= l.duration_sec ? h.fmtDuration(l.duration_sec) : (l.video_type === 'none' ? 'Bài đọc' : 'Video') %></span></span>
+            <%- include('partials/ring', { value: l.percent, cls: 'ring-sm' }) %>
+          </a>
+        </li>
+      <% }) %>
+    </ol>
+  </aside>
+</div>
+<%- include('partials/bottom') %>

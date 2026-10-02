@@ -1,0 +1,5 @@
+<% const C = 97.39; /* 2πr, r = 15.5 */ const v = Math.max(0, Math.min(100, Number(value) || 0)); %>
+<span class="ring <%= locals.cls || '' %>" role="img" aria-label="Hoàn thành <%= v %>%" data-value="<%= v %>">
+  <svg viewBox="0 0 36 36" aria-hidden="true"><circle class="track" cx="18" cy="18" r="15.5"/><circle class="bar" cx="18" cy="18" r="15.5" stroke-dasharray="<%= C %>" stroke-dashoffset="<%= (C * (1 - v / 100)).toFixed(2) %>"/></svg>
+  <span class="label"><%= v %>%</span>
+</span>

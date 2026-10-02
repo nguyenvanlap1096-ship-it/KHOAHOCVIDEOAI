@@ -1,0 +1,29 @@
+<%- include('../partials/top') %>
+<div class="auth-wrap">
+  <div class="auth-card card">
+    <img src="/img/logo.svg" alt="" width="44" height="44">
+    <h1>Đăng nhập</h1>
+    <p class="muted">Chào mừng trở lại <%= siteName %>! Tiếp tục bài học của bạn.</p>
+
+    <% if (errors.form) { %><div class="form-error" role="alert"><svg class="i"><use href="#i-x"/></svg><%= errors.form %></div><% } %>
+
+    <form method="post" action="/login" class="form" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <input type="hidden" name="next" value="<%= next %>">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" required value="<%= values.email || '' %>" autofocus>
+      </div>
+      <div class="field">
+        <label for="password">Mật khẩu</label>
+        <div class="password-wrap">
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+          <button type="button" class="pw-toggle" data-pw-toggle="password" aria-label="Hiện mật khẩu"><svg class="i"><use href="#i-eye"/></svg></button>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg btn-block" type="submit" data-loading-text="Đang đăng nhập...">Đăng nhập</button>
+    </form>
+    <p class="auth-alt">Chưa có tài khoản? <a href="/register<%= next !== '/' ? '?next=' + encodeURIComponent(next) : '' %>">Đăng ký miễn phí</a></p>
+  </div>
+</div>
+<%- include('../partials/bottom') %>

@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demia Course Player</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #4F46E5;
+    --primary-hover: #4338CA;
+    --primary-soft: #EEF2FF;
+    --success: #16A34A;
+    --bg: #FFFFFF;
+    --surface: #F8FAFC;
+    --surface-2: #F1F5F9;
+    --border: #E5E7EB;
+    --text: #0F172A;
+    --text-muted: #475569;
+    --text-subtle: #64748B;
+    --ring: rgba(79, 70, 229, .35);
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, .05);
+    --shadow: 0 4px 16px rgba(15, 23, 42, .06);
+    --ease: cubic-bezier(.2, .8, .2, 1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --primary: #818CF8; --primary-hover: #A5B4FC; --primary-soft: #1E1B4B;
+      --success: #4ADE80;
+      --bg: #0B1120; --surface: #111827; --surface-2: #1F2937; --border: #1F2937;
+      --text: #F1F5F9; --text-muted: #CBD5E1; --text-subtle: #94A3B8;
+      --ring: rgba(129, 140, 248, .45);
+      --shadow-sm: none; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --primary: #818CF8; --primary-hover: #A5B4FC; --primary-soft: #1E1B4B;
+    --success: #4ADE80;
+    --bg: #0B1120; --surface: #111827; --surface-2: #1F2937; --border: #1F2937;
+    --text: #F1F5F9; --text-muted: #CBD5E1; --text-subtle: #94A3B8;
+    --ring: rgba(129, 140, 248, .45);
+    --shadow-sm: none; --shadow: none;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: "Outfit", system-ui, sans-serif;
+    font-size: 15px; line-height: 1.5;
+    color: var(--text); background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; }
+  a { color: inherit; text-decoration: none; }
+  svg.i { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 6px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- App shell ---------- */
+  .app { display: grid; grid-template-columns: 64px 240px 1fr; min-height: 100vh; }
+
+  .rail {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 16px 0; border-right: 1px solid var(--border); background: var(--bg);
+    position: sticky; top: 0; height: 100vh;
+  }
+  .logo { width: 36px; height: 36px; margin-bottom: 14px; }
+  .rail-btn {
+    width: 44px; height: 44px; display: grid; place-items: center;
+    border-radius: 10px; color: var(--text-muted);
+    transition: background .18s var(--ease), color .18s var(--ease);
+  }
+  .rail-btn:hover { background: var(--surface-2); color: var(--text); }
+  .rail-btn[aria-current="page"] { color: var(--text); background: var(--surface-2); }
+  .rail-btn.new { background: var(--primary); color: #fff; margin-bottom: 10px; }
+  .rail-btn.new:hover { background: var(--primary-hover); }
+  .rail .spacer { flex: 1; }
+
+  .panel {
+    border-right: 1px solid var(--border); background: var(--surface);
+    padding: 16px 12px; display: flex; flex-direction: column; gap: 4px;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+  .panel-head { display: flex; align-items: center; gap: 10px; padding: 6px 8px 12px; font-weight: 600; }
+  .chip { font-size: 12px; padding: 1px 7px; border-radius: 6px; background: var(--surface-2); color: var(--text-muted); font-weight: 500; }
+  .panel-head .muted { color: var(--text-muted); font-weight: 500; }
+  .search {
+    display: flex; align-items: center; gap: 8px; padding: 0 12px; height: 40px;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text-subtle);
+    margin-bottom: 10px;
+  }
+  .search input { border: 0; outline: 0; background: none; flex: 1; font: inherit; color: var(--text); min-width: 0; }
+  .search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px var(--ring); }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px;
+    color: var(--text-muted); font-size: 14px; width: 100%; text-align: left;
+    transition: background .15s var(--ease), color .15s var(--ease);
+  }
+  .nav-item:hover { background: var(--surface-2); color: var(--text); }
+  .nav-item[aria-current="true"] { background: var(--surface-2); color: var(--text); font-weight: 500; }
+  .nav-item span.t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .section-toggle {
+    display: flex; align-items: center; gap: 8px; width: 100%; padding: 14px 10px 6px;
+    font-weight: 600; font-size: 14px; border-top: 1px solid var(--border); margin-top: 8px;
+  }
+  .section-toggle .chev { margin-left: auto; transition: transform .2s var(--ease); color: var(--text-subtle); }
+  .section-toggle[aria-expanded="false"] .chev { transform: rotate(-90deg); }
+  .section-body[hidden] { display: none; }
+  .fav-ico { width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; color: #fff; font-size: 9px; font-weight: 700; flex: none; }
+  .dot { width: 9px; height: 9px; border-radius: 3px; flex: none; margin: 0 4px; }
+
+  .ai-card {
+    margin-top: auto; padding: 14px; border-radius: var(--radius); background: var(--bg);
+    border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+  }
+  .ai-card h3 { margin: 0 0 4px; font-size: 14px; }
+  .ai-card p { margin: 0 0 12px; font-size: 13px; color: var(--text-muted); }
+  .btn-soft {
+    display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px;
+    border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-size: 13px; font-weight: 500;
+    transition: background .15s var(--ease);
+  }
+  .btn-soft:hover { background: color-mix(in srgb, var(--primary) 18%, transparent); }
+
+  /* ---------- Main ---------- */
+  main { min-width: 0; display: flex; flex-direction: column; }
+  .topbar {
+    display: flex; align-items: center; gap: 12px; padding: 12px 24px;
+    border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5;
+    background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px);
+  }
+  .topbar .menu-btn { display: none; }
+  .crumbs { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); min-width: 0; overflow: hidden; }
+  .crumbs ol { display: flex; align-items: center; gap: 6px; list-style: none; margin: 0; padding: 0; min-width: 0; }
+  .crumbs li { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .crumbs a:hover { color: var(--text); }
+  .crumbs .current { padding: 3px 10px; border: 1px solid var(--border); border-radius: 999px; color: var(--text); display: inline-flex; gap: 6px; align-items: center; }
+  .crumbs svg.sep { width: 14px; height: 14px; color: var(--text-subtle); }
+  .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .avatars { display: flex; }
+  .avatars span {
+    width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--bg);
+    display: grid; place-items: center; font-size: 12px; font-weight: 600; color: #fff;
+  }
+  .avatars span + span { margin-left: -10px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px;
+    border-radius: 10px; font-weight: 500; font-size: 14px;
+    transition: background .15s var(--ease), border-color .15s var(--ease), transform .1s var(--ease);
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-outline { border: 1px solid var(--border); background: var(--bg); }
+  .btn-outline:hover { background: var(--surface); }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-icon { width: 40px; padding: 0; justify-content: center; }
+  .btn-icon[aria-pressed="true"] { color: var(--primary); border-color: var(--primary); }
+  .btn-icon[aria-pressed="true"] svg { fill: currentColor; }
+
+  .content { padding: 24px; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px 28px; max-width: 1280px; width: 100%; }
+  .title-row { grid-column: 1 / -1; display: flex; align-items: flex-start; gap: 16px; }
+  .title-row h1 { margin: 0; font-size: clamp(22px, 2.4vw, 28px); line-height: 1.25; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; font-size: 13px; color: var(--text-muted); }
+  .meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .meta svg.i { width: 15px; height: 15px; }
+  .title-row .actions { margin-left: auto; display: flex; gap: 10px; flex: none; }
+
+  /* Video */
+  .player {
+    position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius-lg); overflow: hidden;
+    background: radial-gradient(120% 90% at 30% 20%, #FDE7C8 0%, #E9D5B7 35%, #8B7355 100%);
+  }
+  .poster { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .player::after { content: ""; position: absolute; inset: 55% 0 0 0; background: linear-gradient(transparent, rgba(0,0,0,.55)); pointer-events: none; }
+  .big-play {
+    position: absolute; inset: 0; margin: auto; width: 72px; height: 72px; border-radius: 50%; z-index: 2;
+    background: rgba(255,255,255,.92); color: #111; display: grid; place-items: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,.25); transition: transform .2s var(--ease), opacity .2s var(--ease);
+  }
+  .big-play:hover { transform: scale(1.06); }
+  .player.playing .big-play { opacity: 0; pointer-events: none; transform: scale(.9); }
+  .controls { position: absolute; left: 16px; right: 16px; bottom: 12px; z-index: 2; color: #fff; }
+  .scrub { -webkit-appearance: none; appearance: none; width: 100%; height: 20px; background: transparent; cursor: pointer; margin: 0; }
+  .scrub::-webkit-slider-runnable-track { height: 4px; border-radius: 4px; background: linear-gradient(to right, #fff var(--p, 0%), rgba(255,255,255,.35) var(--p, 0%)); }
+  .scrub::-moz-range-track { height: 4px; border-radius: 4px; background: linear-gradient(to right, #fff var(--p, 0%), rgba(255,255,255,.35) var(--p, 0%)); }
+  .scrub::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; margin-top: -5px; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+  .scrub::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: #fff; }
+  .ctrl-row { display: flex; align-items: center; gap: 8px; }
+  .ctrl-row button { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px; color: #fff; }
+  .ctrl-row button:hover { background: rgba(255,255,255,.15); }
+  .ctrl-row .time { font-size: 12px; font-variant-numeric: tabular-nums; opacity: .9; }
+  .ctrl-row .speed { width: auto; padding: 0 8px; height: 26px; font-size: 12px; font-weight: 600; background: rgba(0,0,0,.35); border-radius: 6px; }
+  .ctrl-row .grow { flex: 1; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-top: 16px; overflow-x: auto; scrollbar-width: none; }
+  .tab {
+    display: inline-flex; align-items: center; gap: 6px; padding: 10px 12px; font-size: 14px; color: var(--text-muted);
+    border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color .15s var(--ease);
+  }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] { color: var(--primary); border-bottom-color: var(--primary); font-weight: 500; }
+  .tab svg.i { width: 16px; height: 16px; }
+  .tabpanel { padding-top: 20px; animation: fade .25s var(--ease); }
+  .tabpanel h2 { font-size: 17px; font-weight: 600; margin: 0 0 8px; }
+  .tabpanel p { color: var(--text-muted); margin: 0; max-width: 68ch; }
+  .tabpanel strong { color: var(--text); font-weight: 600; }
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+  .concepts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+  .concept {
+    display: flex; gap: 14px; align-items: flex-start; padding: 16px; border-radius: var(--radius);
+    border: 1px solid var(--border); background: var(--surface); font-size: 14px; color: var(--text-muted);
+  }
+  .concept svg.i { color: var(--success); margin-top: 2px; }
+  .file-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; }
+  .file-row .ext { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); font-size: 11px; font-weight: 700; }
+  .file-row small { display: block; color: var(--text-subtle); }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* Right column */
+  aside.side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .card { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg); box-shadow: var(--shadow-sm); }
+  .progress-card { display: flex; gap: 16px; align-items: center; padding: 18px; }
+  .progress-card h2 { margin: 0 0 2px; font-size: 17px; font-weight: 600; }
+  .progress-card p { margin: 0; color: var(--text-muted); font-size: 13px; }
+  .ring { --size: 64px; --stroke: 7; position: relative; width: var(--size); height: var(--size); flex: none; }
+  .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke-width: var(--stroke); }
+  .ring .track { stroke: var(--surface-2); }
+  .ring .bar { stroke: var(--success); stroke-linecap: round; transition: stroke-dashoffset .6s var(--ease); }
+  .ring .label { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 600; font-size: 14px; }
+
+  .side h2.list-title { font-size: 17px; font-weight: 600; margin: 8px 0 0; }
+  .lessons { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .lesson {
+    width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px 16px; text-align: left;
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg);
+    transition: border-color .15s var(--ease), box-shadow .15s var(--ease), background .15s var(--ease);
+  }
+  .lesson:hover { border-color: color-mix(in srgb, var(--primary) 40%, var(--border)); }
+  .lesson[aria-current="true"] { border-color: var(--primary); box-shadow: 0 0 0 3px var(--ring); }
+  .lesson .num { font-size: 12px; color: var(--text-subtle); width: 14px; text-align: center; font-variant-numeric: tabular-nums; }
+  .lesson .body { flex: 1; min-width: 0; }
+  .lesson .name { font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+  .lesson .dur { font-size: 12px; color: var(--text-subtle); }
+  .lesson .ring { --size: 36px; --stroke: 4; }
+  .lesson .ring .bar { stroke: var(--primary); }
+  .lesson .ring .label { font-size: 9px; }
+  .tag-quiz { font-size: 10px; padding: 1px 6px; border-radius: 4px; background: #FEF3C7; color: #92400E; font-weight: 600; }
+
+  .scrim { display: none; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1180px) {
+    .content { grid-template-columns: minmax(0, 1fr) 300px; }
+  }
+  @media (max-width: 1024px) {
+    .app { grid-template-columns: 64px minmax(0, 1fr); }
+    .panel {
+      position: fixed; left: 64px; top: 0; z-index: 30; width: 260px;
+      transform: translateX(calc(-100% - 64px)); transition: transform .25s var(--ease); box-shadow: var(--shadow);
+    }
+    .app.panel-open .panel { transform: none; }
+    .app.panel-open .scrim { display: block; position: fixed; inset: 0; z-index: 20; background: rgba(15,23,42,.35); }
+    .topbar .menu-btn { display: inline-flex; }
+  }
+  @media (max-width: 860px) {
+    .content { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .app { grid-template-columns: minmax(0, 1fr); }
+    .rail { display: none; }
+    .panel { left: 0; transform: translateX(-100%); }
+    .topbar { padding: 10px 16px; }
+    .crumbs li:not(:last-child) { display: none; }
+    .avatars, .btn-invite-label { display: none; }
+    .content { padding: 16px; }
+    .title-row { flex-wrap: wrap; }
+    .title-row .actions { margin-left: 0; }
+    .concepts { grid-template-columns: 1fr; }
+    .ctrl-row .vol { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Icon sprite (Lucide-style strokes) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="book-open" viewBox="0 0 24 24"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></symbol>
+  <symbol id="book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+  <symbol id="file-text" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></symbol>
+  <symbol id="calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></symbol>
+  <symbol id="user-square" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-1a5 5 0 0 1 10 0v1"/></symbol>
+  <symbol id="settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></symbol>
+  <symbol id="download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 21h14"/></symbol>
+  <symbol id="chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="arrow-right" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+  <symbol id="folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="atom" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></symbol>
+  <symbol id="signal" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 15v-2M12 15v-5M16 15V8"/></symbol>
+  <symbol id="bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></symbol>
+  <symbol id="play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z" fill="currentColor"/></symbol>
+  <symbol id="pause" viewBox="0 0 24 24"><path d="M7 4h3v16H7zM14 4h3v16h-3z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="volume" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></symbol>
+  <symbol id="maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+  <symbol id="user-plus" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 12 0v1M19 8v6M16 11h6"/></symbol>
+</svg>
+
+<div class="app" id="app">
+  <!-- Icon rail -->
+  <nav class="rail" aria-label="Primary">
+    <svg class="logo" viewBox="0 0 36 36" aria-label="Demia">
+      <path d="M18 2 32 10v16l-14 8-14-8V10z" fill="#2DD4BF"/>
+      <path d="M12 15a6 6 0 0 1 12 0v6H12z" fill="#fff"/>
+    </svg>
+    <button class="rail-btn new" aria-label="New course"><svg class="i"><use href="#plus"/></svg></button>
+    <a class="rail-btn" href="#" aria-label="Home"><svg class="i"><use href="#home"/></svg></a>
+    <a class="rail-btn" href="#" aria-label="Courses" aria-current="page"><svg class="i"><use href="#book-open"/></svg></a>
+    <a class="rail-btn" href="#" aria-label="Library"><svg class="i"><use href="#book"/></svg></a>
+    <a class="rail-btn" href="#" aria-label="Notes"><svg class="i"><use href="#file-text"/></svg></a>
+    <a class="rail-btn" href="#" aria-label="Calendar"><svg class="i"><use href="#calendar"/></svg></a>
+    <a class="rail-btn" href="#" aria-label="Profile"><svg class="i"><use href="#user-square"/></svg></a>
+    <div class="spacer"></div>
+    <a class="rail-btn" href="#" aria-label="Settings"><svg class="i"><use href="#settings"/></svg></a>
+    <a class="rail-btn" href="#" aria-label="Apps"><svg class="i"><use href="#grid"/></svg></a>
+    <a class="rail-btn" href="#" aria-label="Help"><svg class="i"><use href="#help"/></svg></a>
+  </nav>
+
+  <!-- Secondary panel -->
+  <aside class="panel" id="panel" aria-label="Courses navigation">
+    <div class="panel-head">Courses <span class="muted">All</span> <span class="chip">11</span></div>
+    <label class="search">
+      <svg class="i"><use href="#search"/></svg>
+      <span class="sr-only">Search courses</span>
+      <input type="search" placeholder="Search..." id="courseSearch">
+    </label>
+
+    <a class="nav-item" href="#"><svg class="i"><use href="#clock"/></svg><span class="t">Recents</span></a>
+    <a class="nav-item" href="#"><svg class="i"><use href="#share"/></svg><span class="t">Shared with you</span></a>
+    <a class="nav-item" href="#"><svg class="i"><use href="#download"/></svg><span class="t">Downloads</span></a>
+
+    <button class="section-toggle" aria-expanded="true" aria-controls="favs">Favorites <span class="chip">7</span><svg class="i chev"><use href="#chevron-down"/></svg></button>
+    <div class="section-body filterable" id="favs">
+      <a class="nav-item" href="#" aria-current="true"><span class="fav-ico" style="background:#0EA5E9"><svg class="i" style="width:12px;height:12px"><use href="#atom"/></svg></span><span class="t">React Basics</span></a>
+      <a class="nav-item" href="#"><span class="fav-ico" style="background:#A855F7">Py</span><span class="t">Python Essentials</span></a>
+      <a class="nav-item" href="#"><span class="fav-ico" style="background:#0D9488">DS</span><span class="t">Data Structures Cheatsheet</span></a>
+      <a class="nav-item" href="#"><span class="fav-ico" style="background:#4F46E5">F</span><span class="t">Figma UI Wireframing Kit</span></a>
+    </div>
+
+    <button class="section-toggle" aria-expanded="true" aria-controls="projects">Projects <span class="chip">4</span><svg class="i chev"><use href="#chevron-down"/></svg></button>
+    <div class="section-body filterable" id="projects">
+      <a class="nav-item" href="#"><span class="dot" style="background:#E11D48"></span><span class="t">Full-Stack API Project</span></a>
+      <a class="nav-item" href="#"><span class="dot" style="background:#06B6D4"></span><span class="t">React Dashboard Build</span></a>
+      <a class="nav-item" href="#"><span class="dot" style="background:#F97316"></span><span class="t">UI Design Starter Kit</span></a>
+      <a class="nav-item" href="#"><span class="dot" style="background:#059669"></span><span class="t">Machine Learning Mini-Project</span></a>
+    </div>
+
+    <div class="ai-card">
+      <h3>Use Buddy AI</h3>
+      <p>Use AI to generate summaries, or help debug your code.</p>
+      <button class="btn-soft">Try now <svg class="i" style="width:14px;height:14px"><use href="#arrow-right"/></svg></button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- Main -->
+  <main>
+    <header class="topbar">
+      <button class="btn btn-outline btn-icon menu-btn" id="menuBtn" aria-label="Open courses menu" aria-controls="panel" aria-expanded="false"><svg class="i"><use href="#menu"/></svg></button>
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <ol>
+          <li><svg class="i" style="width:15px;height:15px"><use href="#folder"/></svg><a href="#">Courses</a><svg class="i sep"><use href="#chevron-right"/></svg></li>
+          <li><a href="#">Frontend Development</a><svg class="i sep"><use href="#chevron-right"/></svg></li>
+          <li><span class="current" aria-current="page"><svg class="i" style="width:14px;height:14px"><use href="#atom"/></svg>React for beginners</span></li>
+        </ol>
+      </nav>
+      <div class="right">
+        <div class="avatars" aria-label="2 collaborators">
+          <span style="background:#B45309">JK</span>
+          <span style="background:#7C3AED">MA</span>
+        </div>
+        <button class="btn btn-outline"><svg class="i"><use href="#user-plus"/></svg><span class="btn-invite-label">Invite</span></button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="title-row">
+        <div>
+          <h1>React for Beginners – Build your first web app</h1>
+          <div class="meta">
+            <span><svg class="i"><use href="#signal"/></svg>Beginner</span>
+            <span><svg class="i"><use href="#book-open"/></svg>12 Lessons</span>
+            <span><svg class="i"><use href="#clock"/></svg>3h 45min</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-outline btn-icon" id="bookmarkBtn" aria-label="Bookmark course" aria-pressed="false"><svg class="i"><use href="#bookmark"/></svg></button>
+          <button class="btn btn-primary" id="shareBtn"><svg class="i"><use href="#share"/></svg>Share</button>
+        </div>
+      </div>
+
+      <!-- Left column -->
+      <section aria-labelledby="lessonTitle">
+        <h2 id="lessonTitle" class="sr-only">Current lesson</h2>
+        <div class="player" id="player">
+          <!-- Illustrated poster: instructor in a cosy room -->
+          <svg class="poster" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <rect width="640" height="360" fill="#EADBC6"/>
+            <rect x="0" y="0" width="150" height="360" fill="#F6EBDC"/>
+            <rect x="20" y="20" width="110" height="200" rx="4" fill="#FFF8EE" opacity=".8"/>
+            <rect x="470" y="70" width="170" height="8" fill="#B08968"/>
+            <rect x="470" y="150" width="170" height="8" fill="#B08968"/>
+            <rect x="490" y="40" width="30" height="30" rx="4" fill="#6B8F71"/>
+            <circle cx="505" cy="34" r="16" fill="#7FA77F"/>
+            <rect x="540" y="50" width="16" height="20" fill="#C9B79C"/><rect x="560" y="44" width="14" height="26" fill="#A68A64"/>
+            <rect x="585" y="120" width="30" height="30" rx="4" fill="#D4A373"/>
+            <circle cx="600" cy="110" r="18" fill="#6B8F71"/>
+            <ellipse cx="320" cy="400" rx="170" ry="130" fill="#3B5B7D"/>
+            <rect x="300" y="220" width="40" height="40" fill="#D9A47E"/>
+            <ellipse cx="320" cy="170" rx="58" ry="68" fill="#E8B48F"/>
+            <path d="M262 150c0-50 30-72 58-72s58 22 58 72c-10-22-30-32-58-32s-48 10-58 32z" fill="#6B4A32"/>
+            <path d="M268 190c10 40 30 55 52 55s42-15 52-55c-6 30-26 44-52 44s-46-14-52-44z" fill="#7A5638" opacity=".6"/>
+            <path d="M252 168a68 68 0 0 1 136 0" fill="none" stroke="#222" stroke-width="9"/>
+            <rect x="240" y="155" width="22" height="40" rx="10" fill="#2B2B2B"/>
+            <rect x="378" y="155" width="22" height="40" rx="10" fill="#2B2B2B"/>
+            <path d="M300 200q20 14 40 0" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <circle cx="300" cy="168" r="4" fill="#3A2A1C"/><circle cx="340" cy="168" r="4" fill="#3A2A1C"/>
+          </svg>
+          <button class="big-play" id="bigPlay" aria-label="Play lesson"><svg class="i" style="width:28px;height:28px;margin-left:4px"><use href="#play"/></svg></button>
+          <div class="controls">
+            <label class="sr-only" for="scrub">Seek</label>
+            <input class="scrub" id="scrub" type="range" min="0" max="662" value="0" step="1">
+            <div class="ctrl-row">
+              <button id="playBtn" aria-label="Play"><svg class="i"><use href="#play"/></svg></button>
+              <span class="time" id="time">0:00 / 11:02</span>
+              <span class="grow"></span>
+              <button class="speed" id="speedBtn" aria-label="Playback speed">1.0x</button>
+              <button class="vol" aria-label="Mute"><svg class="i"><use href="#volume"/></svg></button>
+              <button aria-label="Fullscreen" id="fsBtn"><svg class="i"><use href="#maximize"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Lesson details">
+          <button class="tab" role="tab" aria-selected="true" aria-controls="p-summary" id="t-summary"><svg class="i"><use href="#grid"/></svg>Summary</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="p-files" id="t-files" tabindex="-1"><svg class="i"><use href="#file-text"/></svg>Files</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="p-resources" id="t-resources" tabindex="-1"><svg class="i"><use href="#link"/></svg>Resources</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="p-qa" id="t-qa" tabindex="-1"><svg class="i"><use href="#message"/></svg>Q&amp;A</button>
+        </div>
+
+        <div class="tabpanel" role="tabpanel" id="p-summary" aria-labelledby="t-summary">
+          <h2>Lesson Recap</h2>
+          <p>In this lesson, we explored the fundamental building blocks of React: <strong>Components.</strong> We learned that components are independent and reusable bits of code. They serve the same purpose as JavaScript functions but work in isolation and return HTML.</p>
+          <div class="divider"></div>
+          <h2>Key Concepts</h2>
+          <div class="concepts">
+            <div class="concept"><svg class="i"><use href="#check"/></svg>How to create and export a functional component</div>
+            <div class="concept"><svg class="i"><use href="#check"/></svg>Understanding JSX (JavaScript XML) syntax rules</div>
+            <div class="concept"><svg class="i"><use href="#check"/></svg>Common errors beginners face (e.g., adjacent JSX elements)</div>
+            <div class="concept"><svg class="i"><use href="#check"/></svg>Rendering components inside other components</div>
+          </div>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="p-files" aria-labelledby="t-files" hidden>
+          <div class="file-row"><span class="ext">ZIP</span><div><strong>starter-code.zip</strong><small>1.2 MB</small></div><button class="btn btn-outline btn-icon" style="margin-left:auto" aria-label="Download starter-code.zip"><svg class="i"><use href="#download"/></svg></button></div>
+          <div class="file-row"><span class="ext">PDF</span><div><strong>components-cheatsheet.pdf</strong><small>340 KB</small></div><button class="btn btn-outline btn-icon" style="margin-left:auto" aria-label="Download components-cheatsheet.pdf"><svg class="i"><use href="#download"/></svg></button></div>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="p-resources" aria-labelledby="t-resources" hidden>
+          <h2>Further reading</h2>
+          <p>React docs: “Your First Component”, “Importing and Exporting Components”, and “Writing Markup with JSX”.</p>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="p-qa" aria-labelledby="t-qa" hidden>
+          <h2>No questions yet</h2>
+          <p>Be the first to ask something about this lesson.</p>
+        </div>
+      </section>
+
+      <!-- Right column -->
+      <aside class="side" aria-label="Course progress">
+        <div class="card progress-card">
+          <div class="ring" id="courseRing" data-value="75"></div>
+          <div>
+            <h2>Study Progress</h2>
+            <p>Track your learning milestones and where you left off.</p>
+          </div>
+        </div>
+        <h2 class="list-title">Course Content</h2>
+        <ol class="lessons" id="lessons"></ol>
+      </aside>
+    </div>
+  </main>
+</div>
+
+<script>
+  const lessons = [
+    { title: "Introduction to React", dur: "5:12", p: 100 },
+    { title: "How React Works", dur: "8:24", p: 100 },
+    { title: "What is a Component?", dur: "11:02", p: 75 },
+    { title: "JSX Basics & Syntax", dur: "14:32", p: 0 },
+    { title: "Quiz – Module Fundamentals", dur: "17:56", p: 0, quiz: true },
+    { title: "Reusable Components", dur: "23:12", p: 0 },
+    { title: "Props in React", dur: "31:02", p: 0 },
+  ];
+  let current = 2;
+
+  function ring(el, value) {
+    const r = 15.5, c = 2 * Math.PI * r;
+    el.innerHTML = `<svg viewBox="0 0 36 36" aria-hidden="true"><circle class="track" cx="18" cy="18" r="${r}"/><circle class="bar" cx="18" cy="18" r="${r}" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - value / 100)}"/></svg><span class="label">${value}%</span>`;
+    el.setAttribute("role", "img");
+    el.setAttribute("aria-label", `${value}% complete`);
+  }
+
+  const list = document.getElementById("lessons");
+  function renderLessons() {
+    list.innerHTML = lessons.map((l, i) => `
+      <li><button class="lesson" data-i="${i}" ${i === current ? 'aria-current="true"' : ""}>
+        <span class="num">${i + 1}</span>
+        <span class="body"><span class="name">${l.title}${l.quiz ? ' <span class="tag-quiz">QUIZ</span>' : ""}</span><span class="dur">${l.dur}</span></span>
+        <span class="ring"></span>
+      </button></li>`).join("");
+    list.querySelectorAll(".lesson").forEach((b, i) => ring(b.querySelector(".ring"), lessons[i].p));
+    ring(document.getElementById("courseRing"), +document.getElementById("courseRing").dataset.value);
+  }
+  list.addEventListener("click", e => {
+    const b = e.target.closest(".lesson"); if (!b) return;
+    current = +b.dataset.i;
+    const [m, s] = lessons[current].dur.split(":").map(Number);
+    duration = m * 60 + s; scrub.max = duration;
+    t = Math.round(duration * lessons[current].p / 100) % duration;
+    setPlaying(false); renderLessons(); updateTime();
+  });
+
+  /* Fake video player */
+  const player = document.getElementById("player"), scrub = document.getElementById("scrub");
+  const playBtn = document.getElementById("playBtn"), timeEl = document.getElementById("time");
+  let duration = 662, t = Math.round(662 * .75), timer = null;
+  const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  function updateTime() {
+    scrub.value = t; scrub.style.setProperty("--p", (t / duration * 100) + "%");
+    timeEl.textContent = `${fmt(t)} / ${fmt(duration)}`;
+  }
+  let speed = 1;
+  function setPlaying(on) {
+    clearInterval(timer);
+    player.classList.toggle("playing", on);
+    playBtn.innerHTML = `<svg class="i"><use href="#${on ? "pause" : "play"}"/></svg>`;
+    playBtn.setAttribute("aria-label", on ? "Pause" : "Play");
+    if (on) timer = setInterval(() => {
+      t = Math.min(duration, t + speed);
+      const pct = Math.round(t / duration * 100);
+      if (pct > lessons[current].p) { lessons[current].p = pct; renderLessons(); }
+      updateTime(); if (t >= duration) setPlaying(false);
+    }, 1000);
+  }
+  playBtn.onclick = () => setPlaying(!player.classList.contains("playing"));
+  document.getElementById("bigPlay").onclick = () => setPlaying(true);
+  scrub.oninput = () => { t = +scrub.value; updateTime(); };
+  document.getElementById("speedBtn").onclick = e => {
+    speed = speed >= 2 ? 1 : speed + .5; e.currentTarget.textContent = speed.toFixed(1) + "x";
+    if (player.classList.contains("playing")) setPlaying(true);
+  };
+  document.getElementById("fsBtn").onclick = () => document.fullscreenElement ? document.exitFullscreen() : player.requestFullscreen?.();
+
+  /* Tabs with arrow-key support */
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  function selectTab(tab) {
+    tabs.forEach(t => {
+      const on = t === tab;
+      t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+    tab.focus();
+  }
+  tabs.forEach((t, i) => {
+    t.onclick = () => selectTab(t);
+    t.onkeydown = e => {
+      if (e.key === "ArrowRight") selectTab(tabs[(i + 1) % tabs.length]);
+      if (e.key === "ArrowLeft") selectTab(tabs[(i - 1 + tabs.length) % tabs.length]);
+    };
+  });
+
+  /* Sidebar sections, search, mobile drawer */
+  document.querySelectorAll(".section-toggle").forEach(b => b.onclick = () => {
+    const open = b.getAttribute("aria-expanded") === "true";
+    b.setAttribute("aria-expanded", !open);
+    document.getElementById(b.getAttribute("aria-controls")).hidden = open;
+  });
+  document.getElementById("courseSearch").oninput = e => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll(".filterable .nav-item").forEach(a => a.hidden = !a.textContent.toLowerCase().includes(q));
+  };
+  const app = document.getElementById("app"), menuBtn = document.getElementById("menuBtn");
+  const setPanel = open => { app.classList.toggle("panel-open", open); menuBtn.setAttribute("aria-expanded", open); };
+  menuBtn.onclick = () => setPanel(!app.classList.contains("panel-open"));
+  document.getElementById("scrim").onclick = () => setPanel(false);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") setPanel(false); });
+
+  const bm = document.getElementById("bookmarkBtn");
+  bm.onclick = () => bm.setAttribute("aria-pressed", bm.getAttribute("aria-pressed") !== "true");
+  document.getElementById("shareBtn").onclick = async e => {
+    const btn = e.currentTarget, label = btn.innerHTML;
+    try { await navigator.clipboard.writeText(location.href); } catch {}
+    btn.innerHTML = '<svg class="i"><use href="#check"/></svg>Link copied';
+    setTimeout(() => btn.innerHTML = label, 1600);
+  };
+
+  renderLessons(); updateTime();
+</script>
+</body>
+</html>

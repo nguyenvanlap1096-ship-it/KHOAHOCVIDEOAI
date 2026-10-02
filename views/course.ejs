@@ -1,0 +1,53 @@
+<%- include('partials/top', { crumbs: [{ label: 'Khóa học', href: '/' }, ...(course.category ? [{ label: course.category, href: '/?q=' + encodeURIComponent(course.category) }] : []), { label: course.title }] }) %>
+<div class="page">
+  <section class="course-hero" style="--c:<%= course.color %>">
+    <div class="course-hero-text">
+      <% if (!Number(course.published)) { %><span class="badge badge-warn">Bản nháp – chỉ admin thấy</span><% } %>
+      <h1><%= course.title %></h1>
+      <p><%= course.description %></p>
+      <div class="meta">
+        <span><svg class="i"><use href="#i-signal"/></svg><%= course.level %></span>
+        <span><svg class="i"><use href="#i-book-open"/></svg><%= lessons.length %> bài học</span>
+        <% if (totalSec) { %><span><svg class="i"><use href="#i-clock"/></svg><%= h.fmtTotal(totalSec) %></span><% } %>
+      </div>
+      <div class="actions">
+        <% if (!lessons.length) { %>
+          <span class="muted">Khóa học đang được cập nhật bài học.</span>
+        <% } else if (!user) { %>
+          <a class="btn btn-primary btn-lg" href="/login?next=<%= encodeURIComponent('/learn/' + course.slug) %>"><svg class="i"><use href="#i-play"/></svg>Đăng nhập để học</a>
+          <a class="btn btn-outline btn-lg" href="/register?next=<%= encodeURIComponent('/learn/' + course.slug) %>">Tạo tài khoản miễn phí</a>
+        <% } else { %>
+          <a class="btn btn-primary btn-lg" href="/learn/<%= course.slug %>/<%= resume.id %>"><svg class="i"><use href="#i-play"/></svg><%= started ? 'Tiếp tục học' : 'Bắt đầu học' %></a>
+          <button class="btn btn-outline btn-lg" type="button" data-bookmark="<%= course.id %>" aria-pressed="<%= bookmarked %>">
+            <svg class="i"><use href="#i-bookmark"/></svg><span data-bookmark-label><%= bookmarked ? 'Đã lưu' : 'Lưu khóa học' %></span>
+          </button>
+        <% } %>
+      </div>
+    </div>
+    <% if (user && started) { %>
+      <div class="card progress-card">
+        <%- include('partials/ring', { value: percent, cls: 'ring-lg ring-success' }) %>
+        <div><h2>Tiến độ của bạn</h2><p>Đã hoàn thành <%= lessons.filter(l => l.completed).length %>/<%= lessons.length %> bài học.</p></div>
+      </div>
+    <% } %>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Nội dung khóa học</h2>
+    <ol class="lessons lessons-wide">
+      <% lessons.forEach((l, i) => { %>
+        <li>
+          <a class="lesson" href="<%= user ? `/learn/${course.slug}/${l.id}` : '/login?next=' + encodeURIComponent(`/learn/${course.slug}/${l.id}`) %>">
+            <span class="num"><%= i + 1 %></span>
+            <span class="body">
+              <span class="name"><%= l.title %></span>
+              <span class="dur"><%= [l.duration_sec ? h.fmtDuration(l.duration_sec) : '', l.video_type === 'none' ? 'Bài đọc' : 'Video'].filter(Boolean).join(' · ') %></span>
+            </span>
+            <% if (user) { %><%- include('partials/ring', { value: l.percent, cls: 'ring-sm' }) %><% } else { %><svg class="i muted"><use href="#i-play"/></svg><% } %>
+          </a>
+        </li>
+      <% }) %>
+    </ol>
+  </section>
+</div>
+<%- include('partials/bottom') %>

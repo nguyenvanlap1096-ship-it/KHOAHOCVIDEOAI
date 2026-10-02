@@ -1,0 +1,21 @@
+<article class="course-card">
+  <a class="cover" href="/courses/<%= course.slug %>" style="--c:<%= course.color %>" tabindex="-1" aria-hidden="true">
+    <span class="cover-letter"><%= course.title.trim()[0] %></span>
+    <% if (course.category) { %><span class="cover-tag"><%= course.category %></span><% } %>
+  </a>
+  <div class="course-body">
+    <h3><a href="/courses/<%= course.slug %>"><%= course.title %></a></h3>
+    <p class="course-desc"><%= course.description %></p>
+    <div class="meta">
+      <span><svg class="i"><use href="#i-signal"/></svg><%= course.level %></span>
+      <span><svg class="i"><use href="#i-book-open"/></svg><%= course.lesson_count %> bài</span>
+      <% if (course.total_sec) { %><span><svg class="i"><use href="#i-clock"/></svg><%= h.fmtTotal(course.total_sec) %></span><% } %>
+    </div>
+    <% if (course.started) { %>
+      <div class="bar-progress" role="progressbar" aria-label="Tiến độ" aria-valuenow="<%= course.percent %>" aria-valuemin="0" aria-valuemax="100">
+        <span style="width:<%= course.percent %>%"></span>
+      </div>
+      <div class="bar-caption"><%= course.percent >= 100 ? 'Đã hoàn thành' : `Đã học ${course.percent}%` %></div>
+    <% } %>
+  </div>
+</article>

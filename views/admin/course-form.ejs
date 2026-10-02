@@ -1,0 +1,57 @@
+<%- include('../partials/top', { crumbs: [{ label: 'Quản trị', href: '/admin' }, { label: 'Khóa học', href: '/admin/courses' }, { label: course ? 'Sửa' : 'Thêm mới' }] }) %>
+<%
+  const err = name => errors[name] ? `<p class="field-error" id="${name}-msg">${errors[name]}</p>` : '';
+  const aria = name => errors[name] ? `aria-invalid="true" aria-describedby="${name}-msg"` : '';
+%>
+<div class="page page-narrow">
+  <h1 class="page-title"><%= course ? 'Sửa khóa học' : 'Thêm khóa học' %></h1>
+  <form method="post" action="<%= course ? `/admin/courses/${course.id}` : '/admin/courses' %>" class="form card form-card" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+    <div class="field <%= errors.title ? 'has-error' : '' %>">
+      <label for="title">Tên khóa học <span class="req" aria-hidden="true">*</span></label>
+      <input id="title" name="title" required maxlength="200" value="<%= values.title || '' %>" <%- aria('title') %> data-slug-source>
+      <%- err('title') %>
+    </div>
+
+    <div class="field <%= errors.slug ? 'has-error' : '' %>">
+      <label for="slug">Đường dẫn (slug)</label>
+      <div class="input-prefix"><span>/courses/</span><input id="slug" name="slug" maxlength="120" value="<%= values.slug || '' %>" <%- aria('slug') %> data-slug-target placeholder="tu-dong-tao-tu-ten"></div>
+      <% if (errors.slug) { %><%- err('slug') %><% } else { %><p class="field-hint">Để trống để tự tạo từ tên khóa học.</p><% } %>
+    </div>
+
+    <div class="field">
+      <label for="description">Mô tả ngắn</label>
+      <textarea id="description" name="description" rows="3"><%= values.description || '' %></textarea>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="category">Chủ đề</label>
+        <input id="category" name="category" maxlength="80" value="<%= values.category || '' %>" placeholder="VD: Frontend">
+      </div>
+      <div class="field">
+        <label for="level">Trình độ</label>
+        <select id="level" name="level">
+          <% h.LEVELS.forEach(lv => { %><option <%= values.level === lv ? 'selected' : '' %>><%= lv %></option><% }) %>
+        </select>
+      </div>
+      <div class="field field-color">
+        <label for="color">Màu chủ đạo</label>
+        <input id="color" name="color" type="color" value="<%= values.color || '#4F46E5' %>">
+      </div>
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" name="published" value="1" <%= Number(values.published) ? 'checked' : '' %>>
+      <span class="switch-ui" aria-hidden="true"></span>
+      <span><strong>Xuất bản</strong><small class="d-block muted">Học viên chỉ thấy khóa học đã xuất bản.</small></span>
+    </label>
+
+    <div class="form-actions">
+      <a class="btn btn-ghost" href="/admin/courses">Hủy</a>
+      <button class="btn btn-primary" type="submit" data-loading-text="Đang lưu..."><%= course ? 'Lưu thay đổi' : 'Tạo khóa học' %></button>
+    </div>
+  </form>
+</div>
+<%- include('../partials/bottom', { scripts: ['/js/admin.js'] }) %>

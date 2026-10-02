@@ -1,0 +1,55 @@
+<aside class="panel" id="panel" aria-label="Menu khóa học">
+  <div class="panel-head"><%= siteName %> <span class="muted">Học trực tuyến</span></div>
+  <form class="search" action="/" method="get" role="search">
+    <svg class="i"><use href="#i-search"/></svg>
+    <label for="panelSearch" class="sr-only">Tìm khóa học</label>
+    <input type="search" id="panelSearch" name="q" placeholder="Tìm khóa học..." value="<%= locals.q || '' %>">
+  </form>
+
+  <a class="nav-item" href="/" <%- path === '/' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-grid"/></svg><span class="t">Tất cả khóa học</span></a>
+  <a class="nav-item" href="/my" <%- path === '/my' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-clock"/></svg><span class="t">Đang học</span></a>
+  <a class="nav-item" href="/my#saved"><svg class="i"><use href="#i-bookmark"/></svg><span class="t">Đã lưu</span></a>
+
+  <% if (user && user.role === 'admin') { %>
+    <button class="section-toggle" type="button" aria-expanded="true" aria-controls="sec-admin">Quản trị<svg class="i chev"><use href="#i-chevron-down"/></svg></button>
+    <div class="section-body" id="sec-admin">
+      <a class="nav-item" href="/admin" <%- locals.adminNav === 'dashboard' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-shield"/></svg><span class="t">Tổng quan</span></a>
+      <a class="nav-item" href="/admin/courses" <%- locals.adminNav === 'courses' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-layers"/></svg><span class="t">Khóa học &amp; bài học</span></a>
+      <a class="nav-item" href="/admin/users" <%- locals.adminNav === 'users' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-users"/></svg><span class="t">Người dùng</span></a>
+    </div>
+  <% } %>
+
+  <% if (sidebar.learning.length) { %>
+    <button class="section-toggle" type="button" aria-expanded="true" aria-controls="sec-learning">Đang học <span class="chip"><%= sidebar.learning.length %></span><svg class="i chev"><use href="#i-chevron-down"/></svg></button>
+    <div class="section-body" id="sec-learning">
+      <% sidebar.learning.forEach(c => { %>
+        <a class="nav-item" href="/learn/<%= c.slug %>"><span class="dot" style="background:<%= c.color %>"></span><span class="t"><%= c.title %></span></a>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (sidebar.saved.length) { %>
+    <button class="section-toggle" type="button" aria-expanded="true" aria-controls="sec-saved">Đã lưu <span class="chip"><%= sidebar.saved.length %></span><svg class="i chev"><use href="#i-chevron-down"/></svg></button>
+    <div class="section-body" id="sec-saved">
+      <% sidebar.saved.forEach(c => { %>
+        <a class="nav-item" href="/courses/<%= c.slug %>"><span class="fav-ico" style="background:<%= c.color %>"><%= c.title.trim()[0] %></span><span class="t"><%= c.title %></span></a>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <div class="promo-card">
+    <% if (!user) { %>
+      <h3>Học miễn phí</h3>
+      <p>Tạo tài khoản để lưu tiến độ và tiếp tục học trên mọi thiết bị.</p>
+      <a class="btn-soft" href="/register">Đăng ký ngay <svg class="i i-sm"><use href="#i-arrow-right"/></svg></a>
+    <% } else if (user.role === 'admin') { %>
+      <h3>Thêm nội dung mới</h3>
+      <p>Tạo khóa học, thêm video YouTube hoặc tự upload bài giảng.</p>
+      <a class="btn-soft" href="/admin/courses/new">Thêm khóa học <svg class="i i-sm"><use href="#i-arrow-right"/></svg></a>
+    <% } else { %>
+      <h3>Tiếp tục hành trình</h3>
+      <p>Mỗi ngày một bài học nhỏ sẽ tạo nên khác biệt lớn.</p>
+      <a class="btn-soft" href="/my">Khóa học của tôi <svg class="i i-sm"><use href="#i-arrow-right"/></svg></a>
+    <% } %>
+  </div>
+</aside>

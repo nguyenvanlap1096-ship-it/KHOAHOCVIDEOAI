@@ -1,0 +1,43 @@
+<%- include('../partials/top', { crumbs: [{ label: 'Quản trị', href: '/admin' }, { label: 'Khóa học' }] }) %>
+<div class="page">
+  <div class="page-head">
+    <h1 class="page-title">Khóa học <span class="chip"><%= courses.length %></span></h1>
+    <a class="btn btn-primary" href="/admin/courses/new"><svg class="i"><use href="#i-plus"/></svg>Thêm khóa học</a>
+  </div>
+
+  <% if (!courses.length) { %>
+    <div class="empty"><svg class="i"><use href="#i-layers"/></svg><h3>Chưa có khóa học nào</h3><p>Bắt đầu bằng việc <a href="/admin/courses/new">tạo khóa học đầu tiên</a>.</p></div>
+  <% } else { %>
+    <div class="table-wrap card">
+      <table class="table">
+        <thead><tr><th>Khóa học</th><th>Trình độ</th><th>Bài học</th><th>Trạng thái</th><th class="ta-right">Thao tác</th></tr></thead>
+        <tbody>
+          <% courses.forEach(c => { %>
+            <tr>
+              <td>
+                <span class="cell-user"><span class="fav-ico fav-lg" style="background:<%= c.color %>"><%= c.title.trim()[0] %></span>
+                  <span><strong><%= c.title %></strong><small class="muted d-block"><%= c.category || '—' %></small></span>
+                </span>
+              </td>
+              <td><%= c.level %></td>
+              <td><%= c.lesson_count %></td>
+              <td><span class="badge <%= Number(c.published) ? 'badge-success' : 'badge-warn' %>"><%= Number(c.published) ? 'Đã xuất bản' : 'Bản nháp' %></span></td>
+              <td>
+                <div class="row-actions">
+                  <a class="btn btn-sm btn-outline" href="/admin/courses/<%= c.id %>/lessons"><svg class="i"><use href="#i-video"/></svg>Bài học</a>
+                  <a class="btn btn-sm btn-outline btn-icon" href="/admin/courses/<%= c.id %>/edit" aria-label="Sửa <%= c.title %>"><svg class="i"><use href="#i-edit"/></svg></a>
+                  <a class="btn btn-sm btn-outline btn-icon" href="/courses/<%= c.slug %>" aria-label="Xem <%= c.title %>"><svg class="i"><use href="#i-eye"/></svg></a>
+                  <form method="post" action="/admin/courses/<%= c.id %>/delete" data-confirm="Xóa khóa học “<%= c.title %>” cùng toàn bộ bài học và tiến độ của học viên? Không thể hoàn tác.">
+                    <input type="hidden" name="_csrf" value="<%= csrf %>">
+                    <button class="btn btn-sm btn-outline btn-icon btn-danger" type="submit" aria-label="Xóa <%= c.title %>"><svg class="i"><use href="#i-trash"/></svg></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+<%- include('../partials/bottom') %>

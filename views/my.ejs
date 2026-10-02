@@ -1,0 +1,30 @@
+<%- include('partials/top', { crumbs: [{ label: 'Khóa học', href: '/' }, { label: 'Khóa học của tôi' }] }) %>
+<div class="page">
+  <h1 class="page-title">Khóa học của tôi</h1>
+
+  <section class="section" id="learning">
+    <h2 class="section-title">Đang học <span class="chip"><%= inProgress.length %></span></h2>
+    <% if (inProgress.length) { %>
+      <div class="course-grid"><% inProgress.forEach(c => { %><%- include('partials/course-card', { course: c }) %><% }) %></div>
+    <% } else { %>
+      <div class="empty"><svg class="i"><use href="#i-book-open"/></svg><h3>Bạn chưa bắt đầu khóa học nào</h3><p><a href="/">Khám phá khóa học</a> và bắt đầu bài học đầu tiên.</p></div>
+    <% } %>
+  </section>
+
+  <section class="section" id="saved">
+    <h2 class="section-title">Đã lưu <span class="chip"><%= saved.length %></span></h2>
+    <% if (saved.length) { %>
+      <div class="course-grid"><% saved.forEach(c => { %><%- include('partials/course-card', { course: c }) %><% }) %></div>
+    <% } else { %>
+      <p class="muted">Nhấn biểu tượng <svg class="i i-sm"><use href="#i-bookmark"/></svg> ở trang khóa học để lưu lại xem sau.</p>
+    <% } %>
+  </section>
+
+  <% if (completed.length) { %>
+    <section class="section">
+      <h2 class="section-title">Đã hoàn thành <span class="chip"><%= completed.length %></span></h2>
+      <div class="course-grid"><% completed.forEach(c => { %><%- include('partials/course-card', { course: c }) %><% }) %></div>
+    </section>
+  <% } %>
+</div>
+<%- include('partials/bottom') %>

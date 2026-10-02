@@ -1,0 +1,87 @@
+<%- include('../partials/top', { crumbs: [{ label: 'Quản trị', href: '/admin' }, { label: course.title, href: `/admin/courses/${course.id}/lessons` }, { label: lesson ? 'Sửa bài học' : 'Thêm bài học' }] }) %>
+<%
+  const err = name => errors[name] ? `<p class="field-error" id="${name}-msg">${errors[name]}</p>` : '';
+  const aria = name => errors[name] ? `aria-invalid="true" aria-describedby="${name}-msg"` : '';
+  const action = (lesson ? `/admin/lessons/${lesson.id}` : `/admin/courses/${course.id}/lessons`) + `?_csrf=${csrf}`;
+  const vt = values.video_type || 'youtube';
+  const hasUpload = lesson && lesson.video_type === 'upload' && lesson.video_ref;
+%>
+<div class="page page-narrow">
+  <h1 class="page-title"><%= lesson ? 'Sửa bài học' : 'Thêm bài học' %></h1>
+  <p class="muted"><%= course.title %></p>
+
+  <% if (Object.keys(errors).length) { %>
+    <div class="form-error" role="alert"><svg class="i"><use href="#i-x"/></svg>Vui lòng kiểm tra lại các trường được đánh dấu bên dưới.</div>
+  <% } %>
+
+  <form method="post" action="<%= action %>" enctype="multipart/form-data" class="form card form-card" novalidate id="lessonForm">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+    <div class="field-row">
+      <div class="field grow <%= errors.title ? 'has-error' : '' %>">
+        <label for="title">Tên bài học <span class="req" aria-hidden="true">*</span></label>
+        <input id="title" name="title" required maxlength="200" value="<%= values.title || '' %>" <%- aria('title') %>>
+        <%- err('title') %>
+      </div>
+      <div class="field field-sm <%= errors.duration ? 'has-error' : '' %>">
+        <label for="duration">Thời lượng</label>
+        <input id="duration" name="duration" inputmode="numeric" placeholder="11:02" value="<%= values.duration || '' %>" <%- aria('duration') %>>
+        <% if (errors.duration) { %><%- err('duration') %><% } else { %><p class="field-hint">phút:giây</p><% } %>
+      </div>
+    </div>
+
+    <fieldset class="field">
+      <legend>Nguồn video</legend>
+      <div class="segmented" role="radiogroup">
+        <% [['youtube', 'YouTube'], ['upload', 'Upload file'], ['none', 'Không có video']].forEach(([val, label]) => { %>
+          <label><input type="radio" name="video_type" value="<%= val %>" <%= vt === val ? 'checked' : '' %>><span><%= label %></span></label>
+        <% }) %>
+      </div>
+    </fieldset>
+
+    <div class="field <%= errors.youtube_url ? 'has-error' : '' %>" data-video-panel="youtube" <%= vt !== 'youtube' ? 'hidden' : '' %>>
+      <label for="youtube_url">Link YouTube</label>
+      <input id="youtube_url" name="youtube_url" type="url" placeholder="https://www.youtube.com/watch?v=..." value="<%= values.youtube_url || '' %>" <%- aria('youtube_url') %>>
+      <% if (errors.youtube_url) { %><%- err('youtube_url') %><% } else { %><p class="field-hint">Có thể đặt video ở chế độ “Không công khai” trên YouTube để chỉ người có link mới xem được.</p><% } %>
+    </div>
+
+    <div class="field <%= errors.video_file ? 'has-error' : '' %>" data-video-panel="upload" <%= vt !== 'upload' ? 'hidden' : '' %>>
+      <label for="video_file">File video</label>
+      <% if (hasUpload) { %><p class="field-hint">Đang dùng video đã upload. Chọn file mới nếu muốn thay thế.</p><% } %>
+      <label class="dropzone" for="video_file">
+        <svg class="i"><use href="#i-upload"/></svg>
+        <span data-file-name>Chọn file MP4, WebM hoặc OGG (tối đa <%= maxUploadMb %> MB)</span>
+      </label>
+      <input class="sr-only" id="video_file" name="video_file" type="file" accept="video/mp4,video/webm,video/ogg" <%- aria('video_file') %>>
+      <%- err('video_file') %>
+    </div>
+
+    <div class="field">
+      <label for="summary">Tóm tắt bài học</label>
+      <textarea id="summary" name="summary" rows="5" placeholder="Nội dung chính của bài học. Để trống một dòng để xuống đoạn."><%= values.summary || '' %></textarea>
+    </div>
+
+    <div class="field">
+      <label for="key_points">Kiến thức chính</label>
+      <textarea id="key_points" name="key_points" rows="4" placeholder="Mỗi dòng là một ý"><%= values.key_points || '' %></textarea>
+      <p class="field-hint">Mỗi dòng hiển thị thành một thẻ có dấu tích.</p>
+    </div>
+
+    <div class="field">
+      <label for="resources">Tài liệu tham khảo</label>
+      <textarea id="resources" name="resources" rows="3" placeholder="Tài liệu React | https://react.dev"><%= values.resources || '' %></textarea>
+      <p class="field-hint">Mỗi dòng: <code>Tiêu đề | https://link</code></p>
+    </div>
+
+    <div class="upload-progress" id="uploadProgress" hidden>
+      <div class="bar-progress"><span id="uploadBar"></span></div>
+      <small id="uploadText">Đang tải lên...</small>
+    </div>
+
+    <div class="form-actions">
+      <a class="btn btn-ghost" href="/admin/courses/<%= course.id %>/lessons">Hủy</a>
+      <button class="btn btn-primary" type="submit" data-loading-text="Đang lưu..."><%= lesson ? 'Lưu bài học' : 'Thêm bài học' %></button>
+    </div>
+  </form>
+</div>
+<%- include('../partials/bottom', { scripts: ['/js/admin.js'] }) %>

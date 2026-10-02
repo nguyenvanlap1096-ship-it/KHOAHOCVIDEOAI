@@ -1,0 +1,41 @@
+<%- include('../partials/top', { crumbs: [{ label: 'Quản trị', href: '/admin' }, { label: 'Khóa học', href: '/admin/courses' }, { label: course.title }] }) %>
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title"><%= course.title %></h1>
+      <p class="muted"><%= lessons.length %> bài học · <a href="/admin/courses/<%= course.id %>/edit">Sửa thông tin khóa học</a> · <a href="/courses/<%= course.slug %>">Xem trang khóa học</a></p>
+    </div>
+    <a class="btn btn-primary" href="/admin/courses/<%= course.id %>/lessons/new"><svg class="i"><use href="#i-plus"/></svg>Thêm bài học</a>
+  </div>
+
+  <% if (!lessons.length) { %>
+    <div class="empty"><svg class="i"><use href="#i-video"/></svg><h3>Chưa có bài học</h3><p><a href="/admin/courses/<%= course.id %>/lessons/new">Thêm bài học đầu tiên</a> với video YouTube hoặc file video.</p></div>
+  <% } else { %>
+    <ol class="admin-lessons">
+      <% const typeLabel = { youtube: 'YouTube', upload: 'Video upload', none: 'Bài đọc' }; %>
+      <% lessons.forEach((l, i) => { %>
+        <li class="card admin-lesson" id="lesson-<%= l.id %>">
+          <span class="num"><%= i + 1 %></span>
+          <span class="body">
+            <strong><%= l.title %></strong>
+            <small class="muted"><%= typeLabel[l.video_type] %> · <%= l.duration_sec ? h.fmtDuration(l.duration_sec) : 'chưa có thời lượng' %></small>
+          </span>
+          <div class="row-actions">
+            <% [['up', 'Lên', 'i-arrow-up', i === 0], ['down', 'Xuống', 'i-arrow-down', i === lessons.length - 1]].forEach(([dir, label, icon, disabled]) => { %>
+              <form method="post" action="/admin/lessons/<%= l.id %>/move">
+                <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="dir" value="<%= dir %>">
+                <button class="btn btn-sm btn-outline btn-icon" type="submit" aria-label="Chuyển “<%= l.title %>” <%= label.toLowerCase() %>" <%= disabled ? 'disabled' : '' %>><svg class="i"><use href="#<%= icon %>"/></svg></button>
+              </form>
+            <% }) %>
+            <a class="btn btn-sm btn-outline" href="/admin/lessons/<%= l.id %>/edit"><svg class="i"><use href="#i-edit"/></svg>Sửa</a>
+            <form method="post" action="/admin/lessons/<%= l.id %>/delete" data-confirm="Xóa bài học “<%= l.title %>”? Tiến độ của học viên ở bài này cũng bị xóa.">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button class="btn btn-sm btn-outline btn-icon btn-danger" type="submit" aria-label="Xóa <%= l.title %>"><svg class="i"><use href="#i-trash"/></svg></button>
+            </form>
+          </div>
+        </li>
+      <% }) %>
+    </ol>
+  <% } %>
+</div>
+<%- include('../partials/bottom') %>

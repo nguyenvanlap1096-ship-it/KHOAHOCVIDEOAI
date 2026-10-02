@@ -1,0 +1,32 @@
+<%- include('../partials/top', { crumbs: [{ label: 'Quản trị', href: '/admin' }, { label: 'Người dùng' }] }) %>
+<div class="page">
+  <h1 class="page-title">Người dùng <span class="chip"><%= users.length %></span></h1>
+  <div class="table-wrap card">
+    <table class="table">
+      <thead><tr><th>Họ tên</th><th>Email</th><th>Bài đã học</th><th>Ngày tham gia</th><th>Vai trò</th></tr></thead>
+      <tbody>
+        <% users.forEach(u => { const self = u.id === user.id; %>
+          <tr>
+            <td><span class="cell-user"><span class="avatar avatar-sm"><%= h.initials(u.name) %></span><%= u.name %><%= self ? ' (bạn)' : '' %></span></td>
+            <td><%= u.email %></td>
+            <td><%= u.lessons_started %></td>
+            <td><%= String(u.created_at).slice(0, 10) %></td>
+            <td>
+              <% if (self) { %>
+                <span class="badge badge-primary">Quản trị</span>
+              <% } else { %>
+                <form method="post" action="/admin/users/<%= u.id %>/role" class="inline-form" data-confirm="<%= u.role === 'admin' ? `Gỡ quyền quản trị của ${u.name}?` : `Cấp quyền quản trị cho ${u.name}? Người này sẽ sửa/xóa được mọi khóa học.` %>">
+                  <input type="hidden" name="_csrf" value="<%= csrf %>">
+                  <input type="hidden" name="role" value="<%= u.role === 'admin' ? 'student' : 'admin' %>">
+                  <span class="badge <%= u.role === 'admin' ? 'badge-primary' : '' %>"><%= u.role === 'admin' ? 'Quản trị' : 'Học viên' %></span>
+                  <button class="btn btn-sm btn-ghost" type="submit"><%= u.role === 'admin' ? 'Gỡ quyền' : 'Cấp quyền admin' %></button>
+                </form>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/bottom') %>

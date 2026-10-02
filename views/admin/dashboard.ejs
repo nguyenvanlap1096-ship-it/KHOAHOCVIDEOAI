@@ -1,0 +1,45 @@
+<%- include('../partials/top', { crumbs: [{ label: 'Quản trị', href: '/admin' }, { label: 'Tổng quan' }] }) %>
+<div class="page">
+  <div class="page-head">
+    <h1 class="page-title">Tổng quan</h1>
+    <a class="btn btn-primary" href="/admin/courses/new"><svg class="i"><use href="#i-plus"/></svg>Thêm khóa học</a>
+  </div>
+
+  <div class="stats">
+    <% [
+      ['Học viên', stats.users, 'i-users', '/admin/users'],
+      ['Khóa học', stats.courses, 'i-layers', '/admin/courses'],
+      ['Bài học', stats.lessons, 'i-video', '/admin/courses'],
+      ['Lượt hoàn thành bài', stats.completions, 'i-check-circle', null],
+    ].forEach(([label, value, icon, href]) => { %>
+      <<%= href ? 'a' : 'div' %> class="stat card" <%- href ? `href="${href}"` : '' %>>
+        <span class="stat-ico"><svg class="i"><use href="#<%= icon %>"/></svg></span>
+        <span class="stat-value"><%= value.toLocaleString('vi-VN') %></span>
+        <span class="stat-label"><%= label %></span>
+      </<%= href ? 'a' : 'div' %>>
+    <% }) %>
+  </div>
+
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title">Người dùng mới</h2>
+      <a href="/admin/users" class="link">Xem tất cả <svg class="i i-sm"><use href="#i-arrow-right"/></svg></a>
+    </div>
+    <div class="table-wrap card">
+      <table class="table">
+        <thead><tr><th>Họ tên</th><th>Email</th><th>Vai trò</th><th>Ngày tham gia</th></tr></thead>
+        <tbody>
+          <% recentUsers.forEach(u => { %>
+            <tr>
+              <td><span class="cell-user"><span class="avatar avatar-sm"><%= h.initials(u.name) %></span><%= u.name %></span></td>
+              <td><%= u.email %></td>
+              <td><span class="badge <%= u.role === 'admin' ? 'badge-primary' : '' %>"><%= u.role === 'admin' ? 'Quản trị' : 'Học viên' %></span></td>
+              <td><%= String(u.created_at).slice(0, 10) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<%- include('../partials/bottom') %>
