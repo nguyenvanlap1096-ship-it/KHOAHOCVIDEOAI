@@ -86,3 +86,11 @@ CREATE TABLE IF NOT EXISTS prompts (
   INDEX idx_prompts_category (category_id),
   CONSTRAINT fk_prompts_category FOREIGN KEY (category_id) REFERENCES prompt_categories(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS media (
+  name VARCHAR(64) NOT NULL PRIMARY KEY,
+  mime VARCHAR(40) NOT NULL,
+  size INT UNSIGNED NOT NULL,
+  data MEDIUMBLOB NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

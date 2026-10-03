@@ -104,7 +104,7 @@ hPanel → **Security** → **SSL**: bật SSL miễn phí cho tên miền. Webs
 
 ### 3A.4. Video và ảnh tự upload
 
-Ảnh thumbnail, ảnh bìa và mã QR Zalo được lưu trong `UPLOAD_DIR/images`, video lưu trong `UPLOAD_DIR`. Vì vậy `UPLOAD_DIR` cần nằm ngoài thư mục mã nguồn (xem bên dưới) để không mất ảnh khi deploy lại.
+Ảnh thumbnail, ảnh bìa, logo và mã QR Zalo được **lưu trong cơ sở dữ liệu MySQL**, nên không bị mất khi deploy lại. Riêng **video upload** lưu trên ổ đĩa trong `UPLOAD_DIR` – thư mục này cần nằm ngoài thư mục mã nguồn (xem bên dưới), nếu không video sẽ mất mỗi lần deploy.
 
 
 - Nên dùng **YouTube** (đặt video ở chế độ *Không công khai*) cho phần lớn bài giảng: không tốn dung lượng và băng thông hosting.

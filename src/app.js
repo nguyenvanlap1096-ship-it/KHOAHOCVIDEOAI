@@ -9,7 +9,7 @@ const db = require('./db');
 const h = require('./helpers');
 const { loadUser } = require('./middleware/auth');
 const csrf = require('./middleware/csrf');
-const { imageDir } = require('./uploads');
+const { serveImage } = require('./uploads');
 const { getSettings, supportInfo, siteInfo } = require('./services/settings');
 
 function sessionStore() {
@@ -60,8 +60,8 @@ module.exports = function createApp() {
   }));
   app.use(compression());
   app.use(express.static(path.join(config.root, 'public'), { maxAge: config.isProd ? '7d' : 0 }));
-  // Ảnh thumbnail / QR do admin upload: tên file ngẫu nhiên nên cache lâu được.
-  app.use('/uploads/images', express.static(imageDir, { maxAge: '30d', immutable: true, index: false }));
+  // Ảnh do admin upload (lưu trong CSDL): tên file ngẫu nhiên nên cache lâu được.
+  app.get('/uploads/images/:name', serveImage);
   app.use(express.urlencoded({ extended: false, limit: '1mb' }));
   app.use(express.json({ limit: '100kb' }));
 

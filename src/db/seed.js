@@ -4,6 +4,8 @@ const db = require('./index');
 const config = require('../config');
 const { slugify } = require('../helpers');
 const CURRICULUM = require('./seed-data/curriculum');
+const fs = require('fs');
+const path = require('path');
 const { removeFile } = require('../uploads');
 const PROMPT_LIBRARY = require('./seed-data/prompts');
 
@@ -96,10 +98,35 @@ async function ensurePromptLibrary() {
   });
 }
 
+// Bỏ tham chiếu tới ảnh đã mất (ví dụ ảnh lưu trên ổ đĩa bị xóa khi hosting deploy lại)
+// để giao diện quay về ảnh mặc định thay vì hiện ảnh lỗi.
+async function clearMissingImages() {
+  const exists = async name => Boolean(await db.get('SELECT 1 AS x FROM media WHERE name = ?', [name]))
+    || fs.existsSync(path.join(config.uploadDir, 'images', name));
+  let cleared = 0;
+  for (const [table, column] of [['courses', 'cover_image'], ['lessons', 'thumbnail']]) {
+    const rows = await db.all(`SELECT id, ${column} AS img FROM ${table} WHERE ${column} IS NOT NULL AND ${column} <> ''`);
+    for (const r of rows) {
+      if (await exists(r.img)) continue;
+      await db.run(`UPDATE ${table} SET ${column} = NULL WHERE id = ?`, [r.id]);
+      cleared++;
+    }
+  }
+  for (const name of ['zalo_qr', 'site_logo']) {
+    const row = await db.get('SELECT value FROM settings WHERE name = ?', [name]);
+    if (row && row.value && !(await exists(row.value))) {
+      await db.run("UPDATE settings SET value = '' WHERE name = ?", [name]);
+      cleared++;
+    }
+  }
+  if (cleared) console.log(`[demia] Đã bỏ ${cleared} tham chiếu tới ảnh không còn tồn tại – hãy upload lại các ảnh này.`);
+}
+
 async function ensureSeed() {
   await ensureAdmin();
   await ensureCurriculum();
   await ensurePromptLibrary();
+  await clearMissingImages();
 }
 
 module.exports = { ensureSeed };
