@@ -122,6 +122,28 @@
     }
   }));
 
+  /* Nút chuyển sáng / tối (ghi nhớ trong trình duyệt) */
+  const themeBtn = document.getElementById('themeToggle');
+  if (themeBtn) {
+    const isDark = () => {
+      const t = document.documentElement.dataset.theme;
+      return t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    };
+    const sync = () => {
+      const dark = isDark();
+      themeBtn.setAttribute('aria-pressed', String(dark));
+      themeBtn.setAttribute('aria-label', dark ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối');
+      themeBtn.title = dark ? 'Chế độ sáng' : 'Chế độ tối';
+    };
+    themeBtn.addEventListener('click', () => {
+      const next = isDark() ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      store.set('theme', next);
+      sync();
+    });
+    sync();
+  }
+
   /* Nút Zalo hỗ trợ */
   const zaloFab = document.getElementById('zaloFab');
   const zaloCard = document.getElementById('zaloCard');

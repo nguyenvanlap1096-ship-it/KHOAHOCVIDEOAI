@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/js/theme.js"></script>
   <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
@@ -43,6 +44,9 @@
         </nav>
       <% } %>
       <div class="right">
+        <button class="btn btn-outline btn-icon theme-toggle" type="button" id="themeToggle" aria-label="Chuyển chế độ sáng / tối" title="Chế độ sáng / tối">
+          <svg class="i i-sun"><use href="#i-sun"/></svg><svg class="i i-moon"><use href="#i-moon"/></svg>
+        </button>
         <% if (user) { %>
           <a class="user-chip" href="/my" title="<%= user.email %>">
             <span class="avatar"><%= h.initials(user.name) %></span>

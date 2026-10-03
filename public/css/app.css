@@ -1,10 +1,11 @@
 /* ==========================================================================
    Demia – design tokens
    ========================================================================== */
+/* Chế độ sáng: nền xám xanh nhạt (--page) để đỡ lóa, thẻ nội dung trắng (--bg) nổi lên trên nền. */
 :root {
   --primary: #4F46E5;
   --primary-hover: #4338CA;
-  --primary-soft: #EEF2FF;
+  --primary-soft: #EEF0FF;
   --on-primary: #FFFFFF;
   --success: #16A34A;
   --success-soft: #DCFCE7;
@@ -12,25 +13,27 @@
   --warn-soft: #FEF3C7;
   --danger: #DC2626;
   --danger-soft: #FEE2E2;
+  --page: #F3F4F8;
   --bg: #FFFFFF;
-  --surface: #F8FAFC;
-  --surface-2: #F1F5F9;
-  --border: #E5E7EB;
-  --border-strong: #CBD5E1;
-  --text: #0F172A;
-  --text-muted: #475569;
-  --text-subtle: #64748B;
-  --ring: rgba(79, 70, 229, .3);
+  --surface: #ECEEF4;
+  --surface-2: #E4E7EF;
+  --border: #DFE3EA;
+  --border-strong: #C5CBD6;
+  --text: #1E293B;
+  --text-muted: #4B5768;
+  --text-subtle: #64718A;
+  --ring: rgba(79, 70, 229, .28);
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 16px;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, .05);
-  --shadow: 0 8px 24px rgba(15, 23, 42, .08);
+  --shadow-sm: 0 1px 2px rgba(30, 41, 59, .06);
+  --shadow: 0 8px 24px rgba(30, 41, 59, .08);
   --ease: cubic-bezier(.2, .8, .2, 1);
   color-scheme: light;
 }
+/* Chế độ tối: theo hệ điều hành nếu người dùng chưa chọn, hoặc khi bấm nút Tối. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --primary: #818CF8;
     --primary-hover: #A5B4FC;
     --primary-soft: #1E1B4B;
@@ -41,19 +44,45 @@
     --warn-soft: #422006;
     --danger: #F87171;
     --danger-soft: #450A0A;
-    --bg: #0B1120;
-    --surface: #111827;
-    --surface-2: #1F2937;
-    --border: #1F2937;
-    --border-strong: #374151;
-    --text: #F1F5F9;
-    --text-muted: #CBD5E1;
-    --text-subtle: #94A3B8;
+    --page: #0E1422;
+    --bg: #151D2E;
+    --surface: #121A2A;
+    --surface-2: #1E293B;
+    --border: #243044;
+    --border-strong: #364257;
+    --text: #E2E8F0;
+    --text-muted: #B6C2D2;
+    --text-subtle: #8A98AC;
     --ring: rgba(129, 140, 248, .4);
     --shadow-sm: none;
-    --shadow: 0 8px 24px rgba(0, 0, 0, .4);
+    --shadow: 0 8px 24px rgba(0, 0, 0, .45);
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --primary: #818CF8;
+  --primary-hover: #A5B4FC;
+  --primary-soft: #1E1B4B;
+  --on-primary: #0B1120;
+  --success: #4ADE80;
+  --success-soft: #052E16;
+  --warn: #FBBF24;
+  --warn-soft: #422006;
+  --danger: #F87171;
+  --danger-soft: #450A0A;
+  --page: #0E1422;
+  --bg: #151D2E;
+  --surface: #121A2A;
+  --surface-2: #1E293B;
+  --border: #243044;
+  --border-strong: #364257;
+  --text: #E2E8F0;
+  --text-muted: #B6C2D2;
+  --text-subtle: #8A98AC;
+  --ring: rgba(129, 140, 248, .4);
+  --shadow-sm: none;
+  --shadow: 0 8px 24px rgba(0, 0, 0, .45);
+  color-scheme: dark;
 }
 
 /* ==========================================================================
@@ -67,7 +96,7 @@ body {
   font-size: 15px;
   line-height: 1.55;
   color: var(--text);
-  background: var(--bg);
+  background: var(--page);
   -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3 { line-height: 1.3; text-wrap: balance; }
@@ -98,7 +127,7 @@ svg.i-sm { width: 14px; height: 14px; }
 
 .rail {
   display: flex; flex-direction: column; align-items: center; gap: 6px;
-  padding: 16px 0; border-right: 1px solid var(--border); background: var(--bg);
+  padding: 16px 0; border-right: 1px solid var(--border); background: var(--page);
   position: sticky; top: 0; height: 100vh;
 }
 .rail .logo { display: block; width: 36px; height: 36px; margin-bottom: 14px; }
@@ -165,7 +194,7 @@ main { min-width: 0; display: flex; flex-direction: column; }
 .topbar {
   display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 24px;
   border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
-  background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--page) 88%, transparent); backdrop-filter: blur(8px);
 }
 .topbar .menu-btn { display: none; }
 .crumbs { min-width: 0; overflow: hidden; font-size: 13px; color: var(--text-muted); }
@@ -750,6 +779,15 @@ mark { background: color-mix(in srgb, #FBBF24 35%, transparent); color: inherit;
   .zalo-fab { width: 54px; height: 54px; font-size: 13px; }
   .image-preview { width: 100%; }
 }
+
+/* Nút chuyển sáng / tối */
+.theme-toggle .i-moon, :root[data-theme="dark"] .theme-toggle .i-sun { display: none; }
+:root[data-theme="dark"] .theme-toggle .i-moon { display: inline; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-toggle .i-sun { display: none; }
+  :root:not([data-theme="light"]) .theme-toggle .i-moon { display: inline; }
+}
+html { transition: background-color .2s var(--ease); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
