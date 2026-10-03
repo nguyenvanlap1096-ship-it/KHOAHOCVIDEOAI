@@ -780,6 +780,23 @@ mark { background: color-mix(in srgb, #FBBF24 35%, transparent); color: inherit;
   .image-preview { width: 100%; }
 }
 
+/* Khung hỗ trợ Zalo ở thanh bên */
+.zalo-side {
+  margin-top: 14px; padding: 14px; border-radius: var(--radius); background: var(--bg);
+  border: 1px solid color-mix(in srgb, #0068FF 30%, var(--border)); box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.zalo-side-head { display: flex; align-items: center; gap: 10px; }
+.zalo-side-head .zalo-badge { width: 36px; height: 36px; border-radius: 10px; font-size: 10px; }
+.zalo-side-head h3 { margin: 0; font-size: 14px; }
+.zalo-side-head p { margin: 2px 0 0; font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.zalo-side-qr { margin: 0; text-align: center; }
+.zalo-side-qr img { display: block; width: 100%; max-width: 168px; height: auto; aspect-ratio: 1; margin: 0 auto; object-fit: contain; padding: 8px; border-radius: 12px; background: #fff; border: 1px solid var(--border); }
+.zalo-side-qr figcaption { margin-top: 6px; font-size: 12px; color: var(--text-subtle); }
+.zalo-side-text { margin: 0; font-size: 13px; color: var(--text-muted); }
+.zalo-side-phone { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; font-size: 13px; font-weight: 600; color: var(--text-muted); border-radius: 8px; }
+.zalo-side-phone:hover { color: var(--text); background: var(--surface-2); }
+
 /* Nút chuyển sáng / tối */
 .theme-toggle .i-moon, :root[data-theme="dark"] .theme-toggle .i-sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .i-moon { display: inline; }

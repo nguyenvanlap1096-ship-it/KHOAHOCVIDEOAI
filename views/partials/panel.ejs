@@ -56,4 +56,28 @@
       <a class="btn-soft" href="/my">Khóa học của tôi <svg class="i i-sm"><use href="#i-arrow-right"/></svg></a>
     <% } %>
   </div>
+
+  <% if (locals.support) { %>
+    <section class="zalo-side" aria-labelledby="zaloSideTitle">
+      <div class="zalo-side-head">
+        <span class="zalo-badge" aria-hidden="true">Zalo</span>
+        <div>
+          <h3 id="zaloSideTitle"><%= support.title %></h3>
+          <% if (support.hours) { %><p><span class="dot-online" aria-hidden="true"></span><%= support.hours %></p><% } %>
+        </div>
+      </div>
+      <% if (support.qr) { %>
+        <figure class="zalo-side-qr">
+          <img src="<%= h.imageUrl(support.qr) %>" alt="Mã QR Zalo hỗ trợ học viên" width="168" height="168" loading="lazy">
+          <figcaption>Quét mã bằng ứng dụng Zalo</figcaption>
+        </figure>
+      <% } else if (support.text) { %>
+        <p class="zalo-side-text"><%= support.text %></p>
+      <% } %>
+      <a class="btn btn-zalo btn-sm btn-block" href="<%= support.url %>" target="_blank" rel="noopener noreferrer"><svg class="i"><use href="#i-message"/></svg>Nhắn Zalo</a>
+      <% if (support.phone) { %>
+        <a class="zalo-side-phone" href="tel:<%= support.phone %>"><svg class="i i-sm"><use href="#i-phone"/></svg><%= support.phoneDisplay %></a>
+      <% } %>
+    </section>
+  <% } %>
 </aside>
