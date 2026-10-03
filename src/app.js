@@ -91,7 +91,8 @@ module.exports = function createApp() {
     res.locals.flash = req.session.flash || null;
     delete req.session.flash;
     res.locals.sidebar = await sidebarData(req.user && req.user.id);
-    res.locals.support = supportInfo(settings);
+    // Khung/nút hỗ trợ Zalo chỉ hiện cho người đã đăng nhập.
+    res.locals.support = req.user ? supportInfo(settings) : null;
     res.locals.vnd = fmtVnd;
     res.locals.pendingOrders = req.user && req.user.role === 'admin' ? await countPendingOrders() : 0;
     next();
