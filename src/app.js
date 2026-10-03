@@ -51,7 +51,7 @@ module.exports = function createApp() {
         'frame-src': ['https://www.youtube-nocookie.com', 'https://www.youtube.com'],
         'style-src': ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
         'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
-        'img-src': ["'self'", 'data:', 'https://i.ytimg.com'],
+        'img-src': ["'self'", 'data:', 'blob:', 'https://i.ytimg.com'],
         'media-src': ["'self'", 'blob:'],
         'upgrade-insecure-requests': config.isProd ? [] : null,
       },

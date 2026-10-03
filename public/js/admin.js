@@ -10,14 +10,83 @@
     src.addEventListener('input', () => { if (!touched) target.placeholder = slugify(src.value) || 'tu-dong-tao-tu-ten'; });
   }
 
+  /* Tự cắt sát mã QR: tìm mã QR trong ảnh (jsQR) rồi cắt bỏ phần thừa,
+     chỉ chừa viền trắng mỏng để điện thoại vẫn quét được. Trả về null nếu không tìm thấy. */
+  function loadImage(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Không đọc được ảnh')); };
+      img.src = url;
+    });
+  }
+
+  async function cropQr(file) {
+    if (typeof window.jsQR !== 'function') return null;
+    const img = await loadImage(file);
+    // Dò mã trên bản thu nhỏ cho nhanh, sau đó cắt trên ảnh gốc để giữ độ nét.
+    const scale = Math.min(1, 1200 / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.round(img.naturalWidth * scale);
+    const h = Math.round(img.naturalHeight * scale);
+    const probe = document.createElement('canvas');
+    probe.width = w;
+    probe.height = h;
+    const pctx = probe.getContext('2d', { willReadFrequently: true });
+    pctx.drawImage(img, 0, 0, w, h);
+    const code = window.jsQR(pctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'attemptBoth' });
+    if (!code) return null;
+
+    const pts = ['topLeftCorner', 'topRightCorner', 'bottomLeftCorner', 'bottomRightCorner'].map(k => code.location[k]);
+    const xs = pts.map(p => p.x / scale);
+    const ys = pts.map(p => p.y / scale);
+    const side = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+    const modules = 17 + 4 * (code.version || 1);
+    const margin = (side / modules) * 1.5; // viền ~1,5 ô mã: đủ để quét, không thừa
+    const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
+    const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+    const size = side + margin * 2;
+
+    const out = document.createElement('canvas');
+    const outSize = Math.min(800, Math.round(size));
+    out.width = out.height = outSize;
+    const octx = out.getContext('2d');
+    octx.fillStyle = '#fff';
+    octx.fillRect(0, 0, outSize, outSize);
+    octx.imageSmoothingEnabled = outSize < size; // thu nhỏ thì làm mượt, giữ nguyên thì giữ nét ô vuông
+    octx.drawImage(img, cx - size / 2, cy - size / 2, size, size, 0, 0, outSize, outSize);
+    const blob = await new Promise(r => out.toBlob(r, 'image/png'));
+    return blob ? new File([blob], 'zalo-qr.png', { type: 'image/png' }) : null;
+  }
+
   /* Xem trước ảnh thumbnail trước khi lưu */
   document.querySelectorAll('[data-image-input]').forEach(input => {
     const name = input.dataset.imageInput;
     const preview = document.querySelector(`[data-image-preview="${name}"]`);
     const remove = document.querySelector(`[data-image-remove="${name}"]`);
-    input.addEventListener('change', () => {
-      const f = input.files[0];
-      if (!f) return;
+    let processing = false;
+    input.addEventListener('change', async () => {
+      let f = input.files[0];
+      if (!f || processing) return;
+      if (name === 'zalo_qr') {
+        processing = true;
+        try {
+          const cropped = await cropQr(f);
+          if (cropped) {
+            const dt = new DataTransfer();
+            dt.items.add(cropped);
+            input.files = dt.files;
+            f = cropped;
+            window.Demia.toast('Đã tự căn sát mã QR, bỏ phần lề thừa.');
+          } else {
+            window.Demia.toast('Không tìm thấy mã QR trong ảnh – giữ nguyên ảnh gốc. Hãy chọn ảnh rõ nét hơn.', 'error');
+          }
+        } catch {
+          window.Demia.toast('Không đọc được ảnh, hãy thử ảnh khác.', 'error');
+        } finally {
+          processing = false;
+        }
+      }
       if (f.size > 5 * 1024 * 1024) {
         window.Demia.toast('Ảnh vượt quá 5 MB, hãy chọn ảnh nhỏ hơn.', 'error');
         input.value = '';
