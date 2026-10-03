@@ -9,7 +9,7 @@ Website học trực tuyến viết bằng **Node.js (Express + EJS)**, cơ sở
 - **Ảnh thumbnail:** admin tải lên / đổi / xóa ảnh bìa khóa học và ảnh thumbnail từng bài (JPG, PNG, WebP ≤ 5 MB).
 - **Video mới cập nhật:** mục trên trang chủ và trang `/videos`, gắn nhãn "Mới" / "Cập nhật" trong 7 ngày.
 - **Thư viện prompt theo ngành nghề (`/prompts`):** lọc theo ngành, tìm kiếm, sao chép một chạm, tô sáng phần cần điền `[trong ngoặc vuông]`. Có sẵn 23 prompt cho 10 ngành.
-- **Khóa học "Làm video bằng AI":** 9 bài từ kịch bản, giọng đọc, hình ảnh, text-to-video, avatar AI đến dựng và đăng video.
+- **Chương trình Video AI:** 17 module (00 → 16), 169 bài học: ChatGPT, Gemini, Grok, AI tạo ảnh, VEO3, Kling, giọng nói, âm nhạc, dựng video và các module thực chiến (quảng cáo, affiliate, giải trí, giáo dục). Dữ liệu ở `src/db/seed-data/curriculum.js`.
 - **Hỗ trợ Zalo:** nút Zalo nổi ở mọi trang, kèm mã QR và số điện thoại – cấu hình tại `/admin/settings`.
 - **Trang quản trị (`/admin`):** thống kê, thêm/sửa/xóa khóa học và bài học, sắp xếp thứ tự bài, quản lý prompt & ngành nghề, cài đặt Zalo, cấp quyền admin cho người dùng.
 - **Giao diện:** tiếng Việt, responsive (máy tính, tablet, điện thoại), tự chuyển chế độ tối theo hệ điều hành.

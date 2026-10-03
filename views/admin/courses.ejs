@@ -16,7 +16,7 @@
             <tr>
               <td>
                 <span class="cell-user">
-                  <% if (c.cover_image) { %><img class="cover-thumb" src="<%= h.imageUrl(c.cover_image) %>" alt="" loading="lazy"><% } else { %><span class="fav-ico fav-lg cover-thumb" style="background:<%= c.color %>"><%= c.title.trim()[0] %></span><% } %>
+                  <% if (c.cover_image) { %><img class="cover-thumb" src="<%= h.imageUrl(c.cover_image) %>" alt="" loading="lazy"><% } else { %><span class="fav-ico fav-lg cover-thumb" style="background:<%= c.color %>"><%= h.coverLabel(c.title) %></span><% } %>
                   <span><strong><%= c.title %></strong><small class="muted d-block"><%= c.category || '—' %></small></span>
                 </span>
               </td>

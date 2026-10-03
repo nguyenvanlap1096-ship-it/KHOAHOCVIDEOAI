@@ -31,7 +31,7 @@
       <% } %>
     </div>
     <div class="course-hero-cover" aria-hidden="true">
-      <% if (course.cover_image) { %><img src="<%= h.imageUrl(course.cover_image) %>" alt=""><% } else { %><span class="cover-letter"><%= course.title.trim()[0] %></span><% } %>
+      <% if (course.cover_image) { %><img src="<%= h.imageUrl(course.cover_image) %>" alt=""><% } else { %><span class="cover-letter"><%= h.coverLabel(course.title) %></span><% } %>
     </div>
   </section>
 

@@ -3,7 +3,7 @@
     <% if (course.cover_image) { %>
       <img src="<%= h.imageUrl(course.cover_image) %>" alt="" loading="lazy" decoding="async">
     <% } else { %>
-      <span class="cover-letter"><%= course.title.trim()[0] %></span>
+      <span class="cover-letter"><%= h.coverLabel(course.title) %></span>
     <% } %>
     <% if (course.category) { %><span class="cover-tag"><%= course.category %></span><% } %>
   </a>

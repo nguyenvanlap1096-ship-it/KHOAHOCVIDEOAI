@@ -82,6 +82,12 @@ function coursePercent(pctSum, lessonCount) {
   return lessonCount ? Math.min(100, Math.round(Number(pctSum || 0) / lessonCount)) : 0;
 }
 
+// Chữ hiện trên ảnh bìa khi chưa có ảnh: số module ("Module 04 — ..." → "04") hoặc chữ cái đầu.
+function coverLabel(title) {
+  const m = String(title || '').match(/^\s*module\s+(\d+)/i);
+  return m ? m[1] : String(title || '?').trim().charAt(0).toUpperCase();
+}
+
 function imageUrl(filename) {
   return filename ? `/uploads/images/${filename}` : null;
 }
@@ -117,5 +123,5 @@ function freshness(item) {
 module.exports = {
   LEVELS, fmtDuration, fmtTotal, parseDuration, slugify, youtubeId,
   initials, lines, paragraphs, parseResources, coursePercent,
-  imageUrl, lessonThumb, escapeHtml, highlightPrompt, freshness,
+  coverLabel, imageUrl, lessonThumb, escapeHtml, highlightPrompt, freshness,
 };

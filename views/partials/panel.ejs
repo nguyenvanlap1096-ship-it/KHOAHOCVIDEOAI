@@ -36,7 +36,7 @@
     <button class="section-toggle" type="button" aria-expanded="true" aria-controls="sec-saved">Đã lưu <span class="chip"><%= sidebar.saved.length %></span><svg class="i chev"><use href="#i-chevron-down"/></svg></button>
     <div class="section-body" id="sec-saved">
       <% sidebar.saved.forEach(c => { %>
-        <a class="nav-item" href="/courses/<%= c.slug %>"><span class="fav-ico" style="background:<%= c.color %>"><%= c.title.trim()[0] %></span><span class="t"><%= c.title %></span></a>
+        <a class="nav-item" href="/courses/<%= c.slug %>"><span class="fav-ico" style="background:<%= c.color %>"><%= h.coverLabel(c.title) %></span><span class="t"><%= c.title %></span></a>
       <% }) %>
     </div>
   <% } %>
