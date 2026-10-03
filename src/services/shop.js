@@ -7,6 +7,11 @@ function fmtVnd(n) {
   return `${Math.round(Number(n) || 0).toLocaleString('vi-VN')}đ`;
 }
 
+// Công tắc mở/đóng bán khóa chuyên sâu (mặc định mở).
+function salesOpen(s) {
+  return s.premium_sales_open !== '0';
+}
+
 function paymentConfig(s) {
   return {
     bin: s.pay_bank_bin || '',
@@ -76,6 +81,6 @@ async function countPendingOrders() {
 }
 
 module.exports = {
-  ORDER_STATUS, fmtVnd, paymentConfig, bundleConfig, hasAccess, accessSummary,
+  ORDER_STATUS, fmtVnd, salesOpen, paymentConfig, bundleConfig, hasAccess, accessSummary,
   grantAccess, revokeAccess, pendingOrderFor, countPendingOrders,
 };

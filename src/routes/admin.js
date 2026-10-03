@@ -7,7 +7,8 @@ const { acceptFiles, discardUploads, removeFile, MAX_IMAGE_MB } = require('../up
 const { getSettings, setSettings } = require('../services/settings');
 const { listCategories, listPrompts } = require('../services/prompts');
 const { BANKS } = require('../services/vietqr');
-const { ORDER_STATUS, fmtVnd, grantAccess, revokeAccess, countPendingOrders } = require('../services/shop');
+const { ORDER_STATUS, fmtVnd, salesOpen, grantAccess, revokeAccess, countPendingOrders } = require('../services/shop');
+const { safeNext } = require('../middleware/auth');
 
 router.use(requireAdmin);
 
@@ -444,6 +445,7 @@ router.post('/settings', acceptFiles(['zalo_qr', 'site_logo']), async (req, res)
     pay_account_no: String(b.pay_account_no || '').replace(/\s/g, '').slice(0, 30),
     pay_account_name: String(b.pay_account_name || '').trim().toUpperCase().slice(0, 60),
     pay_prefix: String(b.pay_prefix || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8) || 'BKAI',
+    premium_sales_open: b.premium_sales_open ? '1' : '0',
     bundle_enabled: b.bundle_enabled ? '1' : '',
     bundle_title: String(b.bundle_title || '').trim().slice(0, 120),
     bundle_price: String(Math.round(Number(String(b.bundle_price || '').replace(/[^\d]/g, '')) || 0) || ''),
@@ -507,7 +509,15 @@ router.get('/orders', async (req, res) => {
     status === 'all' ? [] : [status],
   );
   const counts = Object.fromEntries((await db.all('SELECT status, COUNT(*) AS n FROM orders GROUP BY status')).map(r => [r.status, Number(r.n)]));
-  res.render('admin/orders', { title: 'Đơn hàng', orders, status, counts, ORDER_STATUS, fmtVnd, ...nav('orders') });
+  res.render('admin/orders', { title: 'Đơn hàng', orders, status, counts, ORDER_STATUS, fmtVnd, salesOpen: salesOpen(await getSettings()), ...nav('orders') });
+});
+
+// Bật / tắt mở bán khóa chuyên sâu.
+router.post('/sales', async (req, res) => {
+  const open = req.body.open === '1';
+  await setSettings({ premium_sales_open: open ? '1' : '0' });
+  req.flash('success', open ? 'Đã MỞ bán khóa chuyên sâu.' : 'Đã ĐÓNG bán khóa chuyên sâu. Học viên đã mua vẫn học bình thường.');
+  res.redirect(req.body.next ? safeNext(req.body.next) : '/admin/orders');
 });
 
 async function loadOrder(req, res, next) {

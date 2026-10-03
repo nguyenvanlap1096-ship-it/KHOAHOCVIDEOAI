@@ -102,6 +102,12 @@
     <p class="pay-test-note"><svg class="i i-sm"><use href="#i-shield"/></svg>Sau khi lưu, hãy tự tạo một đơn thử và <strong>quét mã bằng app ngân hàng</strong> để chắc chắn tên chủ tài khoản hiện đúng trước khi bán.</p>
 
     <label class="switch">
+      <input type="checkbox" name="premium_sales_open" value="1" <%= values.premium_sales_open !== '0' ? 'checked' : '' %>>
+      <span class="switch-ui" aria-hidden="true"></span>
+      <span><strong>Đang mở bán khóa chuyên sâu</strong><small class="d-block muted">Tắt để tạm ngừng bán: ẩn cột khóa chuyên sâu và nút Mua. Học viên đã mua vẫn học bình thường.</small></span>
+    </label>
+
+    <label class="switch">
       <input type="checkbox" name="bundle_enabled" value="1" <%= values.bundle_enabled === '1' ? 'checked' : '' %>>
       <span class="switch-ui" aria-hidden="true"></span>
       <span><strong>Bán gói trọn bộ</strong><small class="d-block muted">Một lần thanh toán, mở tất cả khóa chuyên sâu (kể cả khóa thêm sau này).</small></span>

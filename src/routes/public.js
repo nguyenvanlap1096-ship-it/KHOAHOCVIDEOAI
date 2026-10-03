@@ -7,7 +7,7 @@ const { requireAuth } = require('../middleware/auth');
 const { listCourses, lessonsWithProgress, pickResume, isBookmarked, latestVideos } = require('../services/courses');
 const { getSettings } = require('../services/settings');
 const {
-  ORDER_STATUS, bundleConfig, hasAccess, accessSummary, pendingOrderFor,
+  ORDER_STATUS, salesOpen, bundleConfig, hasAccess, accessSummary, pendingOrderFor,
 } = require('../services/shop');
 
 async function findCourse(slug, user) {
@@ -26,8 +26,13 @@ async function premiumShelf(user) {
   ]);
   const bundle = bundleConfig(settings);
   const isAdmin = Boolean(user && user.role === 'admin');
+  const open = salesOpen(settings);
   courses.forEach(c => { c.unlocked = access.all || access.ids.has(c.id); });
-  return { courses, bundle, ownsBundle: access.all && !isAdmin };
+  // Đóng bán: người xem chỉ còn thấy khóa đã mua (admin vẫn thấy đủ để quản lý).
+  if (!open && !isAdmin) {
+    return { courses: courses.filter(c => c.unlocked), bundle: { ...bundle, enabled: false }, ownsBundle: access.all, salesOpen: false };
+  }
+  return { courses, bundle, ownsBundle: access.all && !isAdmin, salesOpen: open };
 }
 
 router.get('/', async (req, res) => {
@@ -62,7 +67,9 @@ router.get('/courses/:slug', async (req, res, next) => {
   const totalSec = lessons.reduce((s, l) => s + Number(l.duration_sec), 0);
   const percent = h.coursePercent(lessons.reduce((s, l) => s + l.percent, 0), lessons.length);
   const unlocked = await hasAccess(req.user, course);
-  const bundle = bundleConfig(await getSettings());
+  const settings = await getSettings();
+  const bundle = bundleConfig(settings);
+  const open = salesOpen(settings);
   let pending = null;
   if (req.user && !unlocked) {
     pending = await pendingOrderFor(req.user.id, 'course', course.id)
@@ -70,7 +77,7 @@ router.get('/courses/:slug', async (req, res, next) => {
   }
   res.render('course', {
     title: course.title,
-    course, lessons, totalSec, percent, unlocked, bundle, pending,
+    course, lessons, totalSec, percent, unlocked, bundle, pending, salesOpen: open,
     started: lessons.some(l => l.progress_at),
     resume: lessons.length ? pickResume(lessons) : null,
     bookmarked: await isBookmarked(userId, course.id),

@@ -13,6 +13,7 @@ const DEFAULTS = {
   support_title: 'Hỗ trợ qua Zalo',
   support_text: 'Cần tư vấn khóa học hoặc gặp sự cố khi học? Nhắn Zalo cho chúng tôi.',
   support_hours: '8:00 – 22:00 hằng ngày',
+  premium_sales_open: '1',
   pay_bank_bin: '',
   pay_account_no: '',
   pay_account_name: '',

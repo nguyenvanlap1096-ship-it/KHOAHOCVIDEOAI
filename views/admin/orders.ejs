@@ -7,6 +7,20 @@
     </div>
   </div>
 
+  <div class="sales-toggle card <%= salesOpen ? 'is-open' : 'is-closed' %>">
+    <span class="sales-dot" aria-hidden="true"></span>
+    <div class="body">
+      <strong><%= salesOpen ? 'Đang MỞ bán khóa chuyên sâu' : 'Đang ĐÓNG bán khóa chuyên sâu' %></strong>
+      <small><%= salesOpen ? 'Học viên thấy cột khóa chuyên sâu và mua được.' : 'Ẩn với người chưa mua, không nhận đơn mới. Người đã mua vẫn học bình thường.' %></small>
+    </div>
+    <form method="post" action="/admin/sales">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <input type="hidden" name="open" value="<%= salesOpen ? '0' : '1' %>">
+      <input type="hidden" name="next" value="/admin/orders">
+      <button class="btn btn-sm <%= salesOpen ? 'btn-outline btn-danger' : 'btn-primary' %>" type="submit"><%= salesOpen ? 'Đóng bán' : 'Mở bán' %></button>
+    </form>
+  </div>
+
   <nav class="filter-chips order-filter" aria-label="Lọc đơn hàng">
     <% [['pending', 'Chờ xác nhận'], ['paid', 'Đã thanh toán'], ['cancelled', 'Đã hủy'], ['all', 'Tất cả']].forEach(([key, label]) => { %>
       <a class="filter-chip" href="/admin/orders?status=<%= key %>" <%- status === key ? 'aria-current="true"' : '' %>>

@@ -21,6 +21,8 @@
             <div class="actions">
               <a class="btn btn-primary btn-lg" href="/orders/<%= pending.id %>"><svg class="i"><use href="#i-receipt"/></svg>Xem đơn & mã thanh toán</a>
             </div>
+          <% } else if (!salesOpen) { %>
+            <p class="sales-closed"><svg class="i"><use href="#i-lock"/></svg><span><strong>Khóa học đang tạm ngừng mở bán.</strong> Vui lòng quay lại sau hoặc liên hệ hỗ trợ để được thông báo khi mở bán.</span></p>
           <% } else if (!user) { %>
             <div class="actions">
               <a class="btn btn-primary btn-lg" href="/login?next=<%= encodeURIComponent('/courses/' + course.slug) %>"><svg class="i"><use href="#i-lock"/></svg>Đăng nhập để mua</a>

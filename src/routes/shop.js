@@ -5,12 +5,16 @@ const { requireAuth } = require('../middleware/auth');
 const { getSettings } = require('../services/settings');
 const { qrSvg, bankName } = require('../services/vietqr');
 const {
-  ORDER_STATUS, paymentConfig, bundleConfig, hasAccess, accessSummary, pendingOrderFor,
+  ORDER_STATUS, salesOpen, paymentConfig, bundleConfig, hasAccess, accessSummary, pendingOrderFor,
 } = require('../services/shop');
 
 router.post('/checkout', requireAuth, async (req, res) => {
   const settings = await getSettings();
   const pay = paymentConfig(settings);
+  if (!salesOpen(settings)) {
+    req.flash('error', 'Khóa chuyên sâu đang tạm ngừng mở bán. Vui lòng quay lại sau.');
+    return res.redirect('/');
+  }
   let item;
   if (req.body.item === 'bundle') {
     const bundle = bundleConfig(settings);

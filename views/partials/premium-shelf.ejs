@@ -7,6 +7,19 @@
     </div>
   </div>
 
+  <% if (user && user.role === 'admin') { %>
+    <div class="sales-mini <%= premium.salesOpen ? 'is-open' : 'is-closed' %>">
+      <span class="sales-dot" aria-hidden="true"></span>
+      <span><%= premium.salesOpen ? 'Đang mở bán' : 'Đang đóng bán (chỉ admin thấy cột này)' %></span>
+      <form method="post" action="/admin/sales">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <input type="hidden" name="open" value="<%= premium.salesOpen ? '0' : '1' %>">
+        <input type="hidden" name="next" value="/">
+        <button class="link-btn" type="submit"><%= premium.salesOpen ? 'Đóng bán' : 'Mở bán' %></button>
+      </form>
+    </div>
+  <% } %>
+
   <% if (premium.bundle.enabled) { %>
     <div class="bundle-card">
       <span class="bundle-tag">Tiết kiệm nhất</span>
