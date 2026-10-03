@@ -1,0 +1,69 @@
+<%- include('../partials/top', { crumbs: [{ label: 'Quản trị', href: '/admin' }, { label: 'Đơn hàng' }] }) %>
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Đơn hàng khóa chuyên sâu</h1>
+      <p class="muted">Mở app ngân hàng, đối chiếu <strong>nội dung chuyển khoản</strong> và <strong>số tiền</strong> rồi bấm Xác nhận – khóa học tự mở cho học viên.</p>
+    </div>
+  </div>
+
+  <nav class="filter-chips order-filter" aria-label="Lọc đơn hàng">
+    <% [['pending', 'Chờ xác nhận'], ['paid', 'Đã thanh toán'], ['cancelled', 'Đã hủy'], ['all', 'Tất cả']].forEach(([key, label]) => { %>
+      <a class="filter-chip" href="/admin/orders?status=<%= key %>" <%- status === key ? 'aria-current="true"' : '' %>>
+        <%= label %><% if (key !== 'all') { %> <span class="chip"><%= counts[key] || 0 %></span><% } %>
+      </a>
+    <% }) %>
+  </nav>
+
+  <% if (!orders.length) { %>
+    <div class="empty">
+      <svg class="i"><use href="#i-receipt"/></svg>
+      <h3><%= status === 'pending' ? 'Không có đơn nào đang chờ xác nhận' : 'Chưa có đơn hàng' %></h3>
+      <p>Đơn mới sẽ xuất hiện ở đây khi học viên bấm mua khóa chuyên sâu.</p>
+    </div>
+  <% } else { %>
+    <div class="table-wrap card">
+      <table class="table orders-table">
+        <thead><tr><th>Nội dung CK</th><th>Học viên</th><th>Khóa học</th><th>Số tiền</th><th>Thời gian</th><th>Trạng thái</th><th class="ta-right">Thao tác</th></tr></thead>
+        <tbody>
+          <% orders.forEach(o => { %>
+            <tr>
+              <td><strong class="mono-code"><%= o.transfer_code %></strong></td>
+              <td><span class="d-block"><%= o.user_name %></span><small class="muted"><%= o.user_email %></small></td>
+              <td><%= o.item_title %><% if (o.item_type === 'bundle') { %> <span class="badge badge-premium">Trọn bộ</span><% } %></td>
+              <td><strong><%= fmtVnd(o.amount) %></strong></td>
+              <td>
+                <small class="d-block">Đặt: <%= h.fmtDateTime(o.created_at) %></small>
+                <% if (o.notified_at) { %><small class="d-block notified">Báo đã CK: <%= h.fmtDateTime(o.notified_at) %></small><% } %>
+                <% if (o.confirmed_at) { %><small class="d-block muted">Xác nhận: <%= h.fmtDateTime(o.confirmed_at) %></small><% } %>
+              </td>
+              <td><span class="badge order-status status-<%= o.status %>"><%= ORDER_STATUS[o.status] %></span></td>
+              <td>
+                <div class="row-actions">
+                  <% if (o.status !== 'paid') { %>
+                    <form method="post" action="/admin/orders/<%= o.id %>/confirm" data-confirm="Xác nhận đã nhận <%= fmtVnd(o.amount) %> với nội dung <%= o.transfer_code %>? Khóa học sẽ mở cho <%= o.user_name %>.">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <button class="btn btn-sm btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>Xác nhận</button>
+                    </form>
+                  <% } %>
+                  <% if (o.status === 'pending') { %>
+                    <form method="post" action="/admin/orders/<%= o.id %>/cancel" data-confirm="Hủy đơn <%= o.transfer_code %>?">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <button class="btn btn-sm btn-ghost" type="submit">Hủy</button>
+                    </form>
+                  <% } else if (o.status === 'paid') { %>
+                    <form method="post" action="/admin/orders/<%= o.id %>/cancel" data-confirm="Hủy đơn <%= o.transfer_code %> và THU HỒI quyền học của <%= o.user_name %>? (Dùng khi hoàn tiền hoặc xác nhận nhầm.)">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <button class="btn btn-sm btn-outline btn-danger" type="submit">Thu hồi</button>
+                    </form>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+<%- include('../partials/bottom') %>

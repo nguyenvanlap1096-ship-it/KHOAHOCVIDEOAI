@@ -6,6 +6,8 @@ const { requireAdmin } = require('../middleware/auth');
 const { acceptFiles, discardUploads, removeFile, MAX_IMAGE_MB } = require('../uploads');
 const { getSettings, setSettings } = require('../services/settings');
 const { listCategories, listPrompts } = require('../services/prompts');
+const { BANKS } = require('../services/vietqr');
+const { ORDER_STATUS, fmtVnd, grantAccess, revokeAccess, countPendingOrders } = require('../services/shop');
 
 router.use(requireAdmin);
 
@@ -31,18 +33,19 @@ function cleanupReplaced(oldValue, newValue) {
 /* ---------- Tổng quan ---------- */
 router.get('/', async (req, res) => {
   const count = async sql => Number((await db.get(sql)).n);
-  const [users, courses, lessons, completions, prompts] = await Promise.all([
+  const [users, courses, lessons, completions, prompts, pendingOrders] = await Promise.all([
     count('SELECT COUNT(*) AS n FROM users'),
     count('SELECT COUNT(*) AS n FROM courses'),
     count('SELECT COUNT(*) AS n FROM lessons'),
     count('SELECT COUNT(*) AS n FROM progress WHERE completed = 1'),
     count('SELECT COUNT(*) AS n FROM prompts'),
+    countPendingOrders(),
   ]);
   const recentUsers = await db.all('SELECT id, name, email, role, created_at FROM users ORDER BY id DESC LIMIT 6');
   const settings = await getSettings();
   res.render('admin/dashboard', {
     title: 'Quản trị',
-    stats: { users, courses, lessons, completions, prompts },
+    stats: { users, courses, lessons, completions, prompts, pendingOrders },
     recentUsers,
     zaloConfigured: Boolean(settings.zalo_phone || settings.zalo_link || settings.zalo_qr),
     ...nav('dashboard'),
@@ -52,9 +55,9 @@ router.get('/', async (req, res) => {
 /* ---------- Khóa học ---------- */
 router.get('/courses', async (req, res) => {
   const courses = await db.all(
-    `SELECT c.id, c.slug, c.title, c.level, c.category, c.color, c.cover_image, c.published, COUNT(l.id) AS lesson_count
+    `SELECT c.id, c.slug, c.title, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.published, COUNT(l.id) AS lesson_count
        FROM courses c LEFT JOIN lessons l ON l.course_id = c.id
-      GROUP BY c.id, c.slug, c.title, c.level, c.category, c.color, c.cover_image, c.published, c.created_at
+      GROUP BY c.id, c.slug, c.title, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.published, c.created_at
       ORDER BY c.created_at DESC, c.id DESC`,
   );
   res.render('admin/courses', { title: 'Quản lý khóa học', courses, ...nav('courses') });
@@ -70,9 +73,13 @@ function readCourseForm(req, existing) {
     level: h.LEVELS.includes(body.level) ? body.level : h.LEVELS[0],
     color: /^#[0-9a-f]{6}$/i.test(body.color || '') ? body.color : '#4F46E5',
     published: body.published ? 1 : 0,
+    is_premium: body.is_premium ? 1 : 0,
+    price: Math.round(Number(String(body.price || '').replace(/[^\d]/g, '')) || 0),
   };
   const errors = {};
   if (!values.title) errors.title = 'Vui lòng nhập tên khóa học.';
+  if (values.is_premium && values.price < 1000) errors.price = 'Khóa chuyên sâu cần giá từ 1.000đ trở lên.';
+  if (values.price > 100000000) errors.price = 'Giá không hợp lệ.';
   else if (values.title.length > 200) errors.title = 'Tên khóa học tối đa 200 ký tự.';
   if (!values.slug) errors.slug = 'Đường dẫn không hợp lệ.';
   values.cover_image = resolveImage(req, 'cover', existing && existing.cover_image, errors);
@@ -99,8 +106,8 @@ router.post('/courses', acceptFiles(['cover']), async (req, res) => {
     return res.status(400).render('admin/course-form', courseFormLocals(null, { ...values, cover_image: null }, errors));
   }
   const { insertId } = await db.run(
-    'INSERT INTO courses (slug, title, description, level, category, color, cover_image, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [values.slug, values.title, values.description, values.level, values.category, values.color, values.cover_image, values.published],
+    'INSERT INTO courses (slug, title, description, level, category, color, cover_image, is_premium, price, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [values.slug, values.title, values.description, values.level, values.category, values.color, values.cover_image, values.is_premium, values.price, values.published],
   );
   req.flash('success', 'Đã tạo khóa học. Hãy thêm bài học đầu tiên.');
   res.redirect(`/admin/courses/${insertId}/lessons`);
@@ -124,10 +131,10 @@ router.post('/courses/:id', loadCourse, acceptFiles(['cover']), async (req, res)
     return res.status(400).render('admin/course-form', courseFormLocals(req.course, { ...values, cover_image: req.course.cover_image }, errors));
   }
   await db.run(
-    `UPDATE courses SET slug = ?, title = ?, description = ?, level = ?, category = ?, color = ?, cover_image = ?, published = ?,
+    `UPDATE courses SET slug = ?, title = ?, description = ?, level = ?, category = ?, color = ?, cover_image = ?, is_premium = ?, price = ?, published = ?,
             updated_at = CURRENT_TIMESTAMP
       WHERE id = ?`,
-    [values.slug, values.title, values.description, values.level, values.category, values.color, values.cover_image, values.published, req.course.id],
+    [values.slug, values.title, values.description, values.level, values.category, values.color, values.cover_image, values.is_premium, values.price, values.published, req.course.id],
   );
   cleanupReplaced(req.course.cover_image, values.cover_image);
   req.flash('success', 'Đã lưu thay đổi.');
@@ -137,6 +144,7 @@ router.post('/courses/:id', loadCourse, acceptFiles(['cover']), async (req, res)
 router.post('/courses/:id/delete', loadCourse, async (req, res) => {
   const lessonFiles = await db.all('SELECT video_type, video_ref, thumbnail FROM lessons WHERE course_id = ?', [req.course.id]);
   await db.run('DELETE FROM courses WHERE id = ?', [req.course.id]);
+  await db.run("DELETE FROM access WHERE scope = 'course' AND course_id = ?", [req.course.id]);
   removeFile(req.course.cover_image);
   lessonFiles.forEach(f => {
     if (f.video_type === 'upload') removeFile(f.video_ref);
@@ -416,7 +424,7 @@ router.post('/prompt-categories/:id/delete', async (req, res) => {
 
 /* ---------- Cài đặt: Zalo hỗ trợ ---------- */
 router.get('/settings', async (req, res) => {
-  res.render('admin/settings', { title: 'Cài đặt', values: await getSettings(), defaultSiteName: config.siteName, errors: {}, maxImageMb: MAX_IMAGE_MB, ...nav('settings') });
+  res.render('admin/settings', { title: 'Cài đặt', values: await getSettings(), defaultSiteName: config.siteName, banks: BANKS, errors: {}, maxImageMb: MAX_IMAGE_MB, ...nav('settings') });
 });
 
 router.post('/settings', acceptFiles(['zalo_qr', 'site_logo']), async (req, res) => {
@@ -432,8 +440,19 @@ router.post('/settings', acceptFiles(['zalo_qr', 'site_logo']), async (req, res)
     support_title: String(b.support_title || '').trim().slice(0, 80),
     support_text: String(b.support_text || '').trim().slice(0, 300),
     support_hours: String(b.support_hours || '').trim().slice(0, 80),
+    pay_bank_bin: BANKS.some(x => x.bin === b.pay_bank_bin) ? b.pay_bank_bin : '',
+    pay_account_no: String(b.pay_account_no || '').replace(/\s/g, '').slice(0, 30),
+    pay_account_name: String(b.pay_account_name || '').trim().toUpperCase().slice(0, 60),
+    pay_prefix: String(b.pay_prefix || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8) || 'BKAI',
+    bundle_enabled: b.bundle_enabled ? '1' : '',
+    bundle_title: String(b.bundle_title || '').trim().slice(0, 120),
+    bundle_price: String(Math.round(Number(String(b.bundle_price || '').replace(/[^\d]/g, '')) || 0) || ''),
+    bundle_description: String(b.bundle_description || '').trim().slice(0, 300),
   };
   const errors = {};
+  if (values.pay_account_no && !/^[A-Za-z0-9]{4,30}$/.test(values.pay_account_no)) errors.pay_account_no = 'Số tài khoản chỉ gồm chữ và số.';
+  if (values.pay_account_no && !values.pay_bank_bin) errors.pay_bank_bin = 'Vui lòng chọn ngân hàng.';
+  if (values.bundle_enabled && !(Number(values.bundle_price) >= 1000)) errors.bundle_price = 'Nhập giá gói trọn bộ (từ 1.000đ).';
   const digits = values.zalo_phone.replace(/\D/g, '');
   if (values.zalo_phone && (digits.length < 9 || digits.length > 12)) errors.zalo_phone = 'Số điện thoại Zalo không hợp lệ.';
   if (values.zalo_link && !/^https:\/\/(zalo\.me|oa\.zalo\.me|chat\.zalo\.me)\//i.test(values.zalo_link)) {
@@ -444,7 +463,7 @@ router.post('/settings', acceptFiles(['zalo_qr', 'site_logo']), async (req, res)
   if (hasErrors(errors)) {
     discardUploads(req);
     return res.status(400).render('admin/settings', {
-      title: 'Cài đặt', defaultSiteName: config.siteName, values: { ...values, zalo_qr: current.zalo_qr, site_logo: current.site_logo }, errors, maxImageMb: MAX_IMAGE_MB, ...nav('settings'),
+      title: 'Cài đặt', defaultSiteName: config.siteName, banks: BANKS, values: { ...values, zalo_qr: current.zalo_qr, site_logo: current.site_logo }, errors, maxImageMb: MAX_IMAGE_MB, ...nav('settings'),
     });
   }
   await setSettings(values);
@@ -477,6 +496,44 @@ router.post('/users/:id/role', async (req, res) => {
   res.redirect('/admin/users');
 });
 
+/* ---------- Đơn hàng khóa chuyên sâu ---------- */
+router.get('/orders', async (req, res) => {
+  const status = ['pending', 'paid', 'cancelled', 'all'].includes(req.query.status) ? req.query.status : 'pending';
+  const orders = await db.all(
+    `SELECT o.*, u.name AS user_name, u.email AS user_email
+       FROM orders o JOIN users u ON u.id = o.user_id
+      ${status === 'all' ? '' : 'WHERE o.status = ?'}
+      ORDER BY (o.notified_at IS NULL), o.id DESC LIMIT 200`,
+    status === 'all' ? [] : [status],
+  );
+  const counts = Object.fromEntries((await db.all('SELECT status, COUNT(*) AS n FROM orders GROUP BY status')).map(r => [r.status, Number(r.n)]));
+  res.render('admin/orders', { title: 'Đơn hàng', orders, status, counts, ORDER_STATUS, fmtVnd, ...nav('orders') });
+});
+
+async function loadOrder(req, res, next) {
+  req.order = await db.get('SELECT * FROM orders WHERE id = ?', [Number(req.params.id) || 0]);
+  if (!req.order) return next('route');
+  next();
+}
+
+router.post('/orders/:id/confirm', loadOrder, async (req, res) => {
+  if (req.order.status !== 'paid') {
+    await grantAccess(req.order.user_id, req.order.item_type, req.order.course_id, req.order.id);
+    await db.run("UPDATE orders SET status = 'paid', confirmed_at = CURRENT_TIMESTAMP WHERE id = ?", [req.order.id]);
+    req.flash('success', `Đã xác nhận đơn ${req.order.transfer_code} – khóa học đã mở cho học viên.`);
+  }
+  res.redirect('/admin/orders');
+});
+
+router.post('/orders/:id/cancel', loadOrder, async (req, res) => {
+  if (req.order.status === 'paid') await revokeAccess(req.order);
+  await db.run("UPDATE orders SET status = 'cancelled' WHERE id = ?", [req.order.id]);
+  req.flash('success', req.order.status === 'paid'
+    ? `Đã hủy đơn ${req.order.transfer_code} và thu hồi quyền học.`
+    : `Đã hủy đơn ${req.order.transfer_code}.`);
+  res.redirect(`/admin/orders?status=${req.order.status}`);
+});
+
 // Xóa học viên (kèm tiến độ học và khóa học đã lưu – xóa theo khóa ngoại).
 // Không cho xóa chính mình hay tài khoản admin: phải gỡ quyền admin trước.
 router.post('/users/:id/delete', async (req, res) => {
@@ -490,6 +547,8 @@ router.post('/users/:id/delete', async (req, res) => {
   } else {
     await db.run('DELETE FROM progress WHERE user_id = ?', [target.id]);
     await db.run('DELETE FROM bookmarks WHERE user_id = ?', [target.id]);
+    await db.run('DELETE FROM access WHERE user_id = ?', [target.id]);
+    await db.run('DELETE FROM orders WHERE user_id = ?', [target.id]);
     await db.run('DELETE FROM users WHERE id = ?', [target.id]);
     req.flash('success', `Đã xóa học viên “${target.name}”.`);
   }

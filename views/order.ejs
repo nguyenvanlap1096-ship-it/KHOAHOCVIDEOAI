@@ -1,0 +1,66 @@
+<%- include('partials/top') %>
+<div class="page page-narrow order-page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Đơn hàng <%= order.transfer_code %></h1>
+      <p class="muted"><%= order.item_title %><%= order.item_type === 'bundle' ? ' (gói trọn bộ)' : '' %></p>
+    </div>
+    <span class="badge order-status status-<%= order.status %>"><%= statusLabel %></span>
+  </div>
+
+  <% if (order.status === 'paid') { %>
+    <div class="card order-done">
+      <svg class="i"><use href="#i-check-circle"/></svg>
+      <h2>Thanh toán đã được xác nhận</h2>
+      <p>Khóa học đã được mở cho tài khoản của bạn. Chúc bạn học tốt!</p>
+      <a class="btn btn-primary" href="<%= course ? `/learn/${course.slug}` : '/' %>"><svg class="i"><use href="#i-play"/></svg>Vào học ngay</a>
+    </div>
+  <% } else if (order.status === 'cancelled') { %>
+    <div class="card order-done is-cancelled">
+      <svg class="i"><use href="#i-x"/></svg>
+      <h2>Đơn hàng đã hủy</h2>
+      <p>Nếu bạn đã chuyển khoản cho đơn này, hãy liên hệ hỗ trợ qua Zalo.</p>
+      <a class="btn btn-outline" href="<%= course ? `/courses/${course.slug}` : '/' %>">Quay lại khóa học</a>
+    </div>
+  <% } else { %>
+    <div class="card pay-card">
+      <div class="pay-qr">
+        <% if (svg) { %>
+          <div class="qr-box" role="img" aria-label="Mã VietQR chuyển khoản <%= vnd(order.amount) %>"><%- svg %></div>
+          <p class="qr-hint">Mở app ngân hàng → <strong>Quét mã QR</strong>. Số tiền và nội dung đã điền sẵn.</p>
+        <% } else { %>
+          <p class="muted">Website chưa cài đặt tài khoản nhận tiền. Vui lòng liên hệ hỗ trợ qua Zalo.</p>
+        <% } %>
+      </div>
+      <dl class="pay-info">
+        <div><dt>Ngân hàng</dt><dd><%= bank || '—' %></dd></div>
+        <div><dt>Số tài khoản</dt><dd><span id="payAcc"><%= pay.account %></span> <button type="button" class="copy-mini" data-copy="payAcc" aria-label="Sao chép số tài khoản"><svg class="i i-sm"><use href="#i-copy"/></svg><span>Chép</span></button></dd></div>
+        <% if (pay.accountName) { %><div><dt>Chủ tài khoản</dt><dd><%= pay.accountName %></dd></div><% } %>
+        <div><dt>Số tiền</dt><dd class="pay-amount"><span id="payAmount"><%= order.amount %></span><span class="sr-only"> đồng</span> <small><%= vnd(order.amount) %></small> <button type="button" class="copy-mini" data-copy="payAmount" aria-label="Sao chép số tiền"><svg class="i i-sm"><use href="#i-copy"/></svg><span>Chép</span></button></dd></div>
+        <div><dt>Nội dung chuyển khoản</dt><dd class="pay-code"><span id="payCode"><%= order.transfer_code %></span> <button type="button" class="copy-mini" data-copy="payCode" aria-label="Sao chép nội dung chuyển khoản"><svg class="i i-sm"><use href="#i-copy"/></svg><span>Chép</span></button></dd></div>
+      </dl>
+      <p class="pay-warn"><svg class="i i-sm"><use href="#i-shield"/></svg>Ghi <strong>đúng nội dung <%= order.transfer_code %></strong> để admin nhận ra đơn của bạn.</p>
+    </div>
+
+    <div class="card pay-steps">
+      <% if (order.notified_at) { %>
+        <p><svg class="i"><use href="#i-clock"/></svg><span>Bạn đã báo chuyển khoản. Admin sẽ kiểm tra và mở khóa học sớm nhất – thường trong giờ hỗ trợ. Trang này tự cập nhật khi đơn được xác nhận.</span></p>
+      <% } else { %>
+        <p>Sau khi chuyển khoản xong, bấm nút bên dưới để báo admin kiểm tra.</p>
+        <form method="post" action="/orders/<%= order.id %>/notify">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="btn btn-primary btn-lg btn-block" type="submit" data-loading-text="Đang gửi..."><svg class="i"><use href="#i-check-circle"/></svg>Tôi đã chuyển khoản</button>
+        </form>
+      <% } %>
+      <div class="pay-actions">
+        <a class="btn btn-ghost btn-sm" href="/orders/<%= order.id %>">Tải lại trạng thái</a>
+        <form method="post" action="/orders/<%= order.id %>/cancel" data-confirm="Hủy đơn <%= order.transfer_code %>? Nếu bạn đã chuyển khoản, đừng hủy – hãy liên hệ Zalo.">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="btn btn-ghost btn-sm" type="submit">Hủy đơn</button>
+        </form>
+      </div>
+    </div>
+  <% } %>
+</div>
+<% if (order.status === 'pending' && order.notified_at) { %><span hidden data-auto-refresh="30"></span><% } %>
+<%- include('partials/bottom') %>

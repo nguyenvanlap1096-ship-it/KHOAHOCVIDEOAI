@@ -18,6 +18,7 @@
       <a class="nav-item" href="/admin" <%- locals.adminNav === 'dashboard' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-shield"/></svg><span class="t">Tổng quan</span></a>
       <a class="nav-item" href="/admin/courses" <%- locals.adminNav === 'courses' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-layers"/></svg><span class="t">Khóa học &amp; bài học</span></a>
       <a class="nav-item" href="/admin/prompts" <%- locals.adminNav === 'prompts' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-sparkles"/></svg><span class="t">Prompt &amp; ngành nghề</span></a>
+      <a class="nav-item" href="/admin/orders" <%- locals.adminNav === 'orders' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-receipt"/></svg><span class="t">Đơn hàng</span><% if (pendingOrders) { %><span class="chip chip-alert"><%= pendingOrders %></span><% } %></a>
       <a class="nav-item" href="/admin/users" <%- locals.adminNav === 'users' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-users"/></svg><span class="t">Người dùng</span></a>
       <a class="nav-item" href="/admin/settings" <%- locals.adminNav === 'settings' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-settings"/></svg><span class="t">Cài đặt &amp; Zalo</span></a>
     </div>

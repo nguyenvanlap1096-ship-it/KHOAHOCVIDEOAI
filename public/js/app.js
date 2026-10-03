@@ -173,15 +173,20 @@
   document.querySelectorAll('[data-copy]').forEach(btn => btn.addEventListener('click', async () => {
     const text = document.getElementById(btn.dataset.copy).innerText.trim();
     const label = btn.querySelector('span');
+    const original = label.textContent;
     if (await copyText(text)) {
       btn.classList.add('is-copied');
-      label.textContent = 'Đã sao chép';
-      toast('Đã sao chép prompt. Nhớ thay các phần [trong ngoặc vuông].');
-      setTimeout(() => { btn.classList.remove('is-copied'); label.textContent = 'Sao chép'; }, 2000);
+      label.textContent = 'Đã chép';
+      toast(btn.dataset.copyMsg || `Đã sao chép: ${text}`);
+      setTimeout(() => { btn.classList.remove('is-copied'); label.textContent = original; }, 2000);
     } else {
       toast('Không sao chép được, hãy bôi đen và sao chép thủ công.', 'error');
     }
   }));
+
+  /* Trang đơn hàng đang chờ: tự tải lại định kỳ để thấy ngay khi admin xác nhận */
+  const autoRefresh = document.querySelector('[data-auto-refresh]');
+  if (autoRefresh) setTimeout(() => location.reload(), Number(autoRefresh.dataset.autoRefresh) * 1000);
   document.querySelectorAll('[data-expand]').forEach(btn => {
     const box = document.getElementById(btn.dataset.expand);
     if (box.scrollHeight <= box.clientHeight + 4) { box.classList.add('no-overflow'); btn.hidden = true; return; }

@@ -1,13 +1,16 @@
 const db = require('../db');
 const { coursePercent } = require('../helpers');
 
-const COURSE_COLS = 'c.id, c.slug, c.title, c.description, c.level, c.category, c.color, c.cover_image, c.published, c.created_at';
+const COURSE_COLS = 'c.id, c.slug, c.title, c.description, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.published, c.created_at';
 
 // Danh sách khóa học kèm số bài, tổng thời lượng và (nếu có userId) tiến độ của người học.
-async function listCourses({ userId = null, q = '', level = '', publishedOnly = true } = {}) {
+// premium: 'exclude' (chỉ khóa miễn phí), 'only' (chỉ khóa chuyên sâu) hoặc bỏ trống (tất cả).
+async function listCourses({ userId = null, q = '', level = '', publishedOnly = true, premium = '' } = {}) {
   const where = [];
   const params = [];
   if (publishedOnly) where.push('c.published = 1');
+  if (premium === 'exclude') where.push('c.is_premium = 0');
+  if (premium === 'only') where.push('c.is_premium = 1');
   if (q) {
     const like = `%${q}%`;
     where.push('(c.title LIKE ? OR c.description LIKE ? OR c.category LIKE ?)');

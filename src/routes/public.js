@@ -5,6 +5,10 @@ const config = require('../config');
 const h = require('../helpers');
 const { requireAuth } = require('../middleware/auth');
 const { listCourses, lessonsWithProgress, pickResume, isBookmarked, latestVideos } = require('../services/courses');
+const { getSettings } = require('../services/settings');
+const {
+  ORDER_STATUS, bundleConfig, hasAccess, accessSummary, pendingOrderFor,
+} = require('../services/shop');
 
 async function findCourse(slug, user) {
   const course = await db.get('SELECT * FROM courses WHERE slug = ?', [slug]);
@@ -13,17 +17,33 @@ async function findCourse(slug, user) {
   return course;
 }
 
+// Khóa chuyên sâu cho cột bên phải trang chủ, kèm trạng thái đã mở khóa của người xem.
+async function premiumShelf(user) {
+  const [courses, access, settings] = await Promise.all([
+    listCourses({ userId: user && user.id, premium: 'only' }),
+    accessSummary(user),
+    getSettings(),
+  ]);
+  const bundle = bundleConfig(settings);
+  const isAdmin = Boolean(user && user.role === 'admin');
+  courses.forEach(c => { c.unlocked = access.all || access.ids.has(c.id); });
+  return { courses, bundle, ownsBundle: access.all && !isAdmin };
+}
+
 router.get('/', async (req, res) => {
   const q = String(req.query.q || '').trim().slice(0, 100);
   const level = h.LEVELS.includes(req.query.level) ? req.query.level : '';
   const userId = req.user && req.user.id;
-  const courses = await listCourses({ userId, q, level });
-  const continueLearning = (q || level) ? [] : courses
+  const courses = await listCourses({ userId, q, level, premium: 'exclude' });
+  const continueLearning = (q || level) ? [] : (await listCourses({ userId }))
     .filter(c => c.started && c.percent < 100)
     .sort((a, b) => String(b.last_at).localeCompare(String(a.last_at)))
     .slice(0, 3);
   const videos = (q || level) ? [] : await latestVideos(4);
-  res.render('home', { title: 'Khám phá khóa học', courses, continueLearning, videos, q, level });
+  res.render('home', {
+    title: 'Khám phá khóa học', courses, continueLearning, videos, q, level,
+    premium: await premiumShelf(req.user),
+  });
 });
 
 router.get('/videos', async (req, res) => {
@@ -41,9 +61,16 @@ router.get('/courses/:slug', async (req, res, next) => {
   const lessons = await lessonsWithProgress(course.id, userId);
   const totalSec = lessons.reduce((s, l) => s + Number(l.duration_sec), 0);
   const percent = h.coursePercent(lessons.reduce((s, l) => s + l.percent, 0), lessons.length);
+  const unlocked = await hasAccess(req.user, course);
+  const bundle = bundleConfig(await getSettings());
+  let pending = null;
+  if (req.user && !unlocked) {
+    pending = await pendingOrderFor(req.user.id, 'course', course.id)
+      || (bundle.enabled ? await pendingOrderFor(req.user.id, 'bundle', null) : null);
+  }
   res.render('course', {
     title: course.title,
-    course, lessons, totalSec, percent,
+    course, lessons, totalSec, percent, unlocked, bundle, pending,
     started: lessons.some(l => l.progress_at),
     resume: lessons.length ? pickResume(lessons) : null,
     bookmarked: await isBookmarked(userId, course.id),
@@ -53,6 +80,10 @@ router.get('/courses/:slug', async (req, res, next) => {
 router.get('/learn/:slug{/:lessonId}', requireAuth, async (req, res, next) => {
   const course = await findCourse(req.params.slug, req.user);
   if (!course) return next();
+  if (!(await hasAccess(req.user, course))) {
+    req.flash('info', 'Đây là khóa chuyên sâu. Hãy mua khóa học để bắt đầu học.');
+    return res.redirect(`/courses/${course.slug}`);
+  }
   const lessons = await lessonsWithProgress(course.id, req.user.id);
   if (!lessons.length) {
     req.flash('info', 'Khóa học này chưa có bài học nào.');
@@ -87,23 +118,35 @@ router.get('/learn/:slug{/:lessonId}', requireAuth, async (req, res, next) => {
 });
 
 router.get('/my', requireAuth, async (req, res) => {
-  const courses = await listCourses({ userId: req.user.id });
-  const saved = await db.all('SELECT course_id FROM bookmarks WHERE user_id = ?', [req.user.id]);
+  const [courses, saved, orders, access] = await Promise.all([
+    listCourses({ userId: req.user.id }),
+    db.all('SELECT course_id FROM bookmarks WHERE user_id = ?', [req.user.id]),
+    db.all('SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC LIMIT 50', [req.user.id]),
+    accessSummary(req.user),
+  ]);
   const savedIds = new Set(saved.map(r => r.course_id));
   const learning = courses
     .filter(c => c.started)
     .sort((a, b) => String(b.last_at).localeCompare(String(a.last_at)));
+  const owned = req.user.role === 'admin' ? [] : courses.filter(c => Number(c.is_premium) && (access.all || access.ids.has(c.id)));
   res.render('my', {
     title: 'Khóa học của tôi',
     inProgress: learning.filter(c => c.percent < 100),
     completed: learning.filter(c => c.percent >= 100),
     saved: courses.filter(c => savedIds.has(c.id)),
+    owned, orders, ORDER_STATUS,
   });
 });
 
-// Video tự upload: chỉ phát cho người đã đăng nhập. sendFile hỗ trợ Range để tua video.
-router.get('/media/:file', requireAuth, (req, res, next) => {
+// Video tự upload: chỉ phát cho người đã đăng nhập (và đã mua nếu là khóa chuyên sâu).
+// sendFile hỗ trợ Range để tua video.
+router.get('/media/:file', requireAuth, async (req, res, next) => {
   if (!/^[a-f0-9]{32}\.(mp4|webm|ogv)$/.test(req.params.file)) return next();
+  const course = await db.get(
+    "SELECT c.id, c.is_premium FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.video_type = 'upload' AND l.video_ref = ?",
+    [req.params.file],
+  );
+  if (course && !(await hasAccess(req.user, course))) return res.status(403).end();
   res.sendFile(path.join(config.uploadDir, req.params.file), { maxAge: '1d' }, err => {
     if (err && !res.headersSent) next();
   });

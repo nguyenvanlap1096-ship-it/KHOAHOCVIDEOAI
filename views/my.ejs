@@ -2,6 +2,13 @@
 <div class="page">
   <h1 class="page-title">Khóa học của tôi</h1>
 
+  <% if (owned.length) { %>
+    <section class="section" id="premium">
+      <h2 class="section-title"><svg class="i"><use href="#i-crown"/></svg> Khóa chuyên sâu đã mua <span class="chip"><%= owned.length %></span></h2>
+      <div class="course-grid"><% owned.forEach(c => { %><%- include('partials/course-card', { course: c }) %><% }) %></div>
+    </section>
+  <% } %>
+
   <section class="section" id="learning">
     <h2 class="section-title">Đang học <span class="chip"><%= inProgress.length %></span></h2>
     <% if (inProgress.length) { %>
@@ -24,6 +31,27 @@
     <section class="section">
       <h2 class="section-title">Đã hoàn thành <span class="chip"><%= completed.length %></span></h2>
       <div class="course-grid"><% completed.forEach(c => { %><%- include('partials/course-card', { course: c }) %><% }) %></div>
+    </section>
+  <% } %>
+  <% if (orders.length) { %>
+    <section class="section" id="orders">
+      <h2 class="section-title">Đơn hàng của tôi <span class="chip"><%= orders.length %></span></h2>
+      <div class="table-wrap card">
+        <table class="table">
+          <thead><tr><th>Mã đơn</th><th>Khóa học</th><th>Số tiền</th><th>Ngày đặt</th><th>Trạng thái</th></tr></thead>
+          <tbody>
+            <% orders.forEach(o => { %>
+              <tr>
+                <td><a class="link" href="/orders/<%= o.id %>"><%= o.transfer_code %></a></td>
+                <td><%= o.item_title %></td>
+                <td><%= vnd(o.amount) %></td>
+                <td><%= h.fmtDateTime(o.created_at) %></td>
+                <td><span class="badge order-status status-<%= o.status %>"><%= ORDER_STATUS[o.status] %></span></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
     </section>
   <% } %>
 </div>

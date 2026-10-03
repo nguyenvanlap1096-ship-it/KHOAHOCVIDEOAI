@@ -5,6 +5,13 @@
     <a class="btn btn-primary" href="/admin/courses/new"><svg class="i"><use href="#i-plus"/></svg>Thêm khóa học</a>
   </div>
 
+  <% if (stats.pendingOrders) { %>
+    <a class="promo-strip promo-warn" href="/admin/orders">
+      <span class="promo-ico"><svg class="i"><use href="#i-receipt"/></svg></span>
+      <span class="body"><strong><%= stats.pendingOrders %> đơn khóa chuyên sâu đang chờ xác nhận</strong><small>Kiểm tra tài khoản ngân hàng rồi xác nhận để mở khóa cho học viên.</small></span>
+      <span class="btn btn-primary btn-sm">Xem đơn hàng</span>
+    </a>
+  <% } %>
   <% if (!zaloConfigured) { %>
     <a class="promo-strip promo-warn" href="/admin/settings">
       <span class="promo-ico"><svg class="i"><use href="#i-message"/></svg></span>
@@ -19,6 +26,7 @@
       ['Khóa học', stats.courses, 'i-layers', '/admin/courses'],
       ['Bài học', stats.lessons, 'i-video', '/admin/courses'],
       ['Prompt', stats.prompts, 'i-sparkles', '/admin/prompts'],
+      ['Đơn chờ xác nhận', stats.pendingOrders, 'i-receipt', '/admin/orders'],
       ['Lượt hoàn thành bài', stats.completions, 'i-check-circle', null],
     ].forEach(([label, value, icon, href]) => { %>
       <<%= href ? 'a' : 'div' %> class="stat card" <%- href ? `href="${href}"` : '' %>>

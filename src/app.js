@@ -11,6 +11,7 @@ const { loadUser } = require('./middleware/auth');
 const csrf = require('./middleware/csrf');
 const { serveImage } = require('./uploads');
 const { getSettings, supportInfo, siteInfo } = require('./services/settings');
+const { fmtVnd, countPendingOrders } = require('./services/shop');
 
 function sessionStore() {
   if (db.client !== 'mysql') return undefined; // MemoryStore khi chạy thử với SQLite
@@ -91,6 +92,8 @@ module.exports = function createApp() {
     delete req.session.flash;
     res.locals.sidebar = await sidebarData(req.user && req.user.id);
     res.locals.support = supportInfo(settings);
+    res.locals.vnd = fmtVnd;
+    res.locals.pendingOrders = req.user && req.user.role === 'admin' ? await countPendingOrders() : 0;
     next();
   });
   app.use(csrf);
@@ -98,6 +101,7 @@ module.exports = function createApp() {
   app.use('/', require('./routes/auth'));
   app.use('/', require('./routes/public'));
   app.use('/prompts', require('./routes/prompts'));
+  app.use('/', require('./routes/shop'));
   app.use('/api', require('./routes/api'));
   app.use('/admin', require('./routes/admin'));
 
@@ -116,6 +120,8 @@ module.exports = function createApp() {
     res.locals.sidebar ??= { saved: [], learning: [] };
     res.locals.csrf ??= '';
     res.locals.support ??= null;
+    res.locals.vnd ??= fmtVnd;
+    res.locals.pendingOrders ??= 0;
     const message = status >= 500 ? 'Đã có lỗi xảy ra. Vui lòng thử lại sau.' : err.message;
     if (req.originalUrl.startsWith('/api/')) return res.status(status).json({ error: message });
     res.status(status).render('error', { title: 'Lỗi', status, message });

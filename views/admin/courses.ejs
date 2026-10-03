@@ -22,7 +22,7 @@
               </td>
               <td><%= c.level %></td>
               <td><%= c.lesson_count %></td>
-              <td><span class="badge <%= Number(c.published) ? 'badge-success' : 'badge-warn' %>"><%= Number(c.published) ? 'Đã xuất bản' : 'Bản nháp' %></span></td>
+              <td><% if (Number(c.is_premium)) { %><span class="badge badge-premium">Chuyên sâu · <%= vnd(c.price) %></span> <% } %><span class="badge <%= Number(c.published) ? 'badge-success' : 'badge-warn' %>"><%= Number(c.published) ? 'Đã xuất bản' : 'Bản nháp' %></span></td>
               <td>
                 <div class="row-actions">
                   <a class="btn btn-sm btn-outline" href="/admin/courses/<%= c.id %>/lessons"><svg class="i"><use href="#i-video"/></svg>Bài học</a>

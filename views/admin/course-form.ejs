@@ -47,6 +47,19 @@
       </div>
     </div>
 
+    <div class="premium-fields">
+      <label class="switch">
+        <input type="checkbox" name="is_premium" value="1" <%= Number(values.is_premium) ? 'checked' : '' %> data-premium-toggle>
+        <span class="switch-ui" aria-hidden="true"></span>
+        <span><strong>Khóa chuyên sâu (trả phí)</strong><small class="d-block muted">Hiện ở cột “Khóa chuyên sâu” bên phải trang chủ. Học viên phải thanh toán và được admin xác nhận mới vào học được.</small></span>
+      </label>
+      <div class="field field-price <%= errors.price ? 'has-error' : '' %>" data-premium-price <%= Number(values.is_premium) ? '' : 'hidden' %>>
+        <label for="price">Giá bán (VNĐ)</label>
+        <div class="input-suffix"><input id="price" name="price" inputmode="numeric" placeholder="VD: 499000" value="<%= Number(values.price) ? values.price : '' %>" <%- aria('price') %>><span>đ</span></div>
+        <% if (errors.price) { %><%- err('price') %><% } else { %><p class="field-hint">Chỉ nhập số, ví dụ 499000.</p><% } %>
+      </div>
+    </div>
+
     <label class="switch">
       <input type="checkbox" name="published" value="1" <%= Number(values.published) ? 'checked' : '' %>>
       <span class="switch-ui" aria-hidden="true"></span>

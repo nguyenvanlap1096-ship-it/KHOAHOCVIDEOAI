@@ -23,6 +23,8 @@ async function initMysql() {
     waitForConnections: true,
     connectionLimit: 10,
   });
+  // Mọi thời điểm đọc/ghi theo UTC để hiển thị nhất quán (đổi sang giờ Việt Nam khi hiển thị).
+  pool.pool.on('connection', conn => conn.query("SET time_zone = '+00:00'"));
   return {
     client: 'mysql',
     pool,
@@ -77,6 +79,8 @@ async function columnExists(table, column) {
 const MIGRATIONS = [
   { table: 'courses', column: 'cover_image', mysql: 'VARCHAR(100)', sqlite: 'TEXT' },
   { table: 'lessons', column: 'thumbnail', mysql: 'VARCHAR(100)', sqlite: 'TEXT' },
+  { table: 'courses', column: 'is_premium', mysql: 'TINYINT(1) NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0' },
+  { table: 'courses', column: 'price', mysql: 'INT UNSIGNED NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0' },
   {
     table: 'lessons', column: 'updated_at',
     mysql: 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP', sqlite: 'TEXT',

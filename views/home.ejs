@@ -1,5 +1,6 @@
 <%- include('partials/top', { crumbs: [{ label: 'Khóa học', href: '/' }, { label: 'Khám phá' }] }) %>
-<div class="page">
+<% const showShelf = premium.courses.length > 0 || premium.bundle.enabled || (user && user.role === 'admin'); %>
+<div class="page home-page <%= showShelf ? 'has-shelf' : '' %>">
   <section class="hero">
     <div>
       <% if (user) { %><span class="eyebrow">Chào <%= user.name %>, hôm nay học gì?</span><% } %>
@@ -15,6 +16,9 @@
     </form>
   </section>
 
+  <% if (showShelf) { %><%- include('partials/premium-shelf') %><% } %>
+
+  <div class="home-main">
   <% if (continueLearning.length) { %>
     <section class="section">
       <h2 class="section-title">Tiếp tục học</h2>
@@ -74,5 +78,6 @@
       </div>
     <% } %>
   </section>
+  </div>
 </div>
 <%- include('partials/bottom') %>

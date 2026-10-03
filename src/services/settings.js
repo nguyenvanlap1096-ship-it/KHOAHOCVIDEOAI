@@ -13,6 +13,14 @@ const DEFAULTS = {
   support_title: 'Hỗ trợ qua Zalo',
   support_text: 'Cần tư vấn khóa học hoặc gặp sự cố khi học? Nhắn Zalo cho chúng tôi.',
   support_hours: '8:00 – 22:00 hằng ngày',
+  pay_bank_bin: '',
+  pay_account_no: '',
+  pay_account_name: '',
+  pay_prefix: 'BKAI',
+  bundle_enabled: '',
+  bundle_title: 'Trọn bộ khóa chuyên sâu',
+  bundle_price: '',
+  bundle_description: 'Mở toàn bộ khóa chuyên sâu hiện có và các khóa chuyên sâu ra mắt sau này.',
 };
 
 let cache = null;

@@ -39,7 +39,7 @@
           <div class="prompt-content" id="prompt-<%= p.id %>" data-collapsible><pre><%- h.highlightPrompt(p.content) %></pre></div>
           <footer>
             <button type="button" class="btn btn-ghost btn-sm" data-expand="prompt-<%= p.id %>" aria-expanded="false" aria-controls="prompt-<%= p.id %>">Xem đầy đủ</button>
-            <button type="button" class="btn btn-primary btn-sm" data-copy="prompt-<%= p.id %>"><svg class="i"><use href="#i-copy"/></svg><span>Sao chép</span></button>
+            <button type="button" class="btn btn-primary btn-sm" data-copy="prompt-<%= p.id %>" data-copy-msg="Đã sao chép prompt. Nhớ thay các phần [trong ngoặc vuông]."><svg class="i"><use href="#i-copy"/></svg><span>Sao chép</span></button>
           </footer>
         </article>
       <% }) %>

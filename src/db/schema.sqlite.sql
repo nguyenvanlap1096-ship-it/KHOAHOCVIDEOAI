@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS courses (
   category TEXT,
   color TEXT NOT NULL DEFAULT '#4F46E5',
   cover_image TEXT,
+  is_premium INTEGER NOT NULL DEFAULT 0,
+  price INTEGER NOT NULL DEFAULT 0,
   published INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -87,4 +89,29 @@ CREATE TABLE IF NOT EXISTS media (
   size INTEGER NOT NULL,
   data BLOB NOT NULL,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  item_type TEXT NOT NULL,
+  course_id INTEGER,
+  item_title TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  transfer_code TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'pending',
+  notified_at TEXT,
+  confirmed_at TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders (status);
+CREATE INDEX IF NOT EXISTS idx_orders_user ON orders (user_id);
+
+CREATE TABLE IF NOT EXISTS access (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  scope TEXT NOT NULL,
+  course_id INTEGER NOT NULL DEFAULT 0,
+  order_id INTEGER,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, scope, course_id)
 );

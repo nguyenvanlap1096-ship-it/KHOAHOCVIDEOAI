@@ -1,0 +1,55 @@
+<aside class="premium-shelf" aria-labelledby="premiumTitle">
+  <div class="premium-head">
+    <span class="premium-ico" aria-hidden="true"><svg class="i"><use href="#i-crown"/></svg></span>
+    <div>
+      <h2 id="premiumTitle">Khóa chuyên sâu</h2>
+      <p>Nội dung thực chiến nâng cao, mở khóa sau khi thanh toán.</p>
+    </div>
+  </div>
+
+  <% if (premium.bundle.enabled) { %>
+    <div class="bundle-card">
+      <span class="bundle-tag">Tiết kiệm nhất</span>
+      <h3><%= premium.bundle.title %></h3>
+      <% if (premium.bundle.description) { %><p><%= premium.bundle.description %></p><% } %>
+      <div class="bundle-price"><%= vnd(premium.bundle.price) %></div>
+      <% if (premium.ownsBundle) { %>
+        <span class="btn btn-success btn-sm btn-block"><svg class="i"><use href="#i-check-circle"/></svg>Bạn đã sở hữu gói này</span>
+      <% } else if (!user) { %>
+        <a class="btn btn-primary btn-sm btn-block" href="/login?next=/">Đăng nhập để mua</a>
+      <% } else if (user.role !== 'admin') { %>
+        <form method="post" action="/checkout">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <input type="hidden" name="item" value="bundle">
+          <button class="btn btn-primary btn-sm btn-block" type="submit">Mua trọn bộ</button>
+        </form>
+      <% } %>
+    </div>
+  <% } %>
+
+  <% if (premium.courses.length) { %>
+    <ul class="premium-list">
+      <% premium.courses.forEach(c => { %>
+        <li>
+          <a class="premium-item" href="/courses/<%= c.slug %>">
+            <span class="premium-thumb" style="--c:<%= c.color %>">
+              <% if (c.cover_image) { %><img src="<%= h.imageUrl(c.cover_image) %>" alt="" loading="lazy"><% } else { %><span><%= h.coverLabel(c.title) %></span><% } %>
+            </span>
+            <span class="body">
+              <strong><%= c.title %></strong>
+              <small><%= c.lesson_count %> bài · <%= c.level %></small>
+              <% if (c.unlocked) { %>
+                <span class="premium-state is-open"><svg class="i i-sm"><use href="#i-check-circle"/></svg><%= user && user.role === 'admin' ? 'Admin xem được' : 'Đã mở khóa' %></span>
+              <% } else { %>
+                <span class="premium-state"><svg class="i i-sm"><use href="#i-lock"/></svg><%= vnd(c.price) %></span>
+              <% } %>
+            </span>
+          </a>
+        </li>
+      <% }) %>
+    </ul>
+  <% } else if (user && user.role === 'admin') { %>
+    <p class="premium-empty">Chưa có khóa chuyên sâu. Khi tạo khóa học, bật <strong>“Khóa chuyên sâu”</strong> và đặt giá để khóa hiện ở đây.
+      <a href="/admin/courses/new">Tạo khóa chuyên sâu</a></p>
+  <% } %>
+</aside>

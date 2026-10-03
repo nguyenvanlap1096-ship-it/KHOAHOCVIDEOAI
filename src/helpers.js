@@ -78,6 +78,15 @@ function parseResources(text) {
   }).filter(Boolean);
 }
 
+// Thời điểm lưu trong CSDL (giờ UTC) → giờ Việt Nam, ví dụ "03/10/2026 12:45".
+function fmtDateTime(value) {
+  const t = Date.parse(String(value || '').replace(' ', 'T') + (/[zZ+]/.test(String(value)) ? '' : 'Z'));
+  if (!Number.isFinite(t)) return '';
+  return new Date(t).toLocaleString('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+}
+
 function coursePercent(pctSum, lessonCount) {
   return lessonCount ? Math.min(100, Math.round(Number(pctSum || 0) / lessonCount)) : 0;
 }
@@ -122,6 +131,6 @@ function freshness(item) {
 
 module.exports = {
   LEVELS, fmtDuration, fmtTotal, parseDuration, slugify, youtubeId,
-  initials, lines, paragraphs, parseResources, coursePercent,
+  initials, lines, paragraphs, parseResources, coursePercent, fmtDateTime,
   coverLabel, imageUrl, lessonThumb, escapeHtml, highlightPrompt, freshness,
 };

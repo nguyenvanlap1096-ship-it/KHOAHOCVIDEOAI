@@ -10,6 +10,16 @@
     src.addEventListener('input', () => { if (!touched) target.placeholder = slugify(src.value) || 'tu-dong-tao-tu-ten'; });
   }
 
+  /* Form khóa học: hiện ô giá khi bật "Khóa chuyên sâu" */
+  const premiumToggle = document.querySelector('[data-premium-toggle]');
+  const premiumPrice = document.querySelector('[data-premium-price]');
+  if (premiumToggle && premiumPrice) {
+    premiumToggle.addEventListener('change', () => {
+      premiumPrice.hidden = !premiumToggle.checked;
+      if (premiumToggle.checked) premiumPrice.querySelector('input').focus();
+    });
+  }
+
   /* Tự cắt sát mã QR: tìm mã QR trong ảnh (jsQR) rồi cắt bỏ phần thừa,
      chỉ chừa viền trắng mỏng để điện thoại vẫn quét được. Trả về null nếu không tìm thấy. */
   function loadImage(file) {

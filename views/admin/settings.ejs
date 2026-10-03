@@ -70,6 +70,58 @@
       hint: `Mở Zalo → Cá nhân → bấm vào mã QR → Lưu ảnh, rồi tải lên đây. Có thể dùng ảnh chụp màn hình: website tự cắt sát mã QR. Tối đa ${maxImageMb} MB.`,
     }) %>
 
+    <h2 class="form-section">Thanh toán khóa chuyên sâu</h2>
+    <p class="muted form-section-note">Tài khoản nhận tiền dùng để tạo mã <strong>VietQR</strong> (có sẵn số tiền và nội dung) cho mỗi đơn hàng.</p>
+    <div class="field-row">
+      <div class="field <%= errors.pay_bank_bin ? 'has-error' : '' %>">
+        <label for="pay_bank_bin">Ngân hàng</label>
+        <select id="pay_bank_bin" name="pay_bank_bin" <%- aria('pay_bank_bin') %>>
+          <option value="">— Chọn ngân hàng —</option>
+          <% banks.forEach(b => { %><option value="<%= b.bin %>" <%= values.pay_bank_bin === b.bin ? 'selected' : '' %>><%= b.name %></option><% }) %>
+        </select>
+        <%- err('pay_bank_bin') %>
+      </div>
+      <div class="field <%= errors.pay_account_no ? 'has-error' : '' %>">
+        <label for="pay_account_no">Số tài khoản</label>
+        <input id="pay_account_no" name="pay_account_no" inputmode="numeric" autocomplete="off" value="<%= values.pay_account_no %>" <%- aria('pay_account_no') %>>
+        <%- err('pay_account_no') %>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field grow">
+        <label for="pay_account_name">Tên chủ tài khoản</label>
+        <input id="pay_account_name" name="pay_account_name" maxlength="60" placeholder="NGUYEN VAN A" value="<%= values.pay_account_name %>">
+        <p class="field-hint">Viết hoa không dấu, giống trên app ngân hàng – hiện cho học viên đối chiếu.</p>
+      </div>
+      <div class="field field-sm">
+        <label for="pay_prefix">Tiền tố mã đơn</label>
+        <input id="pay_prefix" name="pay_prefix" maxlength="8" value="<%= values.pay_prefix %>">
+        <p class="field-hint">VD: BKAI → BKAI12</p>
+      </div>
+    </div>
+    <p class="pay-test-note"><svg class="i i-sm"><use href="#i-shield"/></svg>Sau khi lưu, hãy tự tạo một đơn thử và <strong>quét mã bằng app ngân hàng</strong> để chắc chắn tên chủ tài khoản hiện đúng trước khi bán.</p>
+
+    <label class="switch">
+      <input type="checkbox" name="bundle_enabled" value="1" <%= values.bundle_enabled === '1' ? 'checked' : '' %>>
+      <span class="switch-ui" aria-hidden="true"></span>
+      <span><strong>Bán gói trọn bộ</strong><small class="d-block muted">Một lần thanh toán, mở tất cả khóa chuyên sâu (kể cả khóa thêm sau này).</small></span>
+    </label>
+    <div class="field-row">
+      <div class="field grow">
+        <label for="bundle_title">Tên gói</label>
+        <input id="bundle_title" name="bundle_title" maxlength="120" value="<%= values.bundle_title %>">
+      </div>
+      <div class="field field-price <%= errors.bundle_price ? 'has-error' : '' %>">
+        <label for="bundle_price">Giá gói (VNĐ)</label>
+        <div class="input-suffix"><input id="bundle_price" name="bundle_price" inputmode="numeric" placeholder="VD: 1990000" value="<%= values.bundle_price %>" <%- aria('bundle_price') %>><span>đ</span></div>
+        <%- err('bundle_price') %>
+      </div>
+    </div>
+    <div class="field">
+      <label for="bundle_description">Mô tả gói</label>
+      <textarea id="bundle_description" name="bundle_description" rows="2" maxlength="300"><%= values.bundle_description %></textarea>
+    </div>
+
     <div class="form-actions">
       <button class="btn btn-primary" type="submit" data-loading-text="Đang lưu...">Lưu cài đặt</button>
     </div>

@@ -2,6 +2,7 @@ const router = require('express').Router();
 const db = require('../db');
 const { coursePercent } = require('../helpers');
 const { requireAuth } = require('../middleware/auth');
+const { hasAccess } = require('../services/shop');
 
 router.use(requireAuth);
 
@@ -9,11 +10,14 @@ router.use(requireAuth);
 router.post('/progress', async (req, res) => {
   const body = req.body || {};
   const lesson = await db.get(
-    `SELECT l.id, l.course_id, l.duration_sec FROM lessons l JOIN courses c ON c.id = l.course_id
+    `SELECT l.id, l.course_id, l.duration_sec, c.is_premium FROM lessons l JOIN courses c ON c.id = l.course_id
       WHERE l.id = ? AND (c.published = 1 OR ? = 1)`,
     [Number(body.lessonId) || 0, req.user.role === 'admin' ? 1 : 0],
   );
   if (!lesson) return res.status(404).json({ error: 'Không tìm thấy bài học.' });
+  if (!(await hasAccess(req.user, { id: lesson.course_id, is_premium: lesson.is_premium }))) {
+    return res.status(403).json({ error: 'Bạn chưa mua khóa học này.' });
+  }
 
   const position = Math.max(0, Math.floor(Number(body.position) || 0));
   const duration = Number(body.duration) > 0 ? Number(body.duration) : Number(lesson.duration_sec);
