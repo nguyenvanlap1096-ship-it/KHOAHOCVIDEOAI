@@ -16,9 +16,11 @@
         <figcaption>Quét bằng ứng dụng Zalo trên điện thoại</figcaption>
       </figure>
     <% } %>
+    <% if (support.url) { %>
     <a class="btn btn-zalo btn-block" href="<%= support.url %>" target="_blank" rel="noopener noreferrer">
       <svg class="i"><use href="#i-message"/></svg>Nhắn Zalo ngay
     </a>
+    <% } %>
     <% if (support.phone) { %>
       <a class="btn btn-outline btn-block" href="tel:<%= support.phone %>"><svg class="i"><use href="#i-phone"/></svg><%= support.phoneDisplay %></a>
     <% } %>

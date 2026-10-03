@@ -44,7 +44,7 @@ router.get('/', async (req, res) => {
     title: 'Quản trị',
     stats: { users, courses, lessons, completions, prompts },
     recentUsers,
-    zaloConfigured: Boolean(settings.zalo_phone || settings.zalo_link),
+    zaloConfigured: Boolean(settings.zalo_phone || settings.zalo_link || settings.zalo_qr),
     ...nav('dashboard'),
   });
 });

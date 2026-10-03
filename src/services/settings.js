@@ -36,11 +36,11 @@ async function setSettings(values) {
   cache = null;
 }
 
-// Thông tin hỗ trợ dùng cho nút Zalo nổi; null nếu chưa cấu hình.
+// Thông tin hỗ trợ cho khung/nút Zalo; hiện khi có số điện thoại, link hoặc ảnh QR (null nếu chưa có gì).
 function supportInfo(s) {
   const phone = String(s.zalo_phone || '').replace(/\D/g, '');
   const url = s.zalo_link || (phone ? `https://zalo.me/${phone}` : '');
-  if (!url) return null;
+  if (!url && !s.zalo_qr) return null;
   return {
     url,
     phone,

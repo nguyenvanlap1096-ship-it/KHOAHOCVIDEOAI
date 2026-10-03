@@ -74,7 +74,7 @@
       <% } else if (support.text) { %>
         <p class="zalo-side-text"><%= support.text %></p>
       <% } %>
-      <a class="btn btn-zalo btn-sm btn-block" href="<%= support.url %>" target="_blank" rel="noopener noreferrer"><svg class="i"><use href="#i-message"/></svg>Nhắn Zalo</a>
+      <% if (support.url) { %><a class="btn btn-zalo btn-sm btn-block" href="<%= support.url %>" target="_blank" rel="noopener noreferrer"><svg class="i"><use href="#i-message"/></svg>Nhắn Zalo</a><% } %>
       <% if (support.phone) { %>
         <a class="zalo-side-phone" href="tel:<%= support.phone %>"><svg class="i i-sm"><use href="#i-phone"/></svg><%= support.phoneDisplay %></a>
       <% } %>
