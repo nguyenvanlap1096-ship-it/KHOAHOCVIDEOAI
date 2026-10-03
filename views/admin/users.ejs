@@ -3,7 +3,7 @@
   <h1 class="page-title">Người dùng <span class="chip"><%= users.length %></span></h1>
   <div class="table-wrap card">
     <table class="table">
-      <thead><tr><th>Họ tên</th><th>Email</th><th>Bài đã học</th><th>Ngày tham gia</th><th>Vai trò</th></tr></thead>
+      <thead><tr><th>Họ tên</th><th>Email</th><th>Bài đã học</th><th>Ngày tham gia</th><th>Vai trò</th><th class="ta-right">Thao tác</th></tr></thead>
       <tbody>
         <% users.forEach(u => { const self = u.id === user.id; %>
           <tr>
@@ -22,6 +22,18 @@
                   <button class="btn btn-sm btn-ghost" type="submit"><%= u.role === 'admin' ? 'Gỡ quyền' : 'Cấp quyền admin' %></button>
                 </form>
               <% } %>
+            </td>
+            <td>
+              <div class="row-actions">
+                <% if (!self && u.role !== 'admin') { %>
+                  <form method="post" action="/admin/users/<%= u.id %>/delete" data-confirm="Xóa học viên “<%= u.name %>” (<%= u.email %>)? Toàn bộ tiến độ học và khóa học đã lưu của người này sẽ bị xóa, không thể hoàn tác.">
+                    <input type="hidden" name="_csrf" value="<%= csrf %>">
+                    <button class="btn btn-sm btn-outline btn-danger" type="submit" aria-label="Xóa học viên <%= u.name %>"><svg class="i"><use href="#i-trash"/></svg>Xóa</button>
+                  </form>
+                <% } else if (!self) { %>
+                  <span class="muted small-note">Gỡ quyền admin để xóa</span>
+                <% } %>
+              </div>
             </td>
           </tr>
         <% }) %>

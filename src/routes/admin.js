@@ -477,4 +477,23 @@ router.post('/users/:id/role', async (req, res) => {
   res.redirect('/admin/users');
 });
 
+// Xóa học viên (kèm tiến độ học và khóa học đã lưu – xóa theo khóa ngoại).
+// Không cho xóa chính mình hay tài khoản admin: phải gỡ quyền admin trước.
+router.post('/users/:id/delete', async (req, res) => {
+  const target = await db.get('SELECT id, name, role FROM users WHERE id = ?', [Number(req.params.id) || 0]);
+  if (!target) {
+    req.flash('error', 'Không tìm thấy người dùng.');
+  } else if (target.id === req.user.id) {
+    req.flash('error', 'Bạn không thể tự xóa tài khoản của chính mình.');
+  } else if (target.role === 'admin') {
+    req.flash('error', `${target.name} đang là quản trị viên. Hãy gỡ quyền admin trước khi xóa.`);
+  } else {
+    await db.run('DELETE FROM progress WHERE user_id = ?', [target.id]);
+    await db.run('DELETE FROM bookmarks WHERE user_id = ?', [target.id]);
+    await db.run('DELETE FROM users WHERE id = ?', [target.id]);
+    req.flash('success', `Đã xóa học viên “${target.name}”.`);
+  }
+  res.redirect('/admin/users');
+});
+
 module.exports = router;

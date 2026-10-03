@@ -797,6 +797,8 @@ mark { background: color-mix(in srgb, #FBBF24 35%, transparent); color: inherit;
 .zalo-side-phone { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; font-size: 13px; font-weight: 600; color: var(--text-muted); border-radius: 8px; }
 .zalo-side-phone:hover { color: var(--text); background: var(--surface-2); }
 
+.small-note { font-size: 12px; }
+
 /* Nút chuyển sáng / tối */
 .theme-toggle .i-moon, :root[data-theme="dark"] .theme-toggle .i-sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .i-moon { display: inline; }
