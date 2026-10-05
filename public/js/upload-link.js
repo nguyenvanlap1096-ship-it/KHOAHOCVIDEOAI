@@ -69,11 +69,30 @@
   }));
 
   // Khung tiến độ nhỏ ở góc trái dưới mọi trang quản trị: % và bước đang làm của từng video.
+  // Khung ở góc phải (trên nút Zalo); khi tất cả video đã xong thì tự ẩn sau 30 giây
+  // và không hiện lại thông báo cũ đó khi chuyển trang.
+  const HIDE_AFTER = 30000;
   let dock = null;
+  let hideTimer = null;
+  const store = {
+    get(k) { try { return sessionStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { sessionStorage.setItem(k, v); } catch { /* bỏ qua */ } },
+  };
   function renderDock(jobs) {
     const active = jobs.filter(j => !['done', 'error'].includes(j.status));
     const recent = jobs.filter(j => j.status === 'done' || j.status === 'error');
-    if (!jobs.length) { if (dock) dock.hidden = true; return; }
+    const finishedKey = recent.map(j => `${j.lessonId}:${j.status}`).join(',');
+    clearTimeout(hideTimer);
+    if (!jobs.length || (!active.length && store.get('uploadDockSeen') === finishedKey)) {
+      if (dock) dock.hidden = true;
+      return;
+    }
+    if (!active.length) {
+      hideTimer = setTimeout(() => {
+        if (dock) dock.hidden = true;
+        store.set('uploadDockSeen', finishedKey);
+      }, HIDE_AFTER);
+    }
     if (!dock) {
       dock = document.createElement('button');
       dock.type = 'button';
