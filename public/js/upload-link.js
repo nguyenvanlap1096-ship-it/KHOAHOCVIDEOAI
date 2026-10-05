@@ -68,14 +68,73 @@
     try { await waitReady(); channel.postMessage({ type: 'select', lessonId: Number(id) }); } catch { /* trung tâm tự chọn qua ?lesson= */ }
   }));
 
-  // Video tải xong: cập nhật nhãn "đang chờ video" trên trang hiện tại.
-  channel?.addEventListener('message', e => {
-    if (!e.data || e.data.type !== 'done') return;
-    document.querySelectorAll(`[data-pending-lesson="${e.data.lessonId}"]`).forEach(el => {
-      el.textContent = 'Video đã tải xong';
-      el.classList.replace('badge-warn', 'badge-success');
+  // Khung tiến độ nhỏ ở góc trái dưới mọi trang quản trị: % và bước đang làm của từng video.
+  let dock = null;
+  function renderDock(jobs) {
+    const active = jobs.filter(j => !['done', 'error'].includes(j.status));
+    const recent = jobs.filter(j => j.status === 'done' || j.status === 'error');
+    if (!jobs.length) { if (dock) dock.hidden = true; return; }
+    if (!dock) {
+      dock = document.createElement('button');
+      dock.type = 'button';
+      dock.className = 'upload-dock';
+      dock.setAttribute('aria-live', 'polite');
+      dock.title = 'Mở Trung tâm tải video';
+      dock.addEventListener('click', () => { const w = openCenter(); if (w) w.focus(); });
+      document.body.appendChild(dock);
+    }
+    dock.hidden = false;
+    const total = active.length ? Math.floor(active.reduce((s, j) => s + j.pct, 0) / active.length) : 100;
+    const head = active.length
+      ? `Đang tải ${active.length} video · ${total}%`
+      : `Đã tải xong ${recent.filter(j => j.status === 'done').length} video`;
+    dock.classList.toggle('is-done', !active.length);
+    dock.innerHTML = `<strong></strong><span class="bar-progress"><span style="width:${total}%"></span></span><ul></ul>`;
+    dock.querySelector('strong').textContent = head;
+    const ul = dock.querySelector('ul');
+    jobs.slice(0, 4).forEach(j => {
+      const li = document.createElement('li');
+      li.textContent = `${j.title || 'Bài học'} — ${j.label}${j.status === 'done' ? '' : ` ${j.pct}%`}`;
+      if (j.status === 'error') li.className = 'is-error';
+      ul.appendChild(li);
     });
+  }
+
+  // Nhãn "đang chờ video" ở danh sách bài học chạy theo %, và dòng tiến độ ngay dưới tên bài đang tải.
+  function updateBadges(jobs) {
+    jobs.forEach(j => {
+      const row = document.querySelector(`[data-upload-lesson="${j.lessonId}"]`)?.closest('.admin-lesson');
+      const body = row && row.querySelector('.body');
+      if (body && !body.querySelector('[data-pending-lesson]')) {
+        let tag = body.querySelector('.upload-inline');
+        if (!tag) {
+          tag = document.createElement('span');
+          tag.className = 'badge upload-inline';
+          body.appendChild(tag);
+        }
+        tag.textContent = j.status === 'done' ? 'Video mới đã tải xong' : `${j.label} ${j.pct}%`;
+        tag.className = `badge upload-inline ${j.status === 'done' ? 'badge-success' : j.status === 'error' ? 'badge-danger' : 'badge-primary'}`;
+      }
+      document.querySelectorAll(`[data-pending-lesson="${j.lessonId}"]`).forEach(el => {
+        if (j.status === 'done') {
+          el.textContent = 'Video đã tải xong';
+          el.classList.replace('badge-warn', 'badge-success');
+        } else {
+          el.textContent = `${j.label} ${j.pct}%`;
+        }
+      });
+    });
+  }
+
+  channel?.addEventListener('message', e => {
+    const m = e.data || {};
+    if (m.type === 'status') {
+      renderDock(m.jobs || []);
+      updateBadges(m.jobs || []);
+    }
   });
+  // Trang vừa mở: hỏi trung tâm (nếu đang mở) tiến độ hiện tại.
+  channel?.postMessage({ type: 'status?' });
 
   window.DemiaUploads = { supported, openCenter, sendToCenter };
 })();

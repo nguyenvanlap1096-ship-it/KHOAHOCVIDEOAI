@@ -954,7 +954,38 @@ mark { background: color-mix(in srgb, #FBBF24 35%, transparent); color: inherit;
 .upload-add { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .upload-add h2 { margin: 0; font-size: 15px; }
 .uploader-note { font-size: 12px; margin: 0; }
-.upload-pending { margin-top: 4px; align-self: flex-start; }
+.upload-pending, .upload-inline { margin-top: 4px; align-self: flex-start; font-variant-numeric: tabular-nums; }
+
+/* Tiến độ tải video: các bước trong trung tâm + khung nổi ở cửa sổ chính */
+.upload-names { display: flex; flex-direction: column; min-width: 0; }
+.upload-pct { font-size: 22px; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; line-height: 1; }
+.upload-item[data-status="done"] .upload-pct { color: var(--success); }
+.upload-item[data-status="error"] .upload-pct { color: var(--danger); }
+.upload-item[data-status="retrying"] .bar-progress span { background: var(--warn); }
+.upload-item[data-status="processing"] .bar-progress span { background: linear-gradient(90deg, var(--primary), #A855F7, var(--primary)); background-size: 200% 100%; animation: bar-move 1.2s linear infinite; }
+.upload-item[data-status="done"] .bar-progress span { background: var(--success); }
+@keyframes bar-move { to { background-position: -200% 0; } }
+.upload-steps { list-style: none; margin: 2px 0 0; padding: 0; display: flex; gap: 6px; font-size: 12px; color: var(--text-subtle); }
+.upload-steps li { flex: 1; display: flex; align-items: center; gap: 6px; }
+.upload-steps li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--border-strong); flex: none; }
+.upload-steps li.is-current { color: var(--primary); font-weight: 600; }
+.upload-steps li.is-current::before { border-color: var(--primary); box-shadow: 0 0 0 3px var(--ring); }
+.upload-steps li.is-done { color: var(--success); }
+.upload-steps li.is-done::before { border-color: var(--success); background: var(--success); }
+.upload-meta { flex-wrap: wrap; }
+.upload-meta .upload-detail { flex: 1; min-width: 180px; }
+.upload-dock {
+  position: fixed; left: 16px; bottom: 16px; z-index: 55; width: min(320px, calc(100vw - 100px));
+  display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; text-align: left;
+  border-radius: var(--radius); background: var(--bg); border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border));
+  box-shadow: var(--shadow); font-size: 13px; animation: drop .2s var(--ease);
+}
+.upload-dock strong { color: var(--primary); }
+.upload-dock.is-done strong { color: var(--success); }
+.upload-dock.is-done .bar-progress span { background: var(--success); }
+.upload-dock ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; color: var(--text-muted); font-size: 12px; }
+.upload-dock li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upload-dock li.is-error { color: var(--danger); }
 
 /* Nút chuyển sáng / tối */
 .theme-toggle .i-moon, :root[data-theme="dark"] .theme-toggle .i-sun { display: none; }
