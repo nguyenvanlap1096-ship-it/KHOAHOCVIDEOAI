@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS lessons (
   video_type VARCHAR(10) NOT NULL DEFAULT 'none',
   video_ref VARCHAR(500),
   thumbnail VARCHAR(100),
+  video_ratio VARCHAR(8),
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_lessons_course (course_id, position),

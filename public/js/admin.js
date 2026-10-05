@@ -125,22 +125,47 @@
   const duration = form.querySelector('#duration');
   const dropzone = form.querySelector('.dropzone');
 
+  const ratioField = form.querySelector('[data-ratio-field]');
+  const ratioSelect = form.querySelector('#video_ratio');
+  const detectedRatio = form.querySelector('#detected_ratio');
+  const ratioHint = form.querySelector('[data-ratio-hint]');
+  const RATIOS = ['16:9', '9:16', '1:1', '4:3', '3:4', '4:5', '21:9'];
+  const RATIO_NAME = { '16:9': 'ngang 16:9', '9:16': 'dọc 9:16', '1:1': 'vuông 1:1', '4:3': 'ngang 4:3', '3:4': 'dọc 3:4', '4:5': 'dọc 4:5', '21:9': 'siêu rộng 21:9' };
+  const nearestRatio = (w, h) => RATIOS.reduce((best, r) => {
+    const [a, b] = r.split(':').map(Number);
+    const [c, d] = best.split(':').map(Number);
+    return Math.abs(Math.log(a / b / (w / h))) < Math.abs(Math.log(c / d / (w / h))) ? r : best;
+  }, RATIOS[0]);
+  const showDetected = (ratio, source) => {
+    if (ratioHint) ratioHint.innerHTML = `Đã nhận diện <strong>${RATIO_NAME[ratio]}</strong> ${source}. Khung phát sẽ tự căn theo tỉ lệ này.`;
+  };
+
+  form.querySelectorAll('input[name="video_type"]').forEach(r => r.addEventListener('change', () => {
+    if (ratioField) ratioField.hidden = r.value === 'none';
+  }));
+  form.querySelector('#youtube_url')?.addEventListener('input', e => {
+    if (ratioSelect && ratioSelect.value === 'auto') showDetected(/\/shorts\//i.test(e.target.value) ? '9:16' : '16:9', 'từ link YouTube');
+  });
+
   function onFile() {
     const f = file.files[0];
     if (!f) return;
     fileName.textContent = `${f.name} · ${(f.size / 1024 / 1024).toFixed(1)} MB`;
-    // Đọc thời lượng video ngay trên trình duyệt để điền sẵn.
-    if (!duration.value) {
-      const url = URL.createObjectURL(f);
-      const v = document.createElement('video');
-      v.preload = 'metadata';
-      v.onloadedmetadata = () => {
-        const s = Math.round(v.duration);
-        if (isFinite(s) && s > 0) duration.value = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-        URL.revokeObjectURL(url);
-      };
-      v.src = url;
-    }
+    // Đọc thời lượng và kích thước video ngay trên trình duyệt (chỉ đọc phần đầu file, gần như tức thì).
+    const url = URL.createObjectURL(f);
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.onloadedmetadata = () => {
+      const s = Math.round(v.duration);
+      if (!duration.value && isFinite(s) && s > 0) duration.value = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+      if (v.videoWidth && v.videoHeight && detectedRatio) {
+        const r = nearestRatio(v.videoWidth, v.videoHeight);
+        detectedRatio.value = r;
+        showDetected(r, `(${v.videoWidth}×${v.videoHeight})`);
+      }
+      URL.revokeObjectURL(url);
+    };
+    v.src = url;
   }
   file?.addEventListener('change', onFile);
   ['dragenter', 'dragover'].forEach(ev => dropzone?.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('is-over'); }));

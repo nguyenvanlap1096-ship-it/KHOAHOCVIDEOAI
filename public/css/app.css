@@ -391,7 +391,17 @@ main { min-width: 0; display: flex; flex-direction: column; }
 .title-row h1 { margin: 0 0 8px; font-size: clamp(21px, 2.4vw, 28px); font-weight: 700; letter-spacing: -.015em; }
 .title-row .actions { margin-left: auto; display: flex; gap: 10px; flex: none; }
 
-.player { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius-lg); overflow: hidden; background: #0B1120; }
+/* Khung phát tự theo tỉ lệ video (--rw / --rh): video ngang lấp đầy chiều rộng,
+   video dọc đứng giữa "sân khấu" nền tối, cao tối đa ~78% màn hình để không phải cuộn. */
+.player-stage { display: flex; justify-content: center; border-radius: var(--radius-lg); overflow: hidden; background: #0B1120; }
+.player {
+  --max-h: 78vh;
+  position: relative; background: #0B1120;
+  aspect-ratio: var(--rw, 16) / var(--rh, 9);
+  width: min(100%, calc(var(--max-h) * var(--rw, 16) / var(--rh, 9)));
+  transition: width .25s var(--ease);
+}
+.player.is-portrait { --max-h: min(78vh, 760px); }
 .player iframe, .player video, .player #ytPlayer { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .player video { object-fit: contain; background: #000; }
 .player-empty {

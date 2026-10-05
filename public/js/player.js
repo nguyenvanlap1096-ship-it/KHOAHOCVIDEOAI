@@ -69,6 +69,12 @@
     isPlaying = () => !video.paused && !video.ended;
     video.addEventListener('loadedmetadata', () => {
       if (startAt > 0 && startAt < video.duration - 5) video.currentTime = startAt;
+      // Bài cũ chưa lưu tỉ lệ: lấy theo kích thước thật của video.
+      if (!player.dataset.ratio && video.videoWidth && video.videoHeight) {
+        player.style.setProperty('--rw', video.videoWidth);
+        player.style.setProperty('--rh', video.videoHeight);
+        player.classList.toggle('is-portrait', video.videoHeight > video.videoWidth);
+      }
     }, { once: true });
     video.addEventListener('pause', () => send(getPosition(), getDuration()));
     video.addEventListener('ended', () => send(getDuration(), getDuration(), true));

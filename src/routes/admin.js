@@ -174,6 +174,7 @@ function readLessonForm(req, existing) {
     resources: String(b.resources || '').trim(),
     video_type: ['youtube', 'upload', 'none'].includes(b.video_type) ? b.video_type : 'none',
     youtube_url: String(b.youtube_url || '').trim(),
+    video_ratio: h.VIDEO_RATIOS.includes(b.video_ratio) ? b.video_ratio : 'auto',
   };
   const errors = {};
   if (!values.title) errors.title = 'Vui lòng nhập tên bài học.';
@@ -193,13 +194,23 @@ function readLessonForm(req, existing) {
   }
   const thumbnail = resolveImage(req, 'thumbnail', existing && existing.thumbnail, errors);
 
+  // Tỉ lệ khung hình: admin chọn tay, hoặc tự nhận diện (file upload: đọc kích thước ngay trên trình duyệt;
+  // YouTube: link /shorts/ là video dọc 9:16). Không chuyển đổi video nên lưu tức thì.
+  let videoRatio = null;
+  if (values.video_type !== 'none') {
+    if (values.video_ratio !== 'auto') videoRatio = values.video_ratio;
+    else if (values.video_type === 'youtube') videoRatio = /\/shorts\//i.test(values.youtube_url) ? '9:16' : '16:9';
+    else if (req.uploaded.video_file) videoRatio = h.VIDEO_RATIOS.includes(b.detected_ratio) ? b.detected_ratio : null;
+    else if (existing && existing.video_ref === videoRef) videoRatio = existing.video_ratio || null;
+  }
+
   return {
     values: { ...values, thumbnail },
     errors,
     data: {
       title: values.title, duration_sec: durationSec || 0, summary: values.summary,
       key_points: values.key_points, resources: values.resources,
-      video_type: values.video_type, video_ref: videoRef, thumbnail,
+      video_type: values.video_type, video_ref: videoRef, thumbnail, video_ratio: videoRatio,
     },
   };
 }
@@ -208,7 +219,10 @@ function lessonFormValues(lesson) {
   return {
     ...lesson,
     duration: lesson.duration_sec ? h.fmtDuration(lesson.duration_sec) : '',
-    youtube_url: lesson.video_type === 'youtube' ? `https://www.youtube.com/watch?v=${lesson.video_ref}` : '',
+    youtube_url: lesson.video_type === 'youtube'
+      ? (lesson.video_ratio === '9:16' ? `https://www.youtube.com/shorts/${lesson.video_ref}` : `https://www.youtube.com/watch?v=${lesson.video_ref}`)
+      : '',
+    video_ratio: lesson.video_ratio || 'auto',
   };
 }
 
@@ -231,9 +245,9 @@ router.post('/courses/:id/lessons', loadCourse, lessonUploads, async (req, res) 
   }
   const { pos } = await db.get('SELECT COALESCE(MAX(position), 0) + 1 AS pos FROM lessons WHERE course_id = ?', [req.course.id]);
   await db.run(
-    `INSERT INTO lessons (course_id, position, title, duration_sec, summary, key_points, resources, video_type, video_ref, thumbnail, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-    [req.course.id, Number(pos), data.title, data.duration_sec, data.summary, data.key_points, data.resources, data.video_type, data.video_ref, data.thumbnail],
+    `INSERT INTO lessons (course_id, position, title, duration_sec, summary, key_points, resources, video_type, video_ref, thumbnail, video_ratio, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+    [req.course.id, Number(pos), data.title, data.duration_sec, data.summary, data.key_points, data.resources, data.video_type, data.video_ref, data.thumbnail, data.video_ratio],
   );
   req.flash('success', `Đã thêm bài học “${data.title}”.`);
   res.redirect(`/admin/courses/${req.course.id}/lessons`);
@@ -259,10 +273,10 @@ router.post('/lessons/:id', loadLesson, lessonUploads, async (req, res) => {
   // Chỉ đánh dấu "cập nhật" khi video thực sự thay đổi, để mục Video mới không bị nhiễu khi sửa chính tả.
   const videoChanged = data.video_type !== req.lesson.video_type || data.video_ref !== req.lesson.video_ref;
   await db.run(
-    `UPDATE lessons SET title = ?, duration_sec = ?, summary = ?, key_points = ?, resources = ?, video_type = ?, video_ref = ?, thumbnail = ?
+    `UPDATE lessons SET title = ?, duration_sec = ?, summary = ?, key_points = ?, resources = ?, video_type = ?, video_ref = ?, thumbnail = ?, video_ratio = ?
             ${videoChanged ? ', updated_at = CURRENT_TIMESTAMP' : ''}
       WHERE id = ?`,
-    [data.title, data.duration_sec, data.summary, data.key_points, data.resources, data.video_type, data.video_ref, data.thumbnail, req.lesson.id],
+    [data.title, data.duration_sec, data.summary, data.key_points, data.resources, data.video_type, data.video_ref, data.thumbnail, data.video_ratio, req.lesson.id],
   );
   if (req.lesson.video_type === 'upload') cleanupReplaced(req.lesson.video_ref, data.video_ref);
   cleanupReplaced(req.lesson.thumbnail, data.thumbnail);

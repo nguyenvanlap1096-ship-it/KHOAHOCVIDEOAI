@@ -20,7 +20,11 @@
   </div>
 
   <section aria-labelledby="lessonTitle">
-    <div class="player" id="player"
+    <% const ratio = h.ratioParts(lesson.video_ratio); const hasVideo = lesson.video_type !== 'none'; %>
+    <div class="player-stage">
+    <div class="player <%= hasVideo && ratio.portrait ? 'is-portrait' : '' %>" id="player"
+         style="--rw:<%= hasVideo ? ratio.w : 16 %>;--rh:<%= hasVideo ? ratio.h : 9 %>"
+         data-ratio="<%= hasVideo ? (lesson.video_ratio || '') : '16:9' %>"
          data-lesson-id="<%= lesson.id %>"
          data-video-type="<%= lesson.video_type %>"
          data-start="<%= startAt %>"
@@ -41,6 +45,7 @@
           <span>Bài học này không có video. Đọc phần tóm tắt bên dưới rồi đánh dấu hoàn thành.</span>
         </div>
       <% } %>
+    </div>
     </div>
 
     <div class="lesson-bar">

@@ -15,6 +15,7 @@ function fmtDuration(sec) {
 
 // 13500 -> "3 giờ 45 phút"
 function fmtTotal(sec) {
+  if ((Number(sec) || 0) > 0 && Number(sec) < 30) return 'dưới 1 phút';
   const mins = Math.round((Number(sec) || 0) / 60);
   const h = Math.floor(mins / 60);
   const m = mins % 60;
@@ -97,6 +98,28 @@ function coverLabel(title) {
   return m ? m[1] : String(title || '?').trim().charAt(0).toUpperCase();
 }
 
+// Tỉ lệ khung hình video hỗ trợ (rộng:cao).
+const VIDEO_RATIOS = ['16:9', '9:16', '1:1', '4:3', '3:4', '4:5', '21:9'];
+
+// Đổi kích thước video thật (vd 1080×1920) sang tỉ lệ chuẩn gần nhất (vd "9:16").
+function nearestRatio(width, height) {
+  const w = Number(width);
+  const hgt = Number(height);
+  if (!(w > 0 && hgt > 0)) return '';
+  const target = w / hgt;
+  return VIDEO_RATIOS.reduce((best, r) => {
+    const [a, b] = r.split(':').map(Number);
+    const [c, d] = best.split(':').map(Number);
+    return Math.abs(Math.log(a / b / target)) < Math.abs(Math.log(c / d / target)) ? r : best;
+  }, VIDEO_RATIOS[0]);
+}
+
+// "9:16" → { w: 9, h: 16, portrait: true }; mặc định 16:9.
+function ratioParts(ratio) {
+  const [w, hgt] = (VIDEO_RATIOS.includes(ratio) ? ratio : '16:9').split(':').map(Number);
+  return { w, h: hgt, portrait: hgt > w };
+}
+
 function imageUrl(filename) {
   return filename ? `/uploads/images/${filename}` : null;
 }
@@ -132,5 +155,5 @@ function freshness(item) {
 module.exports = {
   LEVELS, fmtDuration, fmtTotal, parseDuration, slugify, youtubeId,
   initials, lines, paragraphs, parseResources, coursePercent, fmtDateTime,
-  coverLabel, imageUrl, lessonThumb, escapeHtml, highlightPrompt, freshness,
+  VIDEO_RATIOS, nearestRatio, ratioParts, coverLabel, imageUrl, lessonThumb, escapeHtml, highlightPrompt, freshness,
 };

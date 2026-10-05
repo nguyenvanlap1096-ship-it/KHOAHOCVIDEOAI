@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS lessons (
   video_type TEXT NOT NULL DEFAULT 'none',
   video_ref TEXT,
   thumbnail TEXT,
+  video_ratio TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );

@@ -56,6 +56,19 @@
       <%- err('video_file') %>
     </div>
 
+    <div class="field" data-ratio-field <%= vt === 'none' ? 'hidden' : '' %>>
+      <label for="video_ratio">Khung hình video</label>
+      <% const currentRatio = values.video_ratio || 'auto'; %>
+      <select id="video_ratio" name="video_ratio">
+        <option value="auto" <%= currentRatio === 'auto' ? 'selected' : '' %>>Tự nhận diện (khuyên dùng)</option>
+        <% [['16:9', 'Ngang 16:9 – YouTube, máy tính'], ['9:16', 'Dọc 9:16 – TikTok, Shorts, Reels'], ['1:1', 'Vuông 1:1'], ['4:5', 'Dọc 4:5 – Facebook/Instagram'], ['4:3', 'Ngang 4:3'], ['3:4', 'Dọc 3:4'], ['21:9', 'Siêu rộng 21:9']].forEach(([val, label]) => { %>
+          <option value="<%= val %>" <%= currentRatio === val ? 'selected' : '' %>><%= label %></option>
+        <% }) %>
+      </select>
+      <input type="hidden" name="detected_ratio" id="detected_ratio" value="">
+      <p class="field-hint" data-ratio-hint>Khung phát tự co giãn theo video: ngang hiện đầy khung, dọc 9:16 hiện thẳng đứng ở giữa. Không chuyển đổi video nên không mất thời gian xử lý.</p>
+    </div>
+
     <%- include('../partials/image-field', {
       name: 'thumbnail', label: 'Ảnh thumbnail bài học (không bắt buộc)', current: values.thumbnail, error: errors.thumbnail,
       hint: `Hiển thị ở mục Video mới cập nhật và làm ảnh chờ của video. Bỏ trống: dùng ảnh YouTube hoặc ảnh bìa khóa học. Tối đa ${maxImageMb} MB.`,
