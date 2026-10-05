@@ -24,9 +24,9 @@
         <%- err('title') %>
       </div>
       <div class="field field-sm <%= errors.duration ? 'has-error' : '' %>">
-        <label for="duration">Thời lượng</label>
-        <input id="duration" name="duration" inputmode="numeric" placeholder="11:02" value="<%= values.duration || '' %>" <%- aria('duration') %>>
-        <% if (errors.duration) { %><%- err('duration') %><% } else { %><p class="field-hint">phút:giây</p><% } %>
+        <label for="duration">Thời lượng <span class="auto-tag">tự động</span></label>
+        <input id="duration" name="duration" inputmode="numeric" placeholder="tự quét" value="<%= values.duration || '' %>" <%- aria('duration') %>>
+        <% if (errors.duration) { %><%- err('duration') %><% } else { %><p class="field-hint" data-duration-hint>Tự quét khi chọn video / dán link</p><% } %>
       </div>
     </div>
 

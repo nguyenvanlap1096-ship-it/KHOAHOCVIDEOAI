@@ -930,6 +930,10 @@ mark { background: color-mix(in srgb, #FBBF24 35%, transparent); color: inherit;
 .link-btn { font-size: 12px; font-weight: 700; text-decoration: underline; min-height: 28px; color: inherit; }
 .sales-closed { display: flex; gap: 10px; align-items: flex-start; margin: 10px 0 0; padding: 12px; border-radius: 10px; background: var(--surface-2); color: var(--text-muted); font-size: 14px; }
 
+/* Thời lượng tự quét */
+.auto-tag { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 6px; background: var(--success-soft); color: var(--success); vertical-align: middle; }
+.field input.is-auto { border-color: color-mix(in srgb, var(--success) 50%, var(--border-strong)); background: color-mix(in srgb, var(--success) 6%, var(--bg)); }
+
 /* Nút chuyển sáng / tối */
 .theme-toggle .i-moon, :root[data-theme="dark"] .theme-toggle .i-sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .i-moon { display: inline; }

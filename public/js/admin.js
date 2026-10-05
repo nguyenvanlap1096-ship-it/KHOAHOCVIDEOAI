@@ -147,26 +147,112 @@
     if (ratioSelect && ratioSelect.value === 'auto') showDetected(/\/shorts\//i.test(e.target.value) ? '9:16' : '16:9', 'từ link YouTube');
   });
 
+  /* Thời lượng tự quét: điền vào ô Thời lượng mỗi khi chọn video mới (vẫn sửa tay được). */
+  const durationHint = form.querySelector('[data-duration-hint]');
+  const fmtSec = sec => {
+    const s = Math.round(sec);
+    const hh = Math.floor(s / 3600);
+    const mm = Math.floor((s % 3600) / 60);
+    const ss = String(s % 60).padStart(2, '0');
+    return hh ? `${hh}:${String(mm).padStart(2, '0')}:${ss}` : `${mm}:${ss}`;
+  };
+  const setDuration = (sec, source) => {
+    if (!(isFinite(sec) && sec > 0)) return;
+    duration.value = fmtSec(sec);
+    duration.classList.add('is-auto');
+    if (durationHint) durationHint.textContent = `Đã quét tự động ${source}`;
+  };
+  const durationStatus = text => { if (durationHint) durationHint.textContent = text; };
+  duration.addEventListener('input', () => {
+    duration.classList.remove('is-auto');
+    durationStatus('Đã nhập tay');
+  });
+
   function onFile() {
     const f = file.files[0];
     if (!f) return;
     fileName.textContent = `${f.name} · ${(f.size / 1024 / 1024).toFixed(1)} MB`;
+    durationStatus('Đang quét thời lượng…');
     // Đọc thời lượng và kích thước video ngay trên trình duyệt (chỉ đọc phần đầu file, gần như tức thì).
     const url = URL.createObjectURL(f);
     const v = document.createElement('video');
     v.preload = 'metadata';
+    v.muted = true;
+    const done = () => { setDuration(v.duration, 'từ file'); URL.revokeObjectURL(url); };
     v.onloadedmetadata = () => {
-      const s = Math.round(v.duration);
-      if (!duration.value && isFinite(s) && s > 0) duration.value = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
       if (v.videoWidth && v.videoHeight && detectedRatio) {
         const r = nearestRatio(v.videoWidth, v.videoHeight);
         detectedRatio.value = r;
         showDetected(r, `(${v.videoWidth}×${v.videoHeight})`);
       }
-      URL.revokeObjectURL(url);
+      if (isFinite(v.duration) && v.duration > 0) return done();
+      // Một số file WebM không ghi sẵn thời lượng: tua tới cuối để trình duyệt tự tính.
+      v.ontimeupdate = () => { v.ontimeupdate = null; v.currentTime = 0; done(); };
+      v.currentTime = Number.MAX_SAFE_INTEGER;
     };
+    v.onerror = () => { durationStatus('Không đọc được thời lượng, hãy nhập tay (phút:giây)'); URL.revokeObjectURL(url); };
     v.src = url;
   }
+
+  /* Link YouTube: hỏi trình phát YouTube (ẩn) để lấy thời lượng, không cần khóa API. */
+  const ytInput = form.querySelector('#youtube_url');
+  const ytId = s => {
+    s = String(s || '').trim();
+    if (/^[\w-]{11}$/.test(s)) return s;
+    const m = s.match(/(?:youtu\.be\/|[?&]v=|\/(?:embed|shorts|live)\/)([\w-]{11})/);
+    return m ? m[1] : null;
+  };
+  let ytApi = null;
+  let ytProbe = null;
+  let lastYtId = ytId(ytInput && ytInput.value);
+  const loadYtApi = () => ytApi || (ytApi = new Promise(resolve => {
+    if (window.YT && window.YT.Player) return resolve(window.YT);
+    window.onYouTubeIframeAPIReady = () => resolve(window.YT);
+    const s = document.createElement('script');
+    s.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(s);
+  }));
+  async function probeYoutube(id) {
+    durationStatus('Đang quét thời lượng từ YouTube…');
+    const YT = await loadYtApi();
+    const getDur = () => new Promise(resolve => {
+      let tries = 0;
+      const tick = () => {
+        const d = ytProbe && ytProbe.getDuration ? ytProbe.getDuration() : 0;
+        if (d > 0 || ++tries > 40) return resolve(d);
+        setTimeout(tick, 250);
+      };
+      tick();
+    });
+    if (!ytProbe) {
+      const box = document.createElement('div');
+      box.style.cssText = 'position:fixed;left:-10000px;top:0;width:320px;height:180px';
+      box.innerHTML = '<div id="ytProbe"></div>';
+      document.body.appendChild(box);
+      await new Promise(resolve => {
+        ytProbe = new YT.Player('ytProbe', {
+          host: 'https://www.youtube-nocookie.com', width: 320, height: 180, videoId: id,
+          playerVars: { mute: 1 }, events: { onReady: resolve },
+        });
+      });
+    } else {
+      ytProbe.cueVideoById(id);
+    }
+    const d = await getDur();
+    if (ytId(ytInput.value) !== id) return; // admin đã đổi link khác trong lúc quét
+    if (d > 0) setDuration(d, 'từ YouTube');
+    else durationStatus('Không lấy được thời lượng từ YouTube, hãy nhập tay (phút:giây)');
+  }
+  let ytTimer = null;
+  ytInput?.addEventListener('input', () => {
+    clearTimeout(ytTimer);
+    ytTimer = setTimeout(() => {
+      const id = ytId(ytInput.value);
+      if (!id || id === lastYtId) return;
+      lastYtId = id;
+      probeYoutube(id).catch(() => durationStatus('Không lấy được thời lượng từ YouTube, hãy nhập tay (phút:giây)'));
+    }, 500);
+  });
   file?.addEventListener('change', onFile);
   ['dragenter', 'dragover'].forEach(ev => dropzone?.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('is-over'); }));
   ['dragleave', 'drop'].forEach(ev => dropzone?.addEventListener(ev, () => dropzone.classList.remove('is-over')));
