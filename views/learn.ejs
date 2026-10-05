@@ -32,7 +32,7 @@
       <% if (lesson.video_type === 'youtube') { %>
         <div id="ytPlayer" data-video-id="<%= lesson.video_ref %>"></div>
         <noscript><a href="https://www.youtube.com/watch?v=<%= lesson.video_ref %>">Xem video trên YouTube</a></noscript>
-      <% } else if (lesson.video_type === 'upload' && !lesson.video_ref) { %>
+      <% } else if (lesson.video_type === 'upload' && (!lesson.video_ref || lesson.video_missing)) { %>
         <div class="player-empty" style="--c:<%= course.color %>">
           <svg class="i"><use href="#i-upload"/></svg>
           <strong>Video đang được tải lên</strong>

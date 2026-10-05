@@ -987,6 +987,12 @@ mark { background: color-mix(in srgb, #FBBF24 35%, transparent); color: inherit;
 .upload-dock li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .upload-dock li.is-error { color: var(--danger); }
 
+.storage-box { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: var(--radius); font-size: 14px; }
+.storage-box code { overflow-wrap: anywhere; }
+.storage-box.is-safe { background: var(--success-soft); color: var(--success); }
+.storage-box.is-risk { background: var(--danger-soft); color: var(--danger); }
+.storage-box strong { color: inherit; }
+
 /* Nút chuyển sáng / tối */
 .theme-toggle .i-moon, :root[data-theme="dark"] .theme-toggle .i-sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .i-moon { display: inline; }

@@ -4,6 +4,7 @@ const db = require('../db');
 const config = require('../config');
 const h = require('../helpers');
 const { requireAuth } = require('../middleware/auth');
+const { videoExists } = require('../uploads');
 const { listCourses, lessonsWithProgress, pickResume, isBookmarked, latestVideos } = require('../services/courses');
 const { getSettings } = require('../services/settings');
 const {
@@ -107,6 +108,7 @@ router.get('/learn/:slug{/:lessonId}', requireAuth, async (req, res, next) => {
     [req.user.id, lessons[idx].id],
   );
   const current = lessons[idx];
+  lesson.video_missing = lesson.video_type === 'upload' && lesson.video_ref && !videoExists(lesson.video_ref);
   // Bài đã xong thì phát lại từ đầu thay vì nhảy tới cuối video.
   const startAt = current.completed ? 0 : Number(lesson.position_sec);
 

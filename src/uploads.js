@@ -44,7 +44,10 @@ function removeFile(filename) {
     fs.unlink(path.join(imageDir, filename), () => {});
     return;
   }
-  fs.unlink(path.join(config.uploadDir, filename), () => {});
+  // Chốt an toàn: chỉ xóa file video khi không còn bài học nào dùng nó.
+  db.get('SELECT COUNT(*) AS n FROM lessons WHERE video_ref = ?', [filename])
+    .then(r => { if (!Number(r && r.n)) fs.unlink(path.join(config.uploadDir, filename), () => {}); })
+    .catch(() => {});
 }
 
 // Chép ảnh vừa nhận vào bảng media (MySQL dùng prepared statement để gửi dữ liệu nhị phân gọn hơn).
@@ -111,4 +114,9 @@ function discardUploads(req) {
   Object.values(req.uploaded || {}).forEach(removeFile);
 }
 
-module.exports = { acceptFiles, discardUploads, removeFile, serveImage, MAX_IMAGE_MB, VIDEO_EXT };
+// Video tự upload còn trên ổ đĩa không (bị mất nếu từng lưu trong thư mục mã nguồn rồi hosting deploy lại).
+function videoExists(filename) {
+  return Boolean(filename) && FILE_RE.test(filename) && fs.existsSync(path.join(config.uploadDir, filename));
+}
+
+module.exports = { videoExists, acceptFiles, discardUploads, removeFile, serveImage, MAX_IMAGE_MB, VIDEO_EXT };

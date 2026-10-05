@@ -36,6 +36,21 @@
       hint: `Ảnh vuông, nền trong suốt càng tốt (PNG/WebP), ví dụ 256×256. Dùng làm logo và biểu tượng tab trình duyệt. Tối đa ${maxImageMb} MB.`,
     }) %>
 
+    <h2 class="form-section">Lưu trữ video</h2>
+    <div class="storage-box <%= storage.persistent ? 'is-safe' : 'is-risk' %>">
+      <svg class="i"><use href="#<%= storage.persistent ? 'i-check-circle' : 'i-shield' %>"/></svg>
+      <div>
+        <% if (storage.persistent) { %>
+          <strong>Video được lưu an toàn ngoài mã nguồn – không bị mất khi cập nhật website.</strong>
+        <% } else if (storage.isProd) { %>
+          <strong>Cảnh báo: video đang lưu trong thư mục mã nguồn và sẽ bị xóa mỗi lần cập nhật website.</strong>
+        <% } else { %>
+          <strong>Đang chạy thử trên máy: video lưu trong thư mục dự án.</strong>
+        <% } %>
+        <small class="d-block muted">Thư mục: <code><%= storage.dir %></code> · <%= storage.count %> video · <%= storage.mb %> MB</small>
+      </div>
+    </div>
+
     <h2 class="form-section">Hỗ trợ Zalo</h2>
     <p class="muted form-section-note">Khung hỗ trợ Zalo (thanh bên trái và nút tròn góc phải dưới) sẽ hiện khi bạn nhập số điện thoại, link Zalo <strong>hoặc chỉ cần upload ảnh mã QR</strong>.</p>
 

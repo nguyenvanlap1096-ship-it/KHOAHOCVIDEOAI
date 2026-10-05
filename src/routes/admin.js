@@ -1,9 +1,11 @@
+const fs = require('fs');
+const path = require('path');
 const router = require('express').Router();
 const db = require('../db');
 const config = require('../config');
 const h = require('../helpers');
 const { requireAdmin } = require('../middleware/auth');
-const { acceptFiles, discardUploads, removeFile, MAX_IMAGE_MB } = require('../uploads');
+const { acceptFiles, discardUploads, removeFile, videoExists, MAX_IMAGE_MB } = require('../uploads');
 const { getSettings, setSettings } = require('../services/settings');
 const { listCategories, listPrompts } = require('../services/prompts');
 const { BANKS } = require('../services/vietqr');
@@ -162,6 +164,7 @@ router.get('/courses/:id/lessons', loadCourse, async (req, res) => {
     'SELECT id, position, title, duration_sec, video_type, video_ref, thumbnail, video_ratio FROM lessons WHERE course_id = ? ORDER BY position, id',
     [req.course.id],
   );
+  lessons.forEach(l => { l.video_missing = l.video_type === 'upload' && l.video_ref && !videoExists(l.video_ref); });
   res.render('admin/lessons', { title: `Bài học · ${req.course.title}`, course: req.course, lessons, ...nav('courses') });
 });
 
@@ -444,9 +447,16 @@ router.post('/prompt-categories/:id/delete', async (req, res) => {
   res.redirect('/admin/prompts');
 });
 
+// Thông tin nơi lưu video cho trang Cài đặt.
+function storageInfo() {
+  const files = (() => { try { return fs.readdirSync(config.uploadDir).filter(f => /\.(mp4|webm|ogv)$/.test(f)); } catch { return []; } })();
+  const bytes = files.reduce((s, f) => { try { return s + fs.statSync(path.join(config.uploadDir, f)).size; } catch { return s; } }, 0);
+  return { dir: config.uploadDir, persistent: config.uploadPersistent, isProd: config.isProd, count: files.length, mb: Math.round(bytes / 1048576) };
+}
+
 /* ---------- Cài đặt: Zalo hỗ trợ ---------- */
 router.get('/settings', async (req, res) => {
-  res.render('admin/settings', { title: 'Cài đặt', values: await getSettings(), defaultSiteName: config.siteName, banks: BANKS, errors: {}, maxImageMb: MAX_IMAGE_MB, ...nav('settings') });
+  res.render('admin/settings', { title: 'Cài đặt', values: await getSettings(), defaultSiteName: config.siteName, banks: BANKS, storage: storageInfo(), errors: {}, maxImageMb: MAX_IMAGE_MB, ...nav('settings') });
 });
 
 router.post('/settings', acceptFiles(['zalo_qr', 'site_logo']), async (req, res) => {
@@ -486,7 +496,7 @@ router.post('/settings', acceptFiles(['zalo_qr', 'site_logo']), async (req, res)
   if (hasErrors(errors)) {
     discardUploads(req);
     return res.status(400).render('admin/settings', {
-      title: 'Cài đặt', defaultSiteName: config.siteName, banks: BANKS, values: { ...values, zalo_qr: current.zalo_qr, site_logo: current.site_logo }, errors, maxImageMb: MAX_IMAGE_MB, ...nav('settings'),
+      title: 'Cài đặt', defaultSiteName: config.siteName, banks: BANKS, storage: storageInfo(), values: { ...values, zalo_qr: current.zalo_qr, site_logo: current.site_logo }, errors, maxImageMb: MAX_IMAGE_MB, ...nav('settings'),
     });
   }
   await setSettings(values);
