@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="/js/theme.js"></script>
-  <link rel="stylesheet" href="/css/app.css">
+  <script src="/js/theme.js?v=<%= assetV %>"></script>
+  <link rel="stylesheet" href="/css/app.css?v=<%= assetV %>">
 </head>
 <body class="uploader-body">
   <main class="uploader">
@@ -51,6 +51,7 @@
     <p class="uploader-note muted">Video được chia thành từng phần nhỏ: mạng chập chờn sẽ tự thử lại và tải tiếp từ chỗ dừng. Tải xong, video tự gắn vào bài học kèm thời lượng và khung hình.</p>
   </main>
   <%- include('../partials/icons') %>
-  <script src="/js/uploader.js" defer></script>
+  <script src="/js/upload-core.js?v=<%= assetV %>" defer></script>
+  <script src="/js/uploader.js?v=<%= assetV %>" defer></script>
 </body>
 </html>

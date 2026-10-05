@@ -263,22 +263,19 @@
 
   const toSeconds = v => String(v || '').trim().split(':').map(Number).reduce((acc, n) => acc * 60 + (n || 0), 0);
 
-  /* Có file video: lưu bài học ngay (không kèm file), rồi chuyển file sang "Trung tâm tải video"
-     chạy ở cửa sổ riêng – admin rời trang hay tải video cho bài khác thì video này vẫn tiếp tục tải. */
+  /* Có file video: lưu bài học ngay (không kèm file), rồi tải video theo từng phần 5 MB.
+     Ưu tiên chuyển file sang cửa sổ "Trung tâm tải video" (tải trong nền, rời trang vẫn tiếp tục);
+     nếu trình duyệt chặn cửa sổ bật lên thì tải theo từng phần ngay tại trang, có % và các bước. */
   form.addEventListener('submit', async e => {
     const type = form.querySelector('input[name="video_type"]:checked')?.value;
     if (type !== 'upload' || !file.files.length || e.defaultPrevented) return;
-    const bg = window.DemiaUploads;
-    if (!bg || !bg.supported) return uploadInPage(e);
     e.preventDefault();
     const videoFile = file.files[0];
+    const bg = window.DemiaUploads;
     // Mở cửa sổ trung tâm ngay trong thao tác bấm (trình duyệt chỉ cho mở popup lúc người dùng bấm).
-    const center = bg.openCenter();
-    if (!center) {
-      window.Demia.toast('Trình duyệt chặn cửa sổ Trung tâm tải video – sẽ tải ngay tại trang này. Hãy cho phép popup để lần sau tải trong nền.', 'error');
-      return uploadInPage(e);
-    }
+    const center = bg && bg.supported ? bg.openCenter() : null;
     const submitBtn = form.querySelector('[type="submit"]');
+    const btnText = submitBtn.textContent;
     submitBtn.classList.add('is-loading');
     submitBtn.textContent = 'Đang lưu bài học...';
 
@@ -291,7 +288,7 @@
     } catch {
       window.Demia.toast('Không lưu được bài học. Kiểm tra kết nối và thử lại.', 'error');
       submitBtn.classList.remove('is-loading');
-      submitBtn.textContent = 'Lưu bài học';
+      submitBtn.textContent = btnText;
       return;
     }
     if (!res.ok || !(res.headers.get('content-type') || '').includes('json')) {
@@ -301,43 +298,55 @@
       return;
     }
     const saved = await res.json();
-    try {
-      await bg.sendToCenter({
-        file: videoFile,
-        lessonId: saved.lessonId,
-        lessonTitle: saved.title,
-        ratio: detectedRatio ? detectedRatio.value : '',
-        duration: toSeconds(duration.value),
-      });
-      window.location.href = saved.redirect;
-    } catch {
-      window.Demia.toast('Không chuyển được file sang Trung tâm tải video – sẽ tải ngay tại trang này.', 'error');
-      uploadInPage(null, saved);
+    const job = {
+      file: videoFile, lessonId: saved.lessonId, lessonTitle: saved.title,
+      ratio: detectedRatio ? detectedRatio.value : '', duration: toSeconds(duration.value),
+    };
+
+    if (center) {
+      try {
+        await bg.sendToCenter(job);
+        window.location.href = saved.redirect;
+        return;
+      } catch { /* trung tâm không phản hồi → tải ngay tại trang */ }
+    } else {
+      window.Demia.toast('Trình duyệt chặn cửa sổ Trung tâm tải video – đang tải ngay tại trang này (giữ trang mở). Hãy cho phép popup để lần sau tải trong nền.', 'error');
     }
+    submitBtn.textContent = 'Đang tải video...';
+    uploadInPage(job, saved);
   });
 
-  /* Dự phòng (trình duyệt cũ / chặn popup): tải ngay tại trang, có thanh tiến trình. */
-  function uploadInPage(e, saved = null) {
-    if (e) e.preventDefault();
-    const target = saved ? `/admin/lessons/${saved.lessonId}${new URL(form.action, location.href).search}` : form.action;
+  /* Tải theo từng phần ngay tại trang (dự phòng), hiển thị % và bước đang làm. */
+  function uploadInPage(info, saved) {
+    const core = window.DemiaUploadCore;
     const box = document.getElementById('uploadProgress');
     const bar = document.getElementById('uploadBar');
     const text = document.getElementById('uploadText');
     box.hidden = false;
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', target);
-    xhr.upload.onprogress = ev => {
-      if (!ev.lengthComputable) return;
-      const pct = Math.round((ev.loaded / ev.total) * 100);
-      bar.style.width = pct + '%';
-      text.textContent = pct < 100 ? `Đang tải lên... ${pct}%` : 'Đang xử lý...';
+    box.scrollIntoView({ block: 'center' });
+    const job = core.createJob(info);
+    const leaveGuard = ev => { ev.preventDefault(); ev.returnValue = 'Video đang tải lên.'; };
+    window.addEventListener('beforeunload', leaveGuard);
+    const show = j => {
+      const pct = Math.floor(core.percent(j));
+      bar.style.width = `${pct}%`;
+      text.textContent = `${pct}% · ${core.stageText(j)}`;
+      box.dataset.status = j.status;
     };
-    xhr.onload = () => {
-      // Server trả về trang mới (redirect đã được trình duyệt theo) → hiển thị kết quả.
-      if (xhr.responseURL && xhr.status < 400) { window.location.href = xhr.responseURL; return; }
-      document.open(); document.write(xhr.responseText); document.close();
-    };
-    xhr.onerror = () => { text.textContent = 'Tải lên thất bại. Kiểm tra kết nối và thử lại.'; };
-    xhr.send(new FormData(form));
+    const start = () => core.run(job, show).then(() => {
+      if (job.status === 'done') {
+        window.removeEventListener('beforeunload', leaveGuard);
+        text.textContent = '100% · Hoàn tất – video đã sẵn sàng. Đang quay lại danh sách bài học…';
+        setTimeout(() => { window.location.href = saved.redirect; }, 800);
+      } else if (job.status === 'error') {
+        const again = document.createElement('button');
+        again.type = 'button';
+        again.className = 'btn btn-sm btn-outline';
+        again.textContent = 'Thử lại (tải tiếp từ chỗ dừng)';
+        again.onclick = () => { again.remove(); start(); };
+        text.after(again);
+      }
+    });
+    start();
   }
 })();

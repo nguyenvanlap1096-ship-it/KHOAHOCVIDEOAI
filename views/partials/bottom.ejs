@@ -2,9 +2,9 @@
   </main>
 </div>
 <%- include('zalo') %>
-<script src="/js/app.js" defer></script>
-<% if (user && user.role === 'admin') { %><script src="/js/upload-link.js" defer></script><% } %>
-<% (locals.scripts || []).forEach(src => { %><script src="<%= src %>" defer></script>
+<script src="/js/app.js?v=<%= assetV %>" defer></script>
+<% if (user && user.role === 'admin') { %><script src="/js/upload-link.js?v=<%= assetV %>" defer></script><% } %>
+<% (locals.scripts || []).forEach(src => { %><script src="<%= src %>?v=<%= assetV %>" defer></script>
 <% }) %>
 </body>
 </html>

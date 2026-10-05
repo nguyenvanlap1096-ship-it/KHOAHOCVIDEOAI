@@ -38,6 +38,9 @@ async function sidebarData(userId) {
   return { saved, learning };
 }
 
+// Phiên bản tài nguyên tĩnh: đổi mỗi lần khởi động (mỗi lần deploy) để trình duyệt tải lại CSS/JS mới.
+const ASSET_VERSION = Date.now().toString(36);
+
 module.exports = function createApp() {
   const app = express();
   app.set('view engine', 'ejs');
@@ -87,6 +90,7 @@ module.exports = function createApp() {
     res.locals.siteLogo = site.logo;
     res.locals.hero = { title: site.heroTitle, text: site.heroText };
     res.locals.path = req.path;
+    res.locals.assetV = ASSET_VERSION;
     res.locals.h = h;
     res.locals.flash = req.session.flash || null;
     // Cửa sổ Trung tâm tải video mở song song: không “lấy mất” thông báo của trang chính.
@@ -116,6 +120,7 @@ module.exports = function createApp() {
     const status = err.status || 500;
     if (status >= 500) console.error(err);
     res.locals.siteName ??= config.siteName;
+    res.locals.assetV ??= ASSET_VERSION;
     res.locals.siteTagline ??= '';
     res.locals.siteLogo ??= '/img/logo.svg';
     res.locals.h ??= h;
