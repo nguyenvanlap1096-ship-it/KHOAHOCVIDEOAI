@@ -61,8 +61,8 @@ router.get('/courses', async (req, res) => {
   const courses = await db.all(
     `SELECT c.id, c.slug, c.title, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.published, COUNT(l.id) AS lesson_count
        FROM courses c LEFT JOIN lessons l ON l.course_id = c.id
-      GROUP BY c.id, c.slug, c.title, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.published, c.created_at
-      ORDER BY c.created_at DESC, c.id DESC`,
+      GROUP BY c.id, c.slug, c.title, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.published, c.position
+      ORDER BY c.position, c.id`,
   );
   res.render('admin/courses', { title: 'Quản lý khóa học', courses, ...nav('courses') });
 });
@@ -109,9 +109,10 @@ router.post('/courses', acceptFiles(['cover']), async (req, res) => {
     discardUploads(req);
     return res.status(400).render('admin/course-form', courseFormLocals(null, { ...values, cover_image: null }, errors));
   }
+  const { top } = await db.get('SELECT COALESCE(MIN(position), 1) - 1 AS top FROM courses');
   const { insertId } = await db.run(
-    'INSERT INTO courses (slug, title, description, level, category, color, cover_image, is_premium, price, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [values.slug, values.title, values.description, values.level, values.category, values.color, values.cover_image, values.is_premium, values.price, values.published],
+    'INSERT INTO courses (slug, title, description, level, category, color, cover_image, is_premium, price, published, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [values.slug, values.title, values.description, values.level, values.category, values.color, values.cover_image, values.is_premium, values.price, values.published, Number(top)],
   );
   req.flash('success', 'Đã tạo khóa học. Hãy thêm bài học đầu tiên.');
   res.redirect(`/admin/courses/${insertId}/lessons`);
@@ -143,6 +144,20 @@ router.post('/courses/:id', loadCourse, acceptFiles(['cover']), async (req, res)
   cleanupReplaced(req.course.cover_image, values.cover_image);
   req.flash('success', 'Đã lưu thay đổi.');
   res.redirect('/admin/courses');
+});
+
+// Đổi thứ tự khóa học (chỉ đổi vị trí, không đụng nội dung).
+router.post('/courses/:id/move', loadCourse, async (req, res) => {
+  const courses = await db.all('SELECT id FROM courses ORDER BY position, id');
+  const idx = courses.findIndex(c => c.id === req.course.id);
+  const target = req.body.dir === 'up' ? idx - 1 : idx + 1;
+  if (target >= 0 && target < courses.length) {
+    [courses[idx], courses[target]] = [courses[target], courses[idx]];
+    for (let i = 0; i < courses.length; i++) {
+      await db.run('UPDATE courses SET position = ? WHERE id = ?', [i + 1, courses[i].id]);
+    }
+  }
+  res.redirect(`/admin/courses#course-${req.course.id}`);
 });
 
 router.post('/courses/:id/delete', loadCourse, async (req, res) => {

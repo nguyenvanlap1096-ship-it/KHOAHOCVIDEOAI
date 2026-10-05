@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
   const lessons = await db.all(
     `SELECT l.id, l.title, l.position, c.id AS course_id, c.title AS course_title
        FROM lessons l JOIN courses c ON c.id = l.course_id
-      ORDER BY c.is_premium, c.created_at, c.id, l.position, l.id`,
+      ORDER BY c.position, c.id, l.position, l.id`,
   );
   res.render('admin/uploads', { title: 'Trung tâm tải video', lessons, maxUploadMb: config.maxUploadMb, preselect: Number(req.query.lesson) || 0 });
 });

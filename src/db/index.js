@@ -83,6 +83,14 @@ const MIGRATIONS = [
   { table: 'courses', column: 'is_premium', mysql: 'TINYINT(1) NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0' },
   { table: 'courses', column: 'price', mysql: 'INT UNSIGNED NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0' },
   {
+    table: 'courses', column: 'position', mysql: 'INT NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0',
+    // Đánh số theo đúng thứ tự trang chủ đang hiển thị để không ai thấy khác đi sau khi cập nhật.
+    afterFn: async () => {
+      const rows = await impl.all('SELECT id FROM courses ORDER BY created_at DESC, id DESC');
+      for (let i = 0; i < rows.length; i++) await impl.run('UPDATE courses SET position = ? WHERE id = ?', [i + 1, rows[i].id]);
+    },
+  },
+  {
     table: 'lessons', column: 'updated_at',
     mysql: 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP', sqlite: 'TEXT',
     after: 'UPDATE lessons SET updated_at = created_at WHERE updated_at IS NULL',
@@ -94,6 +102,7 @@ async function migrate() {
     if (await columnExists(m.table, m.column)) continue;
     await impl.run(`ALTER TABLE ${m.table} ADD COLUMN ${m.column} ${m[impl.client]}`);
     if (m.after) await impl.run(m.after);
+    if (m.afterFn) await m.afterFn();
   }
 }
 

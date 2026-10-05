@@ -33,8 +33,8 @@ async function ensureAdmin() {
 
 async function insertModule(m) {
   const { insertId } = await db.run(
-    'INSERT INTO courses (slug, title, description, level, category, color, published) VALUES (?, ?, ?, ?, ?, ?, 1)',
-    [m.slug, m.title, m.description, m.level, m.category, m.color],
+    'INSERT INTO courses (slug, title, description, level, category, color, published, position) VALUES (?, ?, ?, ?, ?, ?, 1, ?)',
+    [m.slug, m.title, m.description, m.level, m.category, m.color, Number(m.code) + 1],
   );
   let position = 1;
   for (const title of m.lessons) {

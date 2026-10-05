@@ -12,8 +12,8 @@
       <table class="table">
         <thead><tr><th>Khóa học</th><th>Trình độ</th><th>Bài học</th><th>Trạng thái</th><th class="ta-right">Thao tác</th></tr></thead>
         <tbody>
-          <% courses.forEach(c => { %>
-            <tr>
+          <% courses.forEach((c, i) => { %>
+            <tr id="course-<%= c.id %>">
               <td>
                 <span class="cell-user">
                   <% if (c.cover_image) { %><img class="cover-thumb" src="<%= h.imageUrl(c.cover_image) %>" alt="" loading="lazy"><% } else { %><span class="fav-ico fav-lg cover-thumb" style="background:<%= c.color %>"><%= h.coverLabel(c.title) %></span><% } %>
@@ -25,6 +25,12 @@
               <td><% if (Number(c.is_premium)) { %><span class="badge badge-premium">Chuyên sâu · <%= vnd(c.price) %></span> <% } %><span class="badge <%= Number(c.published) ? 'badge-success' : 'badge-warn' %>"><%= Number(c.published) ? 'Đã xuất bản' : 'Bản nháp' %></span></td>
               <td>
                 <div class="row-actions">
+                  <% [['up', 'lên', 'i-arrow-up', i === 0], ['down', 'xuống', 'i-arrow-down', i === courses.length - 1]].forEach(([dir, label, icon, disabled]) => { %>
+                    <form method="post" action="/admin/courses/<%= c.id %>/move">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="dir" value="<%= dir %>">
+                      <button class="btn btn-sm btn-outline btn-icon" type="submit" aria-label="Chuyển “<%= c.title %>” <%= label %>" title="Chuyển <%= label %>" <%= disabled ? 'disabled' : '' %>><svg class="i"><use href="#<%= icon %>"/></svg></button>
+                    </form>
+                  <% }) %>
                   <a class="btn btn-sm btn-outline" href="/admin/courses/<%= c.id %>/lessons"><svg class="i"><use href="#i-video"/></svg>Bài học</a>
                   <a class="btn btn-sm btn-outline btn-icon" href="/admin/courses/<%= c.id %>/edit" aria-label="Sửa <%= c.title %>"><svg class="i"><use href="#i-edit"/></svg></a>
                   <a class="btn btn-sm btn-outline btn-icon" href="/courses/<%= c.slug %>" aria-label="Xem <%= c.title %>"><svg class="i"><use href="#i-eye"/></svg></a>

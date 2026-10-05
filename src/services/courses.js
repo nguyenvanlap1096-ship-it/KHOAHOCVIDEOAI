@@ -1,7 +1,7 @@
 const db = require('../db');
 const { coursePercent } = require('../helpers');
 
-const COURSE_COLS = 'c.id, c.slug, c.title, c.description, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.published, c.created_at';
+const COURSE_COLS = 'c.id, c.slug, c.title, c.description, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.position, c.published, c.created_at';
 
 // Danh sách khóa học kèm số bài, tổng thời lượng và (nếu có userId) tiến độ của người học.
 // premium: 'exclude' (chỉ khóa miễn phí), 'only' (chỉ khóa chuyên sâu) hoặc bỏ trống (tất cả).
@@ -25,7 +25,7 @@ async function listCourses({ userId = null, q = '', level = '', publishedOnly = 
        FROM courses c LEFT JOIN lessons l ON l.course_id = c.id
       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
       GROUP BY ${COURSE_COLS}
-      ORDER BY c.created_at DESC, c.id DESC`,
+      ORDER BY c.position, c.id`,
     params,
   );
 
