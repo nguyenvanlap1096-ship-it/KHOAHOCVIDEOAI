@@ -111,4 +111,4 @@ function discardUploads(req) {
   Object.values(req.uploaded || {}).forEach(removeFile);
 }
 
-module.exports = { acceptFiles, discardUploads, removeFile, serveImage, MAX_IMAGE_MB };
+module.exports = { acceptFiles, discardUploads, removeFile, serveImage, MAX_IMAGE_MB, VIDEO_EXT };

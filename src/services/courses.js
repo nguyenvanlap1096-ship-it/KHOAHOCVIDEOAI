@@ -87,7 +87,7 @@ async function latestVideos(limit = 8) {
             COALESCE(l.updated_at, l.created_at) AS updated_at,
             c.slug AS course_slug, c.title AS course_title, c.color, c.cover_image
        FROM lessons l JOIN courses c ON c.id = l.course_id
-      WHERE c.published = 1 AND l.video_type <> 'none'
+      WHERE c.published = 1 AND l.video_type <> 'none' AND (l.video_type <> 'upload' OR l.video_ref IS NOT NULL)
       ORDER BY COALESCE(l.updated_at, l.created_at) DESC, l.id DESC
       LIMIT ?`,
     [Number(limit)],

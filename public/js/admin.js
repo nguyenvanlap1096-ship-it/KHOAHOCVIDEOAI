@@ -261,17 +261,71 @@
     if (e.dataTransfer.files.length) { file.files = e.dataTransfer.files; onFile(); }
   });
 
-  /* Upload có thanh tiến trình khi gửi kèm file video */
-  form.addEventListener('submit', e => {
+  const toSeconds = v => String(v || '').trim().split(':').map(Number).reduce((acc, n) => acc * 60 + (n || 0), 0);
+
+  /* Có file video: lưu bài học ngay (không kèm file), rồi chuyển file sang "Trung tâm tải video"
+     chạy ở cửa sổ riêng – admin rời trang hay tải video cho bài khác thì video này vẫn tiếp tục tải. */
+  form.addEventListener('submit', async e => {
     const type = form.querySelector('input[name="video_type"]:checked')?.value;
     if (type !== 'upload' || !file.files.length || e.defaultPrevented) return;
+    const bg = window.DemiaUploads;
+    if (!bg || !bg.supported) return uploadInPage(e);
     e.preventDefault();
+    const videoFile = file.files[0];
+    // Mở cửa sổ trung tâm ngay trong thao tác bấm (trình duyệt chỉ cho mở popup lúc người dùng bấm).
+    const center = bg.openCenter();
+    if (!center) {
+      window.Demia.toast('Trình duyệt chặn cửa sổ Trung tâm tải video – sẽ tải ngay tại trang này. Hãy cho phép popup để lần sau tải trong nền.', 'error');
+      return uploadInPage(e);
+    }
+    const submitBtn = form.querySelector('[type="submit"]');
+    submitBtn.classList.add('is-loading');
+    submitBtn.textContent = 'Đang lưu bài học...';
+
+    const fd = new FormData(form);
+    fd.delete('video_file');
+    fd.set('video_pending', '1');
+    let res;
+    try {
+      res = await fetch(form.action, { method: 'POST', body: fd, headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+    } catch {
+      window.Demia.toast('Không lưu được bài học. Kiểm tra kết nối và thử lại.', 'error');
+      submitBtn.classList.remove('is-loading');
+      submitBtn.textContent = 'Lưu bài học';
+      return;
+    }
+    if (!res.ok || !(res.headers.get('content-type') || '').includes('json')) {
+      // Lỗi nhập liệu: hiện lại form kèm thông báo lỗi (cần chọn lại file video).
+      const html = await res.text();
+      document.open(); document.write(html); document.close();
+      return;
+    }
+    const saved = await res.json();
+    try {
+      await bg.sendToCenter({
+        file: videoFile,
+        lessonId: saved.lessonId,
+        lessonTitle: saved.title,
+        ratio: detectedRatio ? detectedRatio.value : '',
+        duration: toSeconds(duration.value),
+      });
+      window.location.href = saved.redirect;
+    } catch {
+      window.Demia.toast('Không chuyển được file sang Trung tâm tải video – sẽ tải ngay tại trang này.', 'error');
+      uploadInPage(null, saved);
+    }
+  });
+
+  /* Dự phòng (trình duyệt cũ / chặn popup): tải ngay tại trang, có thanh tiến trình. */
+  function uploadInPage(e, saved = null) {
+    if (e) e.preventDefault();
+    const target = saved ? `/admin/lessons/${saved.lessonId}${new URL(form.action, location.href).search}` : form.action;
     const box = document.getElementById('uploadProgress');
     const bar = document.getElementById('uploadBar');
     const text = document.getElementById('uploadText');
     box.hidden = false;
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', form.action);
+    xhr.open('POST', target);
     xhr.upload.onprogress = ev => {
       if (!ev.lengthComputable) return;
       const pct = Math.round((ev.loaded / ev.total) * 100);
@@ -285,5 +339,5 @@
     };
     xhr.onerror = () => { text.textContent = 'Tải lên thất bại. Kiểm tra kết nối và thử lại.'; };
     xhr.send(new FormData(form));
-  });
+  }
 })();

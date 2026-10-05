@@ -32,6 +32,12 @@
       <% if (lesson.video_type === 'youtube') { %>
         <div id="ytPlayer" data-video-id="<%= lesson.video_ref %>"></div>
         <noscript><a href="https://www.youtube.com/watch?v=<%= lesson.video_ref %>">Xem video trên YouTube</a></noscript>
+      <% } else if (lesson.video_type === 'upload' && !lesson.video_ref) { %>
+        <div class="player-empty" style="--c:<%= course.color %>">
+          <svg class="i"><use href="#i-upload"/></svg>
+          <strong>Video đang được tải lên</strong>
+          <span>Video của bài học này sẽ có trong ít phút nữa. Trong lúc chờ, bạn có thể đọc phần tóm tắt bên dưới.</span>
+        </div>
       <% } else if (lesson.video_type === 'upload') { %>
         <% const poster = h.imageUrl(lesson.thumbnail) || h.imageUrl(course.cover_image); %>
         <video id="videoEl" controls preload="metadata" playsinline src="/media/<%= lesson.video_ref %>" <% if (poster) { %>poster="<%= poster %>"<% } %>>

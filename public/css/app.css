@@ -934,6 +934,28 @@ mark { background: color-mix(in srgb, #FBBF24 35%, transparent); color: inherit;
 .auto-tag { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 6px; background: var(--success-soft); color: var(--success); vertical-align: middle; }
 .field input.is-auto { border-color: color-mix(in srgb, var(--success) 50%, var(--border-strong)); background: color-mix(in srgb, var(--success) 6%, var(--bg)); }
 
+/* Trung tâm tải video (cửa sổ riêng) */
+.uploader-body { background: var(--page); }
+.uploader { max-width: 560px; margin: 0 auto; padding: 18px 16px 32px; display: flex; flex-direction: column; gap: 14px; }
+.uploader-head { display: flex; gap: 12px; align-items: center; }
+.uploader-head h1 { margin: 0; font-size: 19px; }
+.uploader-summary { margin: 2px 0 0; font-size: 13px; color: var(--text-muted); }
+.uploader-summary.is-active { color: var(--primary); font-weight: 600; }
+.upload-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.upload-item { padding: 12px 14px; border-radius: var(--radius); background: var(--bg); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
+.upload-top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+.upload-title { font-size: 14px; }
+.upload-file { font-size: 12px; overflow-wrap: anywhere; }
+.upload-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 32px; }
+.upload-meta small { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.badge-danger { background: var(--danger-soft); color: var(--danger); }
+.upload-empty { padding: 18px; border: 1px dashed var(--border-strong); border-radius: var(--radius); text-align: center; font-size: 14px; }
+.upload-empty p { margin: 0 0 4px; }
+.upload-add { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.upload-add h2 { margin: 0; font-size: 15px; }
+.uploader-note { font-size: 12px; margin: 0; }
+.upload-pending { margin-top: 4px; align-self: flex-start; }
+
 /* Nút chuyển sáng / tối */
 .theme-toggle .i-moon, :root[data-theme="dark"] .theme-toggle .i-sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .i-moon { display: inline; }

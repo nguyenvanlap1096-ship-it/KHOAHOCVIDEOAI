@@ -89,7 +89,8 @@ module.exports = function createApp() {
     res.locals.path = req.path;
     res.locals.h = h;
     res.locals.flash = req.session.flash || null;
-    delete req.session.flash;
+    // Cửa sổ Trung tâm tải video mở song song: không “lấy mất” thông báo của trang chính.
+    if (!req.path.startsWith('/admin/uploads')) delete req.session.flash;
     res.locals.sidebar = await sidebarData(req.user && req.user.id);
     // Khung/nút hỗ trợ Zalo chỉ hiện cho người đã đăng nhập.
     res.locals.support = req.user ? supportInfo(settings) : null;

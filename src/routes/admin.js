@@ -11,6 +11,7 @@ const { ORDER_STATUS, fmtVnd, salesOpen, grantAccess, revokeAccess, countPending
 const { safeNext } = require('../middleware/auth');
 
 router.use(requireAdmin);
+router.use('/uploads', require('./admin-uploads'));
 
 const nav = active => ({ adminNav: active });
 const hasErrors = errors => Object.keys(errors).length > 0;
@@ -158,7 +159,7 @@ router.post('/courses/:id/delete', loadCourse, async (req, res) => {
 /* ---------- Bài học ---------- */
 router.get('/courses/:id/lessons', loadCourse, async (req, res) => {
   const lessons = await db.all(
-    'SELECT id, position, title, duration_sec, video_type, video_ref, thumbnail FROM lessons WHERE course_id = ? ORDER BY position, id',
+    'SELECT id, position, title, duration_sec, video_type, video_ref, thumbnail, video_ratio FROM lessons WHERE course_id = ? ORDER BY position, id',
     [req.course.id],
   );
   res.render('admin/lessons', { title: `Bài học · ${req.course.title}`, course: req.course, lessons, ...nav('courses') });
@@ -190,6 +191,7 @@ function readLessonForm(req, existing) {
     if (req.uploadErrors.video_file) errors.video_file = req.uploadErrors.video_file;
     else if (req.uploaded.video_file) videoRef = req.uploaded.video_file;
     else if (existing && existing.video_type === 'upload' && existing.video_ref) videoRef = existing.video_ref;
+    else if (b.video_pending === '1') videoRef = null;
     else errors.video_file = 'Vui lòng chọn file video.';
   }
   const thumbnail = resolveImage(req, 'thumbnail', existing && existing.thumbnail, errors);
@@ -249,8 +251,11 @@ router.post('/courses/:id/lessons', loadCourse, lessonUploads, async (req, res) 
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
     [req.course.id, Number(pos), data.title, data.duration_sec, data.summary, data.key_points, data.resources, data.video_type, data.video_ref, data.thumbnail, data.video_ratio],
   );
+  const { id: newId } = await db.get('SELECT MAX(id) AS id FROM lessons WHERE course_id = ?', [req.course.id]);
   req.flash('success', `Đã thêm bài học “${data.title}”.`);
-  res.redirect(`/admin/courses/${req.course.id}/lessons`);
+  const back = `/admin/courses/${req.course.id}/lessons`;
+  if (req.accepts(['html', 'json']) === 'json') return res.json({ ok: true, lessonId: newId, title: data.title, redirect: back });
+  res.redirect(back);
 });
 
 async function loadLesson(req, res, next) {
@@ -281,7 +286,9 @@ router.post('/lessons/:id', loadLesson, lessonUploads, async (req, res) => {
   if (req.lesson.video_type === 'upload') cleanupReplaced(req.lesson.video_ref, data.video_ref);
   cleanupReplaced(req.lesson.thumbnail, data.thumbnail);
   req.flash('success', 'Đã lưu bài học.');
-  res.redirect(`/admin/courses/${req.course.id}/lessons`);
+  const back = `/admin/courses/${req.course.id}/lessons`;
+  if (req.accepts(['html', 'json']) === 'json') return res.json({ ok: true, lessonId: req.lesson.id, title: data.title, redirect: back });
+  res.redirect(back);
 });
 
 router.post('/lessons/:id/delete', loadLesson, async (req, res) => {

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="<%= csrf %>">
+  <title>Trung tâm tải video</title>
+  <link rel="icon" href="<%= siteLogo %>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/js/theme.js"></script>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="uploader-body">
+  <main class="uploader">
+    <header class="uploader-head">
+      <img class="brand-logo" src="<%= siteLogo %>" alt="" width="36" height="36">
+      <div>
+        <h1>Trung tâm tải video</h1>
+        <p id="uploadSummary" class="uploader-summary" role="status">Chưa có video nào đang tải.</p>
+      </div>
+    </header>
+
+    <p class="form-error" id="secondaryNote" hidden>Trung tâm tải video đang mở ở một cửa sổ khác. Hãy dùng cửa sổ đó (cửa sổ này không nhận file từ trang bài học).</p>
+
+    <ul class="upload-list" id="uploadList" aria-live="polite"></ul>
+    <div class="upload-empty" id="uploadEmpty">
+      <p>Video bạn chọn ở trang bài học sẽ tự xuất hiện ở đây và tải lên trong nền.</p>
+      <p class="muted">Bạn có thể thu nhỏ cửa sổ này và tiếp tục làm việc ở cửa sổ chính.</p>
+    </div>
+
+    <form class="card upload-add" id="addForm">
+      <h2>Thêm video trực tiếp</h2>
+      <div class="field">
+        <label for="addLesson">Bài học</label>
+        <select id="addLesson" required>
+          <option value="">— Chọn bài học —</option>
+          <% let lastCourse = null; lessons.forEach(l => { if (l.course_id !== lastCourse) { if (lastCourse !== null) { %></optgroup><% } lastCourse = l.course_id; %><optgroup label="<%= l.course_title %>"><% } %>
+            <option value="<%= l.id %>" data-title="<%= l.title %>" <%= preselect === l.id ? 'selected' : '' %>><%= l.position %>. <%= l.title %></option>
+          <% }); if (lastCourse !== null) { %></optgroup><% } %>
+        </select>
+      </div>
+      <div class="field">
+        <label for="addFile">File video (MP4, WebM, OGG – tối đa <%= maxUploadMb %> MB)</label>
+        <input id="addFile" type="file" accept="video/mp4,video/webm,video/ogg" required>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit"><svg class="i"><use href="#i-upload"/></svg>Tải lên</button>
+    </form>
+
+    <p class="uploader-note muted">Video được chia thành từng phần nhỏ: mạng chập chờn sẽ tự thử lại và tải tiếp từ chỗ dừng. Tải xong, video tự gắn vào bài học kèm thời lượng và khung hình.</p>
+  </main>
+  <%- include('../partials/icons') %>
+  <script src="/js/uploader.js" defer></script>
+</body>
+</html>
