@@ -160,10 +160,21 @@ router.post('/courses/:id/move', loadCourse, async (req, res) => {
   res.redirect(`/admin/courses#course-${req.course.id}`);
 });
 
+// Đánh lại số thứ tự liền mạch 1, 2, 3… (sau khi xóa) – chỉ đổi vị trí, không đụng nội dung.
+async function renumberLessons(courseId) {
+  const rows = await db.all('SELECT id FROM lessons WHERE course_id = ? ORDER BY position, id', [courseId]);
+  for (let i = 0; i < rows.length; i++) await db.run('UPDATE lessons SET position = ? WHERE id = ?', [i + 1, rows[i].id]);
+}
+async function renumberCourses() {
+  const rows = await db.all('SELECT id FROM courses ORDER BY position, id');
+  for (let i = 0; i < rows.length; i++) await db.run('UPDATE courses SET position = ? WHERE id = ?', [i + 1, rows[i].id]);
+}
+
 router.post('/courses/:id/delete', loadCourse, async (req, res) => {
   const lessonFiles = await db.all('SELECT video_type, video_ref, thumbnail FROM lessons WHERE course_id = ?', [req.course.id]);
   await db.run('DELETE FROM courses WHERE id = ?', [req.course.id]);
   await db.run("DELETE FROM access WHERE scope = 'course' AND course_id = ?", [req.course.id]);
+  await renumberCourses();
   removeFile(req.course.cover_image);
   lessonFiles.forEach(f => {
     if (f.video_type === 'upload') removeFile(f.video_ref);
@@ -311,6 +322,7 @@ router.post('/lessons/:id', loadLesson, lessonUploads, async (req, res) => {
 
 router.post('/lessons/:id/delete', loadLesson, async (req, res) => {
   await db.run('DELETE FROM lessons WHERE id = ?', [req.lesson.id]);
+  await renumberLessons(req.course.id);
   if (req.lesson.video_type === 'upload') removeFile(req.lesson.video_ref);
   removeFile(req.lesson.thumbnail);
   req.flash('success', `Đã xóa bài học “${req.lesson.title}”.`);

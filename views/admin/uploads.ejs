@@ -36,8 +36,8 @@
         <label for="addLesson">Bài học</label>
         <select id="addLesson" required>
           <option value="">— Chọn bài học —</option>
-          <% let lastCourse = null; lessons.forEach(l => { if (l.course_id !== lastCourse) { if (lastCourse !== null) { %></optgroup><% } lastCourse = l.course_id; %><optgroup label="<%= l.course_title %>"><% } %>
-            <option value="<%= l.id %>" data-title="<%= l.title %>" <%= preselect === l.id ? 'selected' : '' %>><%= l.position %>. <%= l.title %></option>
+          <% let lastCourse = null; let n = 0; lessons.forEach(l => { if (l.course_id !== lastCourse) { n = 0; if (lastCourse !== null) { %></optgroup><% } lastCourse = l.course_id; %><optgroup label="<%= l.course_title %>"><% } %>
+            <option value="<%= l.id %>" data-title="<%= l.title %>" <%= preselect === l.id ? 'selected' : '' %>><%= ++n %>. <%= l.title %></option>
           <% }); if (lastCourse !== null) { %></optgroup><% } %>
         </select>
       </div>
