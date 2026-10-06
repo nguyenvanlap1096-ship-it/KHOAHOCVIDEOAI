@@ -59,9 +59,10 @@ router.get('/', async (req, res) => {
 /* ---------- Khóa học ---------- */
 router.get('/courses', async (req, res) => {
   const courses = await db.all(
-    `SELECT c.id, c.slug, c.title, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.published, COUNT(l.id) AS lesson_count
+    `SELECT c.id, c.slug, c.title, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.published, c.locked, COUNT(l.id) AS lesson_count,
+            CASE WHEN ${RESOURCE_ONLY_SQL} THEN 1 ELSE 0 END AS resource_only
        FROM courses c LEFT JOIN lessons l ON l.course_id = c.id
-      GROUP BY c.id, c.slug, c.title, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.published, c.position
+      GROUP BY c.id, c.slug, c.title, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.published, c.locked, c.position
       ORDER BY c.position, c.id`,
   );
   res.render('admin/courses', { title: 'Quản lý khóa học', courses, ...nav('courses') });
@@ -147,6 +148,30 @@ router.post('/courses/:id', loadCourse, acceptFiles(['cover']), async (req, res)
 });
 
 // Đổi thứ tự khóa học (chỉ đổi vị trí, không đụng nội dung).
+// Khóa / mở một module: khi khóa, học viên không vào học, không xem video được.
+router.post('/courses/:id/lock', loadCourse, async (req, res) => {
+  const locked = req.body.locked === '1' ? 1 : 0;
+  await db.run('UPDATE courses SET locked = ? WHERE id = ?', [locked, req.course.id]);
+  req.flash('success', locked ? `Đã khóa “${req.course.title}”. Học viên tạm thời không xem được video.` : `Đã mở “${req.course.title}” cho học viên.`);
+  res.redirect(`/admin/courses#course-${req.course.id}`);
+});
+
+// Module "chỉ tài liệu": không có bài video nào nhưng có prompt / file đính kèm (Kho Prompt, Tài nguyên).
+const RESOURCE_ONLY_SQL = `NOT EXISTS (SELECT 1 FROM lessons lv WHERE lv.course_id = c.id AND lv.video_type <> 'none')
+  AND EXISTS (SELECT 1 FROM lessons lr WHERE lr.course_id = c.id
+              AND ((lr.prompts IS NOT NULL AND lr.prompts <> '') OR EXISTS (SELECT 1 FROM lesson_files f WHERE f.lesson_id = lr.id)))`;
+
+// Khóa / mở tất cả module học (kể cả module chưa có video), trừ module chỉ tài liệu và khóa chuyên sâu.
+router.post('/course-locks', async (req, res) => {
+  const locked = req.body.locked === '1' ? 1 : 0;
+  const ids = (await db.all(`SELECT c.id FROM courses c WHERE c.is_premium = 0 AND c.locked <> ? AND NOT (${RESOURCE_ONLY_SQL})`, [locked])).map(r => r.id);
+  for (const id of ids) await db.run('UPDATE courses SET locked = ? WHERE id = ?', [locked, id]);
+  req.flash('success', locked
+    ? `Đã khóa ${ids.length} module. Kho Prompt, Tài nguyên và khóa chuyên sâu vẫn mở cho học viên.`
+    : `Đã mở ${ids.length} module cho học viên.`);
+  res.redirect('/admin/courses');
+});
+
 router.post('/courses/:id/move', loadCourse, async (req, res) => {
   const courses = await db.all('SELECT id FROM courses ORDER BY position, id');
   const idx = courses.findIndex(c => c.id === req.course.id);

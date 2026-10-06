@@ -1,9 +1,10 @@
 <%- include('partials/top', { crumbs: [{ label: 'Khóa học', href: '/' }, ...(course.category ? [{ label: course.category, href: '/?q=' + encodeURIComponent(course.category) }] : []), { label: course.title }] }) %>
-<% const isPremium = Number(course.is_premium) === 1; const locked = isPremium && !unlocked; %>
+<% const isPremium = Number(course.is_premium) === 1; const locked = isPremium && !unlocked; const adminLocked = Number(course.locked) === 1; %>
 <div class="page">
   <section class="course-hero" style="--c:<%= course.color %>">
     <div class="course-hero-text">
       <% if (!Number(course.published)) { %><span class="badge badge-warn">Bản nháp – chỉ admin thấy</span><% } %>
+      <% if (adminLocked) { %><span class="badge badge-locked"><svg class="i i-sm"><use href="#i-lock"/></svg><%= closed ? 'Đang tạm khóa' : 'Đang khóa – học viên chưa xem được' %></span><% } %>
       <% if (isPremium) { %><span class="badge badge-premium"><svg class="i i-sm"><use href="#i-crown"/></svg>Khóa chuyên sâu</span><% } %>
       <h1><%= course.title %></h1>
       <p><%= course.description %></p>
@@ -13,7 +14,9 @@
         <% if (totalSec) { %><span><svg class="i"><use href="#i-clock"/></svg><%= h.fmtTotal(totalSec) %></span><% } %>
       </div>
 
-      <% if (locked) { %>
+      <% if (closed) { %>
+        <p class="module-closed"><svg class="i"><use href="#i-lock"/></svg><span><strong>Module này đang tạm khóa.</strong> Video bài học sẽ mở khi quản trị viên kích hoạt. Trong lúc chờ, bạn vẫn xem được <a href="/prompts">Thư viện prompt</a> và các module Kho Prompt / Tài nguyên.</span></p>
+      <% } else if (locked) { %>
         <div class="buy-box">
           <div class="buy-price"><%= vnd(course.price) %></div>
           <% if (pending) { %>
@@ -63,7 +66,7 @@
         </div>
       <% } %>
 
-      <% if (user && started && !locked) { %>
+      <% if (user && started && !locked && !closed) { %>
         <div class="card progress-card progress-inline">
           <%- include('partials/ring', { value: percent, cls: 'ring-lg ring-success' }) %>
           <div><h2>Tiến độ của bạn</h2><p>Đã hoàn thành <%= lessons.filter(l => l.completed).length %>/<%= lessons.length %> bài học.</p></div>
@@ -80,7 +83,7 @@
     <ol class="lessons lessons-wide">
       <% lessons.forEach((l, i) => { const dur = [l.duration_sec ? h.fmtDuration(l.duration_sec) : '', l.video_type === 'none' ? 'Bài đọc' : 'Video'].filter(Boolean).join(' · '); %>
         <li>
-          <% if (locked) { %>
+          <% if (locked || closed) { %>
             <div class="lesson is-locked">
               <span class="num"><%= i + 1 %></span>
               <span class="body"><span class="name"><%= l.title %></span><span class="dur"><%= dur %></span></span>

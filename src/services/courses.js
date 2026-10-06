@@ -1,7 +1,7 @@
 const db = require('../db');
 const { coursePercent } = require('../helpers');
 
-const COURSE_COLS = 'c.id, c.slug, c.title, c.description, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.position, c.published, c.created_at';
+const COURSE_COLS = 'c.id, c.slug, c.title, c.description, c.level, c.category, c.color, c.cover_image, c.is_premium, c.price, c.position, c.published, c.locked, c.created_at';
 
 // Danh sách khóa học kèm số bài, tổng thời lượng và (nếu có userId) tiến độ của người học.
 // premium: 'exclude' (chỉ khóa miễn phí), 'only' (chỉ khóa chuyên sâu) hoặc bỏ trống (tất cả).
@@ -87,7 +87,7 @@ async function latestVideos(limit = 8) {
             COALESCE(l.updated_at, l.created_at) AS updated_at,
             c.slug AS course_slug, c.title AS course_title, c.color, c.cover_image
        FROM lessons l JOIN courses c ON c.id = l.course_id
-      WHERE c.published = 1 AND l.video_type <> 'none' AND (l.video_type <> 'upload' OR l.video_ref IS NOT NULL)
+      WHERE c.published = 1 AND c.locked = 0 AND l.video_type <> 'none' AND (l.video_type <> 'upload' OR l.video_ref IS NOT NULL)
       ORDER BY COALESCE(l.updated_at, l.created_at) DESC, l.id DESC
       LIMIT ?`,
     [Number(limit)],

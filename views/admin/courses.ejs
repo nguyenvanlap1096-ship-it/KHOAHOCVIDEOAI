@@ -5,6 +5,26 @@
     <a class="btn btn-primary" href="/admin/courses/new"><svg class="i"><use href="#i-plus"/></svg>Thêm khóa học</a>
   </div>
 
+  <% if (courses.length) { const lockedCount = courses.filter(c => Number(c.locked)).length; %>
+    <section class="lock-panel card" aria-labelledby="lockTitle">
+      <span class="lock-panel-ico"><svg class="i"><use href="#i-lock"/></svg></span>
+      <div class="lock-panel-text">
+        <strong id="lockTitle">Khóa / mở module cho học viên</strong>
+        <p class="muted">Module đang khóa: học viên thấy tên bài nhưng không vào học, không xem được video. Nút “Khóa tất cả” bỏ qua module chỉ có tài liệu (Kho Prompt, Tài nguyên) và khóa chuyên sâu. Hiện có <strong><%= lockedCount %></strong> module đang khóa.</p>
+      </div>
+      <div class="lock-panel-actions">
+        <form method="post" action="/admin/course-locks" data-confirm="Khóa tất cả module học? Học viên sẽ tạm thời không xem được video (Kho Prompt và Tài nguyên vẫn mở).">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="locked" value="1">
+          <button class="btn btn-outline btn-danger" type="submit"><svg class="i"><use href="#i-lock"/></svg>Khóa tất cả</button>
+        </form>
+        <form method="post" action="/admin/course-locks">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="locked" value="0">
+          <button class="btn btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>Mở tất cả</button>
+        </form>
+      </div>
+    </section>
+  <% } %>
+
   <% if (!courses.length) { %>
     <div class="empty"><svg class="i"><use href="#i-layers"/></svg><h3>Chưa có khóa học nào</h3><p>Bắt đầu bằng việc <a href="/admin/courses/new">tạo khóa học đầu tiên</a>.</p></div>
   <% } else { %>
@@ -22,7 +42,8 @@
               </td>
               <td><%= c.level %></td>
               <td><%= c.lesson_count %></td>
-              <td><% if (Number(c.is_premium)) { %><span class="badge badge-premium">Chuyên sâu · <%= vnd(c.price) %></span> <% } %><span class="badge <%= Number(c.published) ? 'badge-success' : 'badge-warn' %>"><%= Number(c.published) ? 'Đã xuất bản' : 'Bản nháp' %></span></td>
+              <td><% if (Number(c.is_premium)) { %><span class="badge badge-premium">Chuyên sâu · <%= vnd(c.price) %></span> <% } %><span class="badge <%= Number(c.published) ? 'badge-success' : 'badge-warn' %>"><%= Number(c.published) ? 'Đã xuất bản' : 'Bản nháp' %></span>
+                <% if (Number(c.locked)) { %> <span class="badge badge-locked"><svg class="i i-sm"><use href="#i-lock"/></svg>Đang khóa</span><% } else if (Number(c.resource_only)) { %> <span class="badge badge-info">Tài liệu – luôn mở</span><% } %></td>
               <td>
                 <div class="row-actions">
                   <% [['up', 'lên', 'i-arrow-up', i === 0], ['down', 'xuống', 'i-arrow-down', i === courses.length - 1]].forEach(([dir, label, icon, disabled]) => { %>
@@ -31,6 +52,14 @@
                       <button class="btn btn-sm btn-outline btn-icon" type="submit" aria-label="Chuyển “<%= c.title %>” <%= label %>" title="Chuyển <%= label %>" <%= disabled ? 'disabled' : '' %>><svg class="i"><use href="#<%= icon %>"/></svg></button>
                     </form>
                   <% }) %>
+                  <form method="post" action="/admin/courses/<%= c.id %>/lock">
+                    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="locked" value="<%= Number(c.locked) ? 0 : 1 %>">
+                    <% if (Number(c.locked)) { %>
+                      <button class="btn btn-sm btn-lock is-locked" type="submit" aria-label="Mở “<%= c.title %>” cho học viên" title="Đang khóa – bấm để mở"><svg class="i"><use href="#i-lock"/></svg>Mở khóa</button>
+                    <% } else { %>
+                      <button class="btn btn-sm btn-lock" type="submit" aria-label="Khóa “<%= c.title %>”" title="Đang mở – bấm để khóa"><svg class="i"><use href="#i-lock"/></svg>Khóa</button>
+                    <% } %>
+                  </form>
                   <a class="btn btn-sm btn-outline" href="/admin/courses/<%= c.id %>/lessons"><svg class="i"><use href="#i-video"/></svg>Bài học</a>
                   <a class="btn btn-sm btn-outline btn-icon" href="/admin/courses/<%= c.id %>/edit" aria-label="Sửa <%= c.title %>"><svg class="i"><use href="#i-edit"/></svg></a>
                   <a class="btn btn-sm btn-outline btn-icon" href="/courses/<%= c.slug %>" aria-label="Xem <%= c.title %>"><svg class="i"><use href="#i-eye"/></svg></a>

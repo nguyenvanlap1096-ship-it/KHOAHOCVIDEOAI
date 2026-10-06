@@ -11,6 +11,9 @@ const {
   ORDER_STATUS, salesOpen, bundleConfig, hasAccess, accessSummary, pendingOrderFor,
 } = require('../services/shop');
 
+// Module admin đang tạm khóa: học viên không vào học, không tải video / tài liệu được (admin vẫn xem).
+const lockedFor = (user, course) => Boolean(course && Number(course.locked)) && !(user && user.role === 'admin');
+
 async function findCourse(slug, user) {
   const course = await db.get('SELECT * FROM courses WHERE slug = ?', [slug]);
   if (!course) return null;
@@ -89,6 +92,7 @@ router.get('/courses/:slug', async (req, res, next) => {
   res.render('course', {
     title: course.title,
     course, lessons, totalSec, percent, unlocked, bundle, pending, salesOpen: open,
+    closed: lockedFor(req.user, course),
     started: lessons.some(l => l.progress_at),
     resume: lessons.length ? pickResume(lessons) : null,
     bookmarked: await isBookmarked(userId, course.id),
@@ -98,6 +102,10 @@ router.get('/courses/:slug', async (req, res, next) => {
 router.get('/learn/:slug{/:lessonId}', requireAuth, async (req, res, next) => {
   const course = await findCourse(req.params.slug, req.user);
   if (!course) return next();
+  if (lockedFor(req.user, course)) {
+    req.flash('info', 'Module này đang tạm khóa. Bạn vẫn xem được Kho Prompt và Tài nguyên trong lúc chờ mở.');
+    return res.redirect(`/courses/${course.slug}`);
+  }
   if (!(await hasAccess(req.user, course))) {
     req.flash('info', 'Đây là khóa chuyên sâu. Hãy mua khóa học để bắt đầu học.');
     return res.redirect(`/courses/${course.slug}`);
@@ -163,17 +171,21 @@ router.get('/my', requireAuth, async (req, res) => {
 // ?xem=1 mở PDF ngay trong trình duyệt; mặc định tải file về với tên gốc.
 router.get('/files/:id', requireAuth, async (req, res, next) => {
   const doc = await db.get(
-    `SELECT f.original_name, f.stored, c.id AS course_id, c.is_premium
+    `SELECT f.original_name, f.stored, c.id AS course_id, c.is_premium, c.locked
        FROM lesson_files f JOIN lessons l ON l.id = f.lesson_id JOIN courses c ON c.id = l.course_id
       WHERE f.id = ?`,
     [Number(req.params.id) || 0],
   );
   const p = doc && docPath(doc.stored);
   if (!p) return next();
+  if (lockedFor(req.user, doc)) return res.status(403).end();
   if (!(await hasAccess(req.user, { id: doc.course_id, is_premium: doc.is_premium }))) return res.status(403).end();
   const inline = req.query.xem === '1' && /.pdf$/.test(doc.stored);
   res.setHeader('Content-Disposition', `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(doc.original_name)}`);
-  res.sendFile(p, { maxAge: '1d', headers: { 'X-Content-Type-Options': 'nosniff' } }, err => { if (err && !res.headersSent) next(); });
+  // Không cho trình duyệt dùng lại bản lưu tạm: mỗi lần tải đều kiểm tra quyền (module có thể vừa bị khóa).
+  res.sendFile(p, { cacheControl: false, headers: { 'Cache-Control': 'private, no-cache', 'X-Content-Type-Options': 'nosniff' } }, err => {
+    if (err && !res.headersSent) res.status(404).end();
+  });
 });
 
 // Video tự upload: chỉ phát cho người đã đăng nhập (và đã mua nếu là khóa chuyên sâu).
@@ -181,12 +193,13 @@ router.get('/files/:id', requireAuth, async (req, res, next) => {
 router.get('/media/:file', requireAuth, async (req, res, next) => {
   if (!/^[a-f0-9]{32}\.(mp4|webm|ogv)$/.test(req.params.file)) return next();
   const course = await db.get(
-    "SELECT c.id, c.is_premium FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.video_type = 'upload' AND l.video_ref = ?",
+    "SELECT c.id, c.is_premium, c.locked FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.video_type = 'upload' AND l.video_ref = ?",
     [req.params.file],
   );
-  if (course && !(await hasAccess(req.user, course))) return res.status(403).end();
-  res.sendFile(path.join(config.uploadDir, req.params.file), { maxAge: '1d' }, err => {
-    if (err && !res.headersSent) next();
+  if (course && (lockedFor(req.user, course) || !(await hasAccess(req.user, course)))) return res.status(403).end();
+  res.sendFile(path.join(config.uploadDir, req.params.file), { cacheControl: false, headers: { 'Cache-Control': 'private, max-age=3600' } }, err => {
+    // File video không còn trên ổ đĩa: trả 404 gọn (trang lỗi HTML không dùng được cho đường dẫn /media).
+    if (err && !res.headersSent) res.status(404).end();
   });
 });
 

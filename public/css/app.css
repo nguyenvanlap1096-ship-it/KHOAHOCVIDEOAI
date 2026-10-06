@@ -1076,6 +1076,22 @@ mark { background: color-mix(in srgb, #FBBF24 35%, transparent); color: inherit;
   .sg-hint { display: none; }
 }
 
+/* Khóa / mở module cho học viên */
+.badge-locked { display: inline-flex; align-items: center; gap: 4px; background: var(--danger-soft); color: var(--danger); }
+.badge-info { background: var(--primary-soft); color: var(--primary); }
+.cover-lock { position: absolute; left: 12px; top: 12px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(15, 23, 42, .82); color: #fff; }
+.module-closed { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0 0; padding: 14px; border-radius: 12px; background: var(--danger-soft); color: var(--text); font-size: 14px; line-height: 1.55; }
+.module-closed .i { color: var(--danger); flex-shrink: 0; margin-top: 2px; }
+.lock-panel { display: flex; align-items: center; gap: 16px; padding: 16px 20px; margin-bottom: 18px; flex-wrap: wrap; }
+.lock-panel-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--danger-soft); color: var(--danger); flex-shrink: 0; }
+.lock-panel-text { flex: 1; min-width: 240px; }
+.lock-panel-text p { margin: 2px 0 0; font-size: 13px; line-height: 1.5; }
+.lock-panel-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-lock { border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+.btn-lock:hover { border-color: var(--danger); color: var(--danger); }
+.btn-lock.is-locked { background: var(--danger); border-color: var(--danger); color: #fff; }
+.btn-lock.is-locked:hover { filter: brightness(1.08); color: #fff; }
+
 /* Nút chuyển sáng / tối */
 .theme-toggle .i-moon, :root[data-theme="dark"] .theme-toggle .i-sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .i-moon { display: inline; }

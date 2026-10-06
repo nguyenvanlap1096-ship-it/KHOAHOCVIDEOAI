@@ -82,6 +82,8 @@ const MIGRATIONS = [
   { table: 'lessons', column: 'video_ratio', mysql: 'VARCHAR(8)', sqlite: 'TEXT' },
   { table: 'lessons', column: 'prompts', mysql: 'MEDIUMTEXT', sqlite: 'TEXT' },
   { table: 'courses', column: 'is_premium', mysql: 'TINYINT(1) NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0' },
+  // Admin tạm khóa module: học viên không vào học / xem video được (admin vẫn xem được).
+  { table: 'courses', column: 'locked', mysql: 'TINYINT(1) NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0' },
   { table: 'courses', column: 'price', mysql: 'INT UNSIGNED NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0' },
   {
     table: 'courses', column: 'position', mysql: 'INT NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0',

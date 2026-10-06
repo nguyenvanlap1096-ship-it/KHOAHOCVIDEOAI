@@ -5,6 +5,7 @@
     <% } else { %>
       <span class="cover-letter"><%= h.coverLabel(course.title) %></span>
     <% } %>
+    <% if (Number(course.locked)) { %><span class="cover-lock"><svg class="i i-sm"><use href="#i-lock"/></svg>Tạm khóa</span><% } %>
     <% if (course.category) { %><span class="cover-tag"><%= course.category %></span><% } %>
   </a>
   <div class="course-body">
