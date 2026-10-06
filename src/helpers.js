@@ -140,6 +140,9 @@ function highlightPrompt(text) {
   return escapeHtml(text).replace(/\[[^\]\n]{1,80}\]/g, m => `<mark>${m}</mark>`);
 }
 
+// Dòng "--- Tiếng Việt ---" trong một prompt: phía dưới là bản dịch tiếng Việt.
+const VI_MARK_RE = /^\s*-{2,}\s*ti[eế]ng vi[eệ]t\s*-{2,}\s*$/im;
+
 // Nội dung ô "Prompt để học viên sao chép": các prompt cách nhau bằng dòng "---";
 // dòng đầu bắt đầu bằng "#" là tiêu đề của prompt đó.
 function promptBlocks(text) {
@@ -147,8 +150,9 @@ function promptBlocks(text) {
     const lines = block.trim().split('\n');
     if (!lines[0]) return null;
     const title = /^#+\s*/.test(lines[0]) ? lines.shift().replace(/^#+\s*/, '').trim() : '';
-    const content = lines.join('\n').trim();
-    return content || title ? { title, content: content || title } : null;
+    const [main, vi = ''] = lines.join('\n').split(VI_MARK_RE);
+    const content = main.trim();
+    return content || title ? { title, content: content || title, vi: vi.trim() } : null;
   }).filter(Boolean);
 }
 

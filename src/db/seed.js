@@ -10,6 +10,24 @@ const crypto = require('crypto');
 const { removeFile, docPath } = require('../uploads');
 const PROMPT_LIBRARY = require('./seed-data/prompts');
 const MATERIALS = { 15: require('./seed-data/materials-15'), 16: require('./seed-data/materials-16') };
+const MATERIALS_VI = require('./seed-data/materials-vi');
+
+// Nội dung ô prompt của một bài: "# Tiêu đề\nPrompt EN\n--- Tiếng Việt ---\nBản dịch", các prompt cách nhau bằng "---".
+function materialPrompts(title, d, withVi = true) {
+  const vi = (withVi && MATERIALS_VI[title]) || {};
+  return d.prompts.map(([t, c]) => `# ${t}\n${c}${vi[t] ? `\n--- Tiếng Việt ---\n${vi[t]}` : ''}`).join('\n---\n');
+}
+
+// Kích thước file Word bản đầu (chưa có bản dịch): file còn đúng bản này thì mới được thay bằng bản mới.
+const FIRST_DOC_SIZES = {
+  'module15-prompt-affiliate.docx': 4791, 'module15-prompt-camera.docx': 4483, 'module15-prompt-cinematic.docx': 5086,
+  'module15-prompt-kling.docx': 4815, 'module15-prompt-nhan-vat.docx': 4909, 'module15-prompt-quang-cao.docx': 5011,
+  'module15-prompt-san-pham.docx': 5178, 'module15-prompt-storytelling.docx': 4800, 'module15-prompt-tao-anh.docx': 5653,
+  'module15-prompt-theo-nganh.docx': 5383, 'module15-prompt-ugc.docx': 4478, 'module15-prompt-veo3.docx': 5012,
+  'module16-checklist-lam-video-ai.docx': 3942, 'module16-cong-cu-video-ai-moi.docx': 3889, 'module16-font.docx': 4112,
+  'module16-huong-dan-bo-sung.docx': 4352, 'module16-link-cong-cu.docx': 3763, 'module16-nhac.docx': 4001,
+  'module16-prompt-moi.docx': 4526, 'module16-sound-effect.docx': 4238, 'module16-template.docx': 4305,
+};
 
 // Đường dẫn các khóa học mẫu đời đầu, được thay bằng chương trình Video AI.
 const OLD_SAMPLE_SLUGS = [
@@ -119,7 +137,7 @@ async function ensureLessonMaterials() {
             pick(lesson.summary, d.summary),
             pick(lesson.key_points, d.keyPoints.join('\n')),
             pick(lesson.resources, d.resources.map(([t, u]) => `${t} | ${u}`).join('\n')),
-            pick(lesson.prompts, d.prompts.map(([t, c]) => `# ${t}\n${c}`).join('\n---\n')),
+            pick(lesson.prompts, materialPrompts(title, d)),
             lesson.id,
           ],
         );
@@ -138,6 +156,35 @@ async function ensureLessonMaterials() {
       }
     }
     if (filled) console.log(`[demia] Đã nạp nội dung prompt & tài nguyên cho ${filled} bài (Module 15, 16).`);
+  });
+}
+
+// Bổ sung bản dịch tiếng Việt cho các bài Module 15/16 đã nạp trước đó.
+// Chỉ thay khi ô prompt và file Word vẫn đúng bản gốc đã nạp (admin chưa sửa).
+async function addMaterialTranslations() {
+  await once('seed:materials-15-16-vi', async () => {
+    let updated = 0;
+    for (const [code, lessons] of Object.entries(MATERIALS)) {
+      const course = await db.get('SELECT id FROM courses WHERE title LIKE ? ORDER BY id LIMIT 1', [`Module ${code}%`]);
+      if (!course) continue;
+      const rows = await db.all('SELECT id, title, prompts FROM lessons WHERE course_id = ?', [course.id]);
+      for (const [title, d] of Object.entries(lessons)) {
+        const lesson = rows.find(r => String(r.title).trim().toLowerCase() === title.toLowerCase());
+        if (!lesson) continue;
+        if (String(lesson.prompts || '') === materialPrompts(title, d, false)) {
+          await db.run('UPDATE lessons SET prompts = ? WHERE id = ?', [materialPrompts(title, d), lesson.id]);
+          updated++;
+        }
+        const name = `module${code}-${slugify(title)}.docx`;
+        const source = path.join(__dirname, 'seed-data', 'docs', name);
+        const doc = await db.get('SELECT id, stored, size FROM lesson_files WHERE lesson_id = ? AND original_name = ?', [lesson.id, `${title}.docx`]);
+        if (doc && Number(doc.size) === FIRST_DOC_SIZES[name] && docPath(doc.stored) && fs.existsSync(source)) {
+          fs.copyFileSync(source, docPath(doc.stored));
+          await db.run('UPDATE lesson_files SET size = ? WHERE id = ?', [fs.statSync(source).size, doc.id]);
+        }
+      }
+    }
+    if (updated) console.log(`[demia] Đã thêm bản dịch tiếng Việt cho prompt của ${updated} bài (Module 15, 16).`);
   });
 }
 
@@ -170,6 +217,7 @@ async function ensureSeed() {
   await ensureCurriculum();
   await ensurePromptLibrary();
   await ensureLessonMaterials();
+  await addMaterialTranslations();
   await clearMissingImages();
 }
 

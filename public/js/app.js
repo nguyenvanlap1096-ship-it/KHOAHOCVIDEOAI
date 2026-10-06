@@ -184,12 +184,30 @@
     }
   }));
 
+  /* Thẻ prompt có bản dịch: chuyển EN / Tiếng Việt, nút Sao chép chép đúng bản đang xem */
+  document.querySelectorAll('[data-lang-for]').forEach(btn => btn.addEventListener('click', () => {
+    const id = `lp-${btn.dataset.langFor}`;
+    const lang = btn.dataset.lang;
+    document.querySelectorAll(`[data-lang-for="${btn.dataset.langFor}"]`).forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+    ['en', 'vi'].forEach(l => { document.getElementById(`${id}-${l}`).hidden = l !== lang; });
+    document.getElementById(`${id}-copy`).dataset.copy = `${id}-${lang}`;
+    // Bản dịch dài/ngắn hơn: tính lại nút "Xem đầy đủ".
+    const box = document.getElementById(id);
+    const more = document.querySelector(`[data-expand="${id}"]`);
+    if (more && !box.classList.contains('is-open')) {
+      box.classList.remove('no-overflow');
+      const fits = box.scrollHeight <= box.clientHeight + 4;
+      box.classList.toggle('no-overflow', fits);
+      more.hidden = fits;
+    }
+  }));
+
   /* Trang đơn hàng đang chờ: tự tải lại định kỳ để thấy ngay khi admin xác nhận */
   const autoRefresh = document.querySelector('[data-auto-refresh]');
   if (autoRefresh) setTimeout(() => location.reload(), Number(autoRefresh.dataset.autoRefresh) * 1000);
   document.querySelectorAll('[data-expand]').forEach(btn => {
     const box = document.getElementById(btn.dataset.expand);
-    if (box.scrollHeight <= box.clientHeight + 4) { box.classList.add('no-overflow'); btn.hidden = true; return; }
+    if (box.scrollHeight <= box.clientHeight + 4) { box.classList.add('no-overflow'); btn.hidden = true; }
     btn.addEventListener('click', () => {
       const open = box.classList.toggle('is-open');
       btn.setAttribute('aria-expanded', String(open));

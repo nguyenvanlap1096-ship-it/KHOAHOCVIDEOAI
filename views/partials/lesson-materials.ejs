@@ -8,11 +8,22 @@
     <div class="prompt-grid lesson-prompts">
       <% prompts.forEach((p, i) => { %>
         <article class="prompt-card card" style="--c:<%= course.color %>">
-          <h2><%= p.title || `Prompt ${i + 1}` %></h2>
-          <div class="prompt-content" id="lp-<%= i %>"><pre><%- h.highlightPrompt(p.content) %></pre></div>
+          <header>
+            <h2><%= p.title || `Prompt ${i + 1}` %></h2>
+            <% if (p.vi) { %>
+              <span class="lang-switch" role="group" aria-label="Ngôn ngữ prompt">
+                <button type="button" data-lang="en" data-lang-for="<%= i %>" aria-pressed="true">EN</button>
+                <button type="button" data-lang="vi" data-lang-for="<%= i %>" aria-pressed="false">Tiếng Việt</button>
+              </span>
+            <% } %>
+          </header>
+          <div class="prompt-content" id="lp-<%= i %>">
+            <pre id="lp-<%= i %>-en"><%- h.highlightPrompt(p.content) %></pre>
+            <% if (p.vi) { %><pre id="lp-<%= i %>-vi" lang="vi" hidden><%- h.highlightPrompt(p.vi) %></pre><% } %>
+          </div>
           <footer>
             <button type="button" class="btn btn-ghost btn-sm" data-expand="lp-<%= i %>" aria-expanded="false" aria-controls="lp-<%= i %>">Xem đầy đủ</button>
-            <button type="button" class="btn btn-primary btn-sm" data-copy="lp-<%= i %>" data-copy-msg="Đã sao chép prompt. Nhớ thay các phần [trong ngoặc vuông]."><svg class="i"><use href="#i-copy"/></svg><span>Sao chép</span></button>
+            <button type="button" class="btn btn-primary btn-sm" id="lp-<%= i %>-copy" data-copy="lp-<%= i %>-en" data-copy-msg="Đã sao chép prompt. Nhớ thay các phần [trong ngoặc vuông]."><svg class="i"><use href="#i-copy"/></svg><span>Sao chép</span></button>
           </footer>
         </article>
       <% }) %>

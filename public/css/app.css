@@ -1026,6 +1026,13 @@ mark { background: color-mix(in srgb, #FBBF24 35%, transparent); color: inherit;
 .doc-list-admin .doc-ext { width: 34px; height: 34px; font-size: 10px; }
 .doc-list-admin .doc-name { min-width: 0; }
 
+/* Chuyển ngôn ngữ prompt EN / Tiếng Việt */
+.lang-switch { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); flex-shrink: 0; }
+.lang-switch button { border: 0; background: transparent; color: var(--text-muted); font: inherit; font-size: 12px; font-weight: 600; padding: 4px 10px; min-height: 28px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s; }
+.lang-switch button:hover { color: var(--text); }
+.lang-switch button[aria-pressed="true"] { background: var(--c, var(--primary)); color: #fff; }
+.lang-switch button:focus-visible { outline: 2px solid var(--c, var(--primary)); outline-offset: 2px; }
+
 /* Nút chuyển sáng / tối */
 .theme-toggle .i-moon, :root[data-theme="dark"] .theme-toggle .i-sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .i-moon { display: inline; }
