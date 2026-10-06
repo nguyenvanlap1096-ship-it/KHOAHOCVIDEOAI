@@ -118,6 +118,36 @@ async function ensurePromptLibrary() {
   });
 }
 
+// Bổ sung ~110 prompt theo ngành (thêm ngành mới nếu chưa có). Bỏ qua prompt trùng tên trong cùng ngành,
+// không sửa / xóa prompt và ngành admin đã có.
+async function addMorePrompts() {
+  await once('seed:prompts-more-v1', async () => {
+    const more = [...require('./seed-data/prompts-more-a'), ...require('./seed-data/prompts-more-b')];
+    let added = 0;
+    for (const cat of more) {
+      const slug = slugify(cat.name);
+      let row = await db.get('SELECT id FROM prompt_categories WHERE slug = ? OR name = ?', [slug, cat.name]);
+      if (!row) {
+        const { pos } = await db.get('SELECT COALESCE(MAX(position), 0) + 1 AS pos FROM prompt_categories');
+        const { insertId } = await db.run(
+          'INSERT INTO prompt_categories (slug, name, color, position) VALUES (?, ?, ?, ?)',
+          [slug, cat.name, cat.color, Number(pos)],
+        );
+        row = { id: insertId };
+      }
+      for (const p of cat.prompts) {
+        if (await db.get('SELECT 1 AS x FROM prompts WHERE category_id = ? AND title = ?', [row.id, p.title])) continue;
+        await db.run(
+          'INSERT INTO prompts (category_id, title, description, content, tool) VALUES (?, ?, ?, ?, ?)',
+          [row.id, p.title, p.description, p.content, p.tool],
+        );
+        added++;
+      }
+    }
+    if (added) console.log(`[demia] Đã bổ sung ${added} prompt vào thư viện theo ngành.`);
+  });
+}
+
 // Nạp prompt, tóm tắt, link và file Word cho các bài của Module 15 (Kho Prompt) và 16 (Tài nguyên).
 // Chỉ điền vào ô còn trống và chỉ gắn file Word khi bài chưa có tài liệu: không ghi đè nội dung admin đã nhập.
 async function ensureLessonMaterials() {
@@ -216,6 +246,7 @@ async function ensureSeed() {
   await ensureAdmin();
   await ensureCurriculum();
   await ensurePromptLibrary();
+  await addMorePrompts();
   await ensureLessonMaterials();
   await addMaterialTranslations();
   await clearMissingImages();

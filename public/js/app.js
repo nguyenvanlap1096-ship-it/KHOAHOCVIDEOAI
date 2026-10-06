@@ -202,12 +202,12 @@
     }
   }));
 
-  /* Khung "Hướng dẫn học": nhớ trạng thái thu gọn / mở rộng của từng người xem */
+  /* Khung "Hướng dẫn học": bấm ra ngoài hoặc nhấn Esc thì tự thu lại */
   const guide = document.getElementById('studyGuide');
   if (guide) {
-    try { if (localStorage.getItem('demia-guide') === 'closed') guide.open = false; } catch {}
-    guide.addEventListener('toggle', () => {
-      try { localStorage.setItem('demia-guide', guide.open ? 'open' : 'closed'); } catch {}
+    document.addEventListener('click', e => { if (guide.open && !guide.contains(e.target)) guide.open = false; });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && guide.open) { guide.open = false; guide.querySelector('summary').focus(); }
     });
   }
 

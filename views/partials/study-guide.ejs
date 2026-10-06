@@ -1,12 +1,13 @@
 <%# Khung hướng dẫn học: thứ tự học các module và vị trí kho prompt / tài nguyên %>
-<details class="study-guide card" id="studyGuide" open>
+<details class="study-guide" id="studyGuide">
   <summary>
-    <span class="sg-ico"><svg class="i"><use href="#i-signal"/></svg></span>
-    <span class="sg-head"><strong>Hướng dẫn học</strong><small>Học theo thứ tự từ trái qua phải, từ trên xuống dưới</small></span>
+    <span class="sg-ico"><svg class="i"><use href="#i-pointer"/></svg></span>
+    <span class="sg-head"><strong>Hướng dẫn học</strong><small>Thứ tự học · Kho prompt · Kho tài nguyên</small></span>
+    <span class="sg-hint">Bấm để xem</span>
     <svg class="i sg-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
   </summary>
 
-  <div class="sg-body">
+  <div class="sg-body card">
     <figure class="sg-map" aria-hidden="true">
       <div class="sg-grid">
         <% for (let i = 1; i <= 6; i++) { %><span class="sg-cell"><%= i %></span><% } %>
