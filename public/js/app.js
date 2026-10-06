@@ -202,6 +202,15 @@
     }
   }));
 
+  /* Khung "Hướng dẫn học": nhớ trạng thái thu gọn / mở rộng của từng người xem */
+  const guide = document.getElementById('studyGuide');
+  if (guide) {
+    try { if (localStorage.getItem('demia-guide') === 'closed') guide.open = false; } catch {}
+    guide.addEventListener('toggle', () => {
+      try { localStorage.setItem('demia-guide', guide.open ? 'open' : 'closed'); } catch {}
+    });
+  }
+
   /* Trang đơn hàng đang chờ: tự tải lại định kỳ để thấy ngay khi admin xác nhận */
   const autoRefresh = document.querySelector('[data-auto-refresh]');
   if (autoRefresh) setTimeout(() => location.reload(), Number(autoRefresh.dataset.autoRefresh) * 1000);

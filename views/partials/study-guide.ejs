@@ -1,0 +1,45 @@
+<%# Khung hướng dẫn học: thứ tự học các module và vị trí kho prompt / tài nguyên %>
+<details class="study-guide card" id="studyGuide" open>
+  <summary>
+    <span class="sg-ico"><svg class="i"><use href="#i-signal"/></svg></span>
+    <span class="sg-head"><strong>Hướng dẫn học</strong><small>Học theo thứ tự từ trái qua phải, từ trên xuống dưới</small></span>
+    <svg class="i sg-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+  </summary>
+
+  <div class="sg-body">
+    <figure class="sg-map" aria-hidden="true">
+      <div class="sg-grid">
+        <% for (let i = 1; i <= 6; i++) { %><span class="sg-cell"><%= i %></span><% } %>
+      </div>
+      <figcaption>Thứ tự học: 1 → 2 → 3, xuống hàng 4 → 5 → 6…</figcaption>
+    </figure>
+
+    <ol class="sg-steps">
+      <li>
+        <span class="sg-num">1</span>
+        <div><strong>Học lần lượt <%= guide.first && guide.last ? `Module ${guide.first} → Module ${guide.last}` : 'các module theo thứ tự' %></strong>
+          <p>Các module bên dưới đã xếp sẵn theo lộ trình: đọc từ trái qua phải, hết hàng thì xuống hàng tiếp theo.</p></div>
+      </li>
+      <li>
+        <span class="sg-num">2</span>
+        <div><strong>Trong mỗi bài học</strong>
+          <p>Xem video → đọc tab <em>Tóm tắt</em> → bấm <em>Đánh dấu hoàn thành</em> → <em>Bài tiếp theo</em>. Tiến độ được lưu tự động, mục <em>Tiếp tục học</em> đưa bạn về đúng bài đang học.</p></div>
+      </li>
+      <li>
+        <span class="sg-num">3</span>
+        <div><strong>Kho Prompt Video AI</strong>
+          <p>Prompt chi tiết cho ảnh, nhân vật, VEO3, Kling, quảng cáo… có nút <em>EN / Tiếng Việt</em>, bấm <em>Sao chép</em> là dùng được, kèm file Word tải về.</p>
+          <% if (guide.prompts) { %><a class="btn btn-sm btn-outline" href="/courses/<%= guide.prompts.slug %>"><svg class="i"><use href="#i-sparkles"/></svg><%= guide.prompts.title %></a><% } %></div>
+      </li>
+      <li>
+        <span class="sg-num">4</span>
+        <div><strong>Kho tài nguyên</strong>
+          <p>Link công cụ AI, nhạc, hiệu ứng âm thanh, font tiếng Việt, template kịch bản, checklist làm video – và thư viện prompt theo ngành nghề.</p>
+          <span class="sg-links">
+            <% if (guide.resources) { %><a class="btn btn-sm btn-outline" href="/courses/<%= guide.resources.slug %>"><svg class="i"><use href="#i-folder"/></svg><%= guide.resources.title %></a><% } %>
+            <a class="btn btn-sm btn-outline" href="/prompts"><svg class="i"><use href="#i-briefcase"/></svg>Prompt theo ngành nghề</a>
+          </span></div>
+      </li>
+    </ol>
+  </div>
+</details>

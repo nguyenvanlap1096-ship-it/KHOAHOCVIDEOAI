@@ -46,8 +46,18 @@ router.get('/', async (req, res) => {
     .sort((a, b) => String(b.last_at).localeCompare(String(a.last_at)))
     .slice(0, 3);
   const videos = (q || level) ? [] : await latestVideos(4);
+  // Khung "Hướng dẫn học": số module đầu / cuối của lộ trình và đường dẫn tới Kho Prompt (15), Tài nguyên (16).
+  const moduleOf = c => { const m = String(c.title).match(/^\s*module\s+(\d+)/i); return m ? m[1] : null; };
+  const codes = courses.map(moduleOf).filter(Boolean);
+  const studyCodes = codes.filter(c => Number(c) < 15).sort((a, b) => a - b);
+  const guide = {
+    first: studyCodes[0] || null,
+    last: studyCodes[studyCodes.length - 1] || null,
+    prompts: courses.find(c => moduleOf(c) === '15') || null,
+    resources: courses.find(c => moduleOf(c) === '16') || null,
+  };
   res.render('home', {
-    title: 'Khám phá khóa học', courses, continueLearning, videos, q, level,
+    title: 'Khám phá khóa học', courses, continueLearning, videos, q, level, guide,
     premium: await premiumShelf(req.user),
   });
 });

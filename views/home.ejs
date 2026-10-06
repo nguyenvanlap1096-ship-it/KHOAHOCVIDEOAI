@@ -56,6 +56,8 @@
     </a>
   <% } %>
 
+  <% if (!q && !level) { %><%- include('partials/study-guide') %><% } %>
+
   <section class="section">
     <div class="section-head">
       <h2 class="section-title"><%= q ? `Kết quả cho “${q}”` : 'Tất cả khóa học' %> <span class="chip"><%= courses.length %></span></h2>

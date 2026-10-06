@@ -1033,6 +1033,41 @@ mark { background: color-mix(in srgb, #FBBF24 35%, transparent); color: inherit;
 .lang-switch button[aria-pressed="true"] { background: var(--c, var(--primary)); color: #fff; }
 .lang-switch button:focus-visible { outline: 2px solid var(--c, var(--primary)); outline-offset: 2px; }
 
+/* Khung hướng dẫn học (trang chủ) */
+.study-guide { margin-top: 28px; padding: 0; overflow: hidden; container-type: inline-size; border-left: 4px solid var(--primary); }
+.study-guide summary { display: flex; align-items: center; gap: 12px; padding: 16px 20px; cursor: pointer; list-style: none; }
+.study-guide summary::-webkit-details-marker { display: none; }
+.study-guide summary:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.sg-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--primary-soft); color: var(--primary); flex-shrink: 0; }
+.sg-head { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sg-head strong { font-size: 16px; }
+.sg-head small { color: var(--text-muted); font-size: 13px; }
+.sg-chevron { color: var(--text-muted); transition: transform .2s var(--ease); }
+.study-guide[open] .sg-chevron { transform: rotate(180deg); }
+.sg-body { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 24px; padding: 4px 20px 20px; }
+.sg-map { margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.sg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 22px; padding: 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); counter-reset: none; }
+.sg-cell { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px; background: var(--primary-soft); color: var(--primary); font-weight: 700; font-size: 14px; }
+/* mũi tên ngang giữa các ô cùng hàng */
+.sg-cell:not(:nth-child(3n))::after { content: "→"; position: absolute; right: -19px; top: 50%; transform: translateY(-52%); color: var(--text-subtle); font-size: 14px; font-weight: 600; }
+/* mũi tên xuống hàng từ ô 3 sang ô 4 */
+.sg-cell:nth-child(3)::before { content: "↵"; position: absolute; bottom: -19px; right: 6px; color: var(--text-subtle); font-size: 14px; }
+.sg-map figcaption { font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.4; }
+.sg-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 22px; }
+.sg-steps li { display: flex; gap: 12px; align-items: flex-start; }
+.sg-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--primary); color: var(--on-primary); font-size: 13px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.sg-steps strong { display: block; font-size: 14px; margin-bottom: 2px; }
+.sg-steps p { margin: 0 0 8px; font-size: 13px; line-height: 1.55; color: var(--text-muted); }
+.sg-steps em { font-style: normal; font-weight: 600; color: var(--text); }
+.sg-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.sg-steps li > div { min-width: 0; }
+.sg-steps .btn { white-space: normal; text-align: left; max-width: 100%; }
+/* Khung hẹp (cột bên cạnh có khóa chuyên sâu, điện thoại): hình minh họa nằm trên, các bước xếp 1 cột */
+@container (max-width: 640px) {
+  .sg-body { grid-template-columns: 1fr; gap: 16px; padding: 0 16px 16px; }
+  .study-guide summary { padding: 14px 16px; }
+}
+
 /* Nút chuyển sáng / tối */
 .theme-toggle .i-moon, :root[data-theme="dark"] .theme-toggle .i-sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .i-moon { display: inline; }
