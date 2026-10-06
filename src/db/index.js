@@ -80,6 +80,7 @@ const MIGRATIONS = [
   { table: 'courses', column: 'cover_image', mysql: 'VARCHAR(100)', sqlite: 'TEXT' },
   { table: 'lessons', column: 'thumbnail', mysql: 'VARCHAR(100)', sqlite: 'TEXT' },
   { table: 'lessons', column: 'video_ratio', mysql: 'VARCHAR(8)', sqlite: 'TEXT' },
+  { table: 'lessons', column: 'prompts', mysql: 'MEDIUMTEXT', sqlite: 'TEXT' },
   { table: 'courses', column: 'is_premium', mysql: 'TINYINT(1) NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0' },
   { table: 'courses', column: 'price', mysql: 'INT UNSIGNED NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0' },
   {

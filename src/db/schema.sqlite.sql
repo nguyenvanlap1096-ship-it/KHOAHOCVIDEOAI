@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS lessons (
   video_ref TEXT,
   thumbnail TEXT,
   video_ratio TEXT,
+  prompts TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
@@ -117,3 +118,15 @@ CREATE TABLE IF NOT EXISTS access (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, scope, course_id)
 );
+
+CREATE TABLE IF NOT EXISTS lesson_files (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  lesson_id INTEGER NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+  position INTEGER NOT NULL DEFAULT 0,
+  original_name TEXT NOT NULL,
+  stored TEXT NOT NULL,
+  size INTEGER NOT NULL DEFAULT 0,
+  text_content TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_lesson_files_lesson ON lesson_files (lesson_id, position);

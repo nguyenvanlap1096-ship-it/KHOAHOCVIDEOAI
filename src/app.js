@@ -52,7 +52,7 @@ module.exports = function createApp() {
     contentSecurityPolicy: {
       directives: {
         'script-src': ["'self'", 'https://www.youtube.com', 'https://s.ytimg.com'],
-        'frame-src': ['https://www.youtube-nocookie.com', 'https://www.youtube.com'],
+        'frame-src': ["'self'", 'https://www.youtube-nocookie.com', 'https://www.youtube.com'],
         'style-src': ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
         'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
         'img-src': ["'self'", 'data:', 'blob:', 'https://i.ytimg.com'],

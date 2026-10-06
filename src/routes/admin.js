@@ -5,7 +5,7 @@ const db = require('../db');
 const config = require('../config');
 const h = require('../helpers');
 const { requireAdmin } = require('../middleware/auth');
-const { acceptFiles, discardUploads, removeFile, videoExists, MAX_IMAGE_MB } = require('../uploads');
+const { acceptFiles, discardUploads, removeFile, videoExists, extractDocText, MAX_IMAGE_MB, MAX_DOC_MB } = require('../uploads');
 const { getSettings, setSettings } = require('../services/settings');
 const { listCategories, listPrompts } = require('../services/prompts');
 const { BANKS } = require('../services/vietqr');
@@ -172,10 +172,13 @@ async function renumberCourses() {
 
 router.post('/courses/:id/delete', loadCourse, async (req, res) => {
   const lessonFiles = await db.all('SELECT video_type, video_ref, thumbnail FROM lessons WHERE course_id = ?', [req.course.id]);
+  const courseDocs = await db.all('SELECT f.stored FROM lesson_files f JOIN lessons l ON l.id = f.lesson_id WHERE l.course_id = ?', [req.course.id]);
+  await db.run('DELETE FROM lesson_files WHERE lesson_id IN (SELECT id FROM lessons WHERE course_id = ?)', [req.course.id]);
   await db.run('DELETE FROM courses WHERE id = ?', [req.course.id]);
   await db.run("DELETE FROM access WHERE scope = 'course' AND course_id = ?", [req.course.id]);
   await renumberCourses();
   removeFile(req.course.cover_image);
+  courseDocs.forEach(d => removeFile(d.stored));
   lessonFiles.forEach(f => {
     if (f.video_type === 'upload') removeFile(f.video_ref);
     removeFile(f.thumbnail);
@@ -187,7 +190,10 @@ router.post('/courses/:id/delete', loadCourse, async (req, res) => {
 /* ---------- Bài học ---------- */
 router.get('/courses/:id/lessons', loadCourse, async (req, res) => {
   const lessons = await db.all(
-    'SELECT id, position, title, duration_sec, video_type, video_ref, thumbnail, video_ratio FROM lessons WHERE course_id = ? ORDER BY position, id',
+    `SELECT l.id, l.position, l.title, l.duration_sec, l.video_type, l.video_ref, l.thumbnail, l.video_ratio,
+            (SELECT COUNT(*) FROM lesson_files f WHERE f.lesson_id = l.id) AS doc_count,
+            CASE WHEN l.prompts IS NOT NULL AND l.prompts <> '' THEN 1 ELSE 0 END AS has_prompts
+       FROM lessons l WHERE l.course_id = ? ORDER BY l.position, l.id`,
     [req.course.id],
   );
   lessons.forEach(l => { l.video_missing = l.video_type === 'upload' && l.video_ref && !videoExists(l.video_ref); });
@@ -202,6 +208,7 @@ function readLessonForm(req, existing) {
     summary: String(b.summary || '').trim(),
     key_points: String(b.key_points || '').trim(),
     resources: String(b.resources || '').trim(),
+    prompts: String(b.prompts || '').replace(/\r\n/g, '\n').trim(),
     video_type: ['youtube', 'upload', 'none'].includes(b.video_type) ? b.video_type : 'none',
     youtube_url: String(b.youtube_url || '').trim(),
     video_ratio: h.VIDEO_RATIOS.includes(b.video_ratio) ? b.video_ratio : 'auto',
@@ -224,6 +231,7 @@ function readLessonForm(req, existing) {
     else errors.video_file = 'Vui lòng chọn file video.';
   }
   const thumbnail = resolveImage(req, 'thumbnail', existing && existing.thumbnail, errors);
+  if (req.uploadErrors.docs) errors.docs = req.uploadErrors.docs;
 
   // Tỉ lệ khung hình: admin chọn tay, hoặc tự nhận diện (file upload: đọc kích thước ngay trên trình duyệt;
   // YouTube: link /shorts/ là video dọc 9:16). Không chuyển đổi video nên lưu tức thì.
@@ -240,7 +248,7 @@ function readLessonForm(req, existing) {
     errors,
     data: {
       title: values.title, duration_sec: durationSec || 0, summary: values.summary,
-      key_points: values.key_points, resources: values.resources,
+      key_points: values.key_points, resources: values.resources, prompts: values.prompts,
       video_type: values.video_type, video_ref: videoRef, thumbnail, video_ratio: videoRatio,
     },
   };
@@ -257,12 +265,36 @@ function lessonFormValues(lesson) {
   };
 }
 
-const lessonFormLocals = (course, lesson, values, errors) => ({
+const lessonFormLocals = (course, lesson, values, errors, docs = []) => ({
   title: lesson ? 'Sửa bài học' : 'Thêm bài học',
-  course, lesson, values, errors, maxUploadMb: config.maxUploadMb, maxImageMb: MAX_IMAGE_MB, ...nav('courses'),
+  course, lesson, values, errors, docs, maxUploadMb: config.maxUploadMb, maxImageMb: MAX_IMAGE_MB, maxDocMb: MAX_DOC_MB, ...nav('courses'),
 });
 
-const lessonUploads = acceptFiles(['video_file', 'thumbnail']);
+const lessonUploads = acceptFiles(['video_file', 'thumbnail', 'docs']);
+
+// Tài liệu đính kèm (PDF / Word / TXT): lưu file mới (đọc sẵn nội dung Word/TXT để hiện và sao chép trên web)
+// và xóa các tài liệu admin đánh dấu xóa.
+async function saveLessonDocs(req, lessonId) {
+  const removeIds = [].concat((req.body && req.body.remove_docs) || []).map(Number).filter(Boolean);
+  for (const id of removeIds) {
+    const doc = await db.get('SELECT id, stored FROM lesson_files WHERE id = ? AND lesson_id = ?', [id, lessonId]);
+    if (!doc) continue;
+    await db.run('DELETE FROM lesson_files WHERE id = ?', [doc.id]);
+    removeFile(doc.stored);
+  }
+  for (const d of req.uploadedDocs || []) {
+    const { pos } = await db.get('SELECT COALESCE(MAX(position), 0) + 1 AS pos FROM lesson_files WHERE lesson_id = ?', [lessonId]);
+    const text = await extractDocText(d.stored);
+    await db.run(
+      'INSERT INTO lesson_files (lesson_id, position, original_name, stored, size, text_content) VALUES (?, ?, ?, ?, ?, ?)',
+      [lessonId, Number(pos), d.name, d.stored, d.size, text],
+    );
+  }
+}
+
+async function lessonDocs(lessonId) {
+  return lessonId ? db.all('SELECT id, original_name, stored, size FROM lesson_files WHERE lesson_id = ? ORDER BY position, id', [lessonId]) : [];
+}
 
 router.get('/courses/:id/lessons/new', loadCourse, (req, res) => {
   res.render('admin/lesson-form', lessonFormLocals(req.course, null, { video_type: 'youtube' }, {}));
@@ -276,11 +308,12 @@ router.post('/courses/:id/lessons', loadCourse, lessonUploads, async (req, res) 
   }
   const { pos } = await db.get('SELECT COALESCE(MAX(position), 0) + 1 AS pos FROM lessons WHERE course_id = ?', [req.course.id]);
   await db.run(
-    `INSERT INTO lessons (course_id, position, title, duration_sec, summary, key_points, resources, video_type, video_ref, thumbnail, video_ratio, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-    [req.course.id, Number(pos), data.title, data.duration_sec, data.summary, data.key_points, data.resources, data.video_type, data.video_ref, data.thumbnail, data.video_ratio],
+    `INSERT INTO lessons (course_id, position, title, duration_sec, summary, key_points, resources, prompts, video_type, video_ref, thumbnail, video_ratio, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+    [req.course.id, Number(pos), data.title, data.duration_sec, data.summary, data.key_points, data.resources, data.prompts, data.video_type, data.video_ref, data.thumbnail, data.video_ratio],
   );
   const { id: newId } = await db.get('SELECT MAX(id) AS id FROM lessons WHERE course_id = ?', [req.course.id]);
+  await saveLessonDocs(req, newId);
   req.flash('success', `Đã thêm bài học “${data.title}”.`);
   const back = `/admin/courses/${req.course.id}/lessons`;
   if (req.accepts(['html', 'json']) === 'json') return res.json({ ok: true, lessonId: newId, title: data.title, redirect: back });
@@ -294,24 +327,25 @@ async function loadLesson(req, res, next) {
   next();
 }
 
-router.get('/lessons/:id/edit', loadLesson, (req, res) => {
-  res.render('admin/lesson-form', lessonFormLocals(req.course, req.lesson, lessonFormValues(req.lesson), {}));
+router.get('/lessons/:id/edit', loadLesson, async (req, res) => {
+  res.render('admin/lesson-form', lessonFormLocals(req.course, req.lesson, lessonFormValues(req.lesson), {}, await lessonDocs(req.lesson.id)));
 });
 
 router.post('/lessons/:id', loadLesson, lessonUploads, async (req, res) => {
   const { values, errors, data } = readLessonForm(req, req.lesson);
   if (hasErrors(errors)) {
     discardUploads(req);
-    return res.status(400).render('admin/lesson-form', lessonFormLocals(req.course, req.lesson, { ...values, thumbnail: req.lesson.thumbnail }, errors));
+    return res.status(400).render('admin/lesson-form', lessonFormLocals(req.course, req.lesson, { ...values, thumbnail: req.lesson.thumbnail }, errors, await lessonDocs(req.lesson.id)));
   }
   // Chỉ đánh dấu "cập nhật" khi video thực sự thay đổi, để mục Video mới không bị nhiễu khi sửa chính tả.
   const videoChanged = data.video_type !== req.lesson.video_type || data.video_ref !== req.lesson.video_ref;
   await db.run(
-    `UPDATE lessons SET title = ?, duration_sec = ?, summary = ?, key_points = ?, resources = ?, video_type = ?, video_ref = ?, thumbnail = ?, video_ratio = ?
+    `UPDATE lessons SET title = ?, duration_sec = ?, summary = ?, key_points = ?, resources = ?, prompts = ?, video_type = ?, video_ref = ?, thumbnail = ?, video_ratio = ?
             ${videoChanged ? ', updated_at = CURRENT_TIMESTAMP' : ''}
       WHERE id = ?`,
-    [data.title, data.duration_sec, data.summary, data.key_points, data.resources, data.video_type, data.video_ref, data.thumbnail, data.video_ratio, req.lesson.id],
+    [data.title, data.duration_sec, data.summary, data.key_points, data.resources, data.prompts, data.video_type, data.video_ref, data.thumbnail, data.video_ratio, req.lesson.id],
   );
+  await saveLessonDocs(req, req.lesson.id);
   if (req.lesson.video_type === 'upload') cleanupReplaced(req.lesson.video_ref, data.video_ref);
   cleanupReplaced(req.lesson.thumbnail, data.thumbnail);
   req.flash('success', 'Đã lưu bài học.');
@@ -321,7 +355,10 @@ router.post('/lessons/:id', loadLesson, lessonUploads, async (req, res) => {
 });
 
 router.post('/lessons/:id/delete', loadLesson, async (req, res) => {
+  const docs = await lessonDocs(req.lesson.id);
+  await db.run('DELETE FROM lesson_files WHERE lesson_id = ?', [req.lesson.id]);
   await db.run('DELETE FROM lessons WHERE id = ?', [req.lesson.id]);
+  docs.forEach(d => removeFile(d.stored));
   await renumberLessons(req.course.id);
   if (req.lesson.video_type === 'upload') removeFile(req.lesson.video_ref);
   removeFile(req.lesson.thumbnail);

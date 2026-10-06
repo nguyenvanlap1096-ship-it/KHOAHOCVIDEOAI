@@ -33,7 +33,7 @@
     <fieldset class="field">
       <legend>Nguồn video</legend>
       <div class="segmented" role="radiogroup">
-        <% [['youtube', 'YouTube'], ['upload', 'Upload file'], ['none', 'Không có video']].forEach(([val, label]) => { %>
+        <% [['youtube', 'YouTube'], ['upload', 'Upload file'], ['none', 'Không có video (tài liệu / bài đọc)']].forEach(([val, label]) => { %>
           <label><input type="radio" name="video_type" value="<%= val %>" <%= vt === val ? 'checked' : '' %>><span><%= label %></span></label>
         <% }) %>
       </div>
@@ -89,6 +89,30 @@
       <label for="resources">Tài liệu tham khảo</label>
       <textarea id="resources" name="resources" rows="3" placeholder="Tài liệu React | https://react.dev"><%= values.resources || '' %></textarea>
       <p class="field-hint">Mỗi dòng: <code>Tiêu đề | https://link</code></p>
+    </div>
+
+    <h2 class="form-section">Tài liệu &amp; prompt cho học viên</h2>
+    <div class="field">
+      <label for="prompts">Prompt để học viên sao chép</label>
+      <textarea id="prompts" name="prompts" rows="8" class="mono" placeholder="# Prompt tạo ảnh nhân vật&#10;Một cô gái [độ tuổi] mặc [trang phục], đứng ở [bối cảnh], ánh sáng [kiểu ánh sáng]...&#10;---&#10;# Prompt VEO3&#10;Camera dolly in chậm vào [chủ thể]..."><%= values.prompts || '' %></textarea>
+      <p class="field-hint">Mỗi prompt hiện thành một thẻ có nút <strong>Sao chép</strong>. Ngăn cách các prompt bằng một dòng <code>---</code>; dòng đầu bắt đầu bằng <code>#</code> là tiêu đề. Phần <code>[trong ngoặc vuông]</code> được tô vàng.</p>
+    </div>
+
+    <div class="field <%= errors.docs ? 'has-error' : '' %>">
+      <label for="docs">Tài liệu đính kèm (PDF, Word, TXT)</label>
+      <% if (docs.length) { %>
+        <ul class="doc-list-admin">
+          <% docs.forEach(d => { const ext = d.stored.split('.').pop(); %>
+            <li>
+              <span class="doc-ext ext-<%= ext %>"><%= ext.toUpperCase() %></span>
+              <span class="doc-name"><strong><%= d.original_name %></strong><small class="muted"><%= h.fmtSize(d.size) %></small></span>
+              <label class="check"><input type="checkbox" name="remove_docs" value="<%= d.id %>"> Xóa</label>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+      <input id="docs" name="docs" type="file" multiple accept=".pdf,.docx,.doc,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,text/plain" <%- errors.docs ? 'aria-invalid="true" aria-describedby="docs-msg"' : '' %>>
+      <% if (errors.docs) { %><p class="field-error" id="docs-msg"><%= errors.docs %></p><% } else { %><p class="field-hint">Chọn được nhiều file một lần, mỗi file tối đa <%= maxDocMb %> MB. <strong>PDF</strong> hiện xem trực tiếp; <strong>Word (.docx)</strong> và <strong>TXT</strong> được đọc thành chữ để học viên sao chép từng đoạn. Học viên cũng tải được file gốc.</p><% } %>
     </div>
 
     <div class="upload-progress" id="uploadProgress" hidden>

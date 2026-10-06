@@ -1,0 +1,62 @@
+<%# Prompt sao chép nhanh + tài liệu đính kèm của bài học (PDF xem trực tiếp, Word/TXT hiện chữ để sao chép) %>
+<% if (prompts.length) { %>
+  <section class="materials" aria-labelledby="matPrompts">
+    <div class="materials-head">
+      <h3 id="matPrompts"><svg class="i"><use href="#i-sparkles"/></svg>Prompt sao chép nhanh <span class="chip"><%= prompts.length %></span></h3>
+      <span class="muted materials-tip">Bấm <strong>Sao chép</strong> rồi thay các phần <mark>[trong ngoặc vuông]</mark>.</span>
+    </div>
+    <div class="prompt-grid lesson-prompts">
+      <% prompts.forEach((p, i) => { %>
+        <article class="prompt-card card" style="--c:<%= course.color %>">
+          <h2><%= p.title || `Prompt ${i + 1}` %></h2>
+          <div class="prompt-content" id="lp-<%= i %>"><pre><%- h.highlightPrompt(p.content) %></pre></div>
+          <footer>
+            <button type="button" class="btn btn-ghost btn-sm" data-expand="lp-<%= i %>" aria-expanded="false" aria-controls="lp-<%= i %>">Xem đầy đủ</button>
+            <button type="button" class="btn btn-primary btn-sm" data-copy="lp-<%= i %>" data-copy-msg="Đã sao chép prompt. Nhớ thay các phần [trong ngoặc vuông]."><svg class="i"><use href="#i-copy"/></svg><span>Sao chép</span></button>
+          </footer>
+        </article>
+      <% }) %>
+    </div>
+  </section>
+<% } %>
+
+<% if (docs.length) { %>
+  <section class="materials" aria-labelledby="matDocs">
+    <div class="materials-head">
+      <h3 id="matDocs"><svg class="i"><use href="#i-file-text"/></svg>Tài liệu bài học <span class="chip"><%= docs.length %></span></h3>
+    </div>
+    <% let firstPdf = true; docs.forEach(d => { const ext = d.stored.split('.').pop(); const isPdf = ext === 'pdf'; const paras = h.paragraphs(d.text_content); %>
+      <article class="doc-card card">
+        <header class="doc-head">
+          <span class="doc-ext ext-<%= ext %>"><%= ext.toUpperCase() %></span>
+          <span class="doc-name"><strong><%= d.original_name %></strong><small class="muted"><%= h.fmtSize(d.size) %><%= paras.length ? ` · ${paras.length} đoạn` : '' %></small></span>
+          <span class="doc-actions">
+            <% if (paras.length) { %>
+              <pre id="doc-all-<%= d.id %>" hidden><%= d.text_content %></pre>
+              <button type="button" class="btn btn-sm btn-primary" data-copy="doc-all-<%= d.id %>" data-copy-msg="Đã sao chép toàn bộ nội dung tài liệu."><svg class="i"><use href="#i-copy"/></svg><span>Sao chép toàn bộ</span></button>
+            <% } %>
+            <% if (isPdf) { %><a class="btn btn-sm btn-outline" href="/files/<%= d.id %>?xem=1" target="_blank" rel="noopener"><svg class="i"><use href="#i-eye"/></svg>Mở toàn màn hình</a><% } %>
+            <a class="btn btn-sm btn-outline" href="/files/<%= d.id %>" download><svg class="i"><use href="#i-download"/></svg>Tải về</a>
+          </span>
+        </header>
+        <% if (isPdf) { %>
+          <iframe class="doc-pdf" src="/files/<%= d.id %>?xem=1" title="Xem tài liệu <%= d.original_name %>" loading="<%= firstPdf ? 'eager' : 'lazy' %>"></iframe>
+          <% firstPdf = false; %>
+          <p class="doc-note muted">Bôi đen chữ trong tài liệu để sao chép. Không xem được trên điện thoại? Bấm <strong>Mở toàn màn hình</strong> hoặc <strong>Tải về</strong>.</p>
+        <% } else if (paras.length) { %>
+          <div class="doc-text prompt-content" id="doc-<%= d.id %>">
+            <% paras.forEach((p, j) => { %>
+              <div class="doc-para">
+                <div class="doc-para-text" id="dp-<%= d.id %>-<%= j %>"><%- h.highlightPrompt(p) %></div>
+                <button type="button" class="copy-mini" data-copy="dp-<%= d.id %>-<%= j %>" data-copy-msg="Đã sao chép đoạn này." aria-label="Sao chép đoạn <%= j + 1 %>"><svg class="i i-sm"><use href="#i-copy"/></svg><span>Chép</span></button>
+              </div>
+            <% }) %>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm doc-expand" data-expand="doc-<%= d.id %>" aria-expanded="false" aria-controls="doc-<%= d.id %>">Xem đầy đủ</button>
+        <% } else { %>
+          <p class="doc-note muted">Tài liệu Word cũ (.doc) không xem trực tiếp được – hãy bấm <strong>Tải về</strong>.</p>
+        <% } %>
+      </article>
+    <% }) %>
+  </section>
+<% } %>

@@ -4,7 +4,7 @@ const db = require('../db');
 const config = require('../config');
 const h = require('../helpers');
 const { requireAuth } = require('../middleware/auth');
-const { videoExists } = require('../uploads');
+const { videoExists, docPath } = require('../uploads');
 const { listCourses, lessonsWithProgress, pickResume, isBookmarked, latestVideos } = require('../services/courses');
 const { getSettings } = require('../services/settings');
 const {
@@ -109,12 +109,14 @@ router.get('/learn/:slug{/:lessonId}', requireAuth, async (req, res, next) => {
   );
   const current = lessons[idx];
   lesson.video_missing = lesson.video_type === 'upload' && lesson.video_ref && !videoExists(lesson.video_ref);
+  const docs = await db.all('SELECT id, original_name, stored, size, text_content FROM lesson_files WHERE lesson_id = ? ORDER BY position, id', [lesson.id]);
+  const prompts = h.promptBlocks(lesson.prompts);
   // Bài đã xong thì phát lại từ đầu thay vì nhảy tới cuối video.
   const startAt = current.completed ? 0 : Number(lesson.position_sec);
 
   res.render('learn', {
     title: `${lesson.title} · ${course.title}`,
-    course, lessons, lesson, current, startAt,
+    course, lessons, lesson, current, startAt, docs, prompts,
     scripts: ['/js/player.js'],
     prev: lessons[idx - 1] || null,
     next: lessons[idx + 1] || null,
@@ -145,6 +147,23 @@ router.get('/my', requireAuth, async (req, res) => {
     saved: courses.filter(c => savedIds.has(c.id)),
     owned, orders, ORDER_STATUS,
   });
+});
+
+// Tài liệu đính kèm bài học: chỉ cho người đã đăng nhập (và đã mua nếu là khóa chuyên sâu).
+// ?xem=1 mở PDF ngay trong trình duyệt; mặc định tải file về với tên gốc.
+router.get('/files/:id', requireAuth, async (req, res, next) => {
+  const doc = await db.get(
+    `SELECT f.original_name, f.stored, c.id AS course_id, c.is_premium
+       FROM lesson_files f JOIN lessons l ON l.id = f.lesson_id JOIN courses c ON c.id = l.course_id
+      WHERE f.id = ?`,
+    [Number(req.params.id) || 0],
+  );
+  const p = doc && docPath(doc.stored);
+  if (!p) return next();
+  if (!(await hasAccess(req.user, { id: doc.course_id, is_premium: doc.is_premium }))) return res.status(403).end();
+  const inline = req.query.xem === '1' && /.pdf$/.test(doc.stored);
+  res.setHeader('Content-Disposition', `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(doc.original_name)}`);
+  res.sendFile(p, { maxAge: '1d', headers: { 'X-Content-Type-Options': 'nosniff' } }, err => { if (err && !res.headersSent) next(); });
 });
 
 // Video tự upload: chỉ phát cho người đã đăng nhập (và đã mua nếu là khóa chuyên sâu).

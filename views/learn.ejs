@@ -20,8 +20,8 @@
   </div>
 
   <section aria-labelledby="lessonTitle">
-    <% const ratio = h.ratioParts(lesson.video_ratio); const hasVideo = lesson.video_type !== 'none'; %>
-    <div class="player-stage">
+    <% const ratio = h.ratioParts(lesson.video_ratio); const hasVideo = lesson.video_type !== 'none'; const docsOnly = !hasVideo && (docs.length || prompts.length); %>
+    <div class="player-stage" <%= docsOnly ? 'hidden' : '' %>>
     <div class="player <%= hasVideo && ratio.portrait ? 'is-portrait' : '' %>" id="player"
          style="--rw:<%= hasVideo ? ratio.w : 16 %>;--rh:<%= hasVideo ? ratio.h : 9 %>"
          data-ratio="<%= hasVideo ? (lesson.video_ratio || '') : '16:9' %>"
@@ -63,6 +63,8 @@
         <svg class="i"><use href="#i-check-circle"/></svg><span><%= current.completed ? 'Đã hoàn thành' : 'Đánh dấu hoàn thành' %></span>
       </button>
     </div>
+
+    <%- include('partials/lesson-materials') %>
 
     <div class="tabs" role="tablist" aria-label="Chi tiết bài học">
       <button class="tab" role="tab" type="button" aria-selected="true" aria-controls="p-summary" id="t-summary"><svg class="i"><use href="#i-grid"/></svg>Tóm tắt</button>

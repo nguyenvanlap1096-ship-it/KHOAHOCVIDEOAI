@@ -997,6 +997,35 @@ mark { background: color-mix(in srgb, #FBBF24 35%, transparent); color: inherit;
 .storage-box.is-risk { background: var(--danger-soft); color: var(--danger); }
 .storage-box strong { color: inherit; }
 
+/* Tài liệu & prompt trong bài học */
+.materials { margin-top: 18px; display: flex; flex-direction: column; gap: 12px; }
+.materials-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.materials-head h3 { margin: 0; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.materials-tip { font-size: 13px; }
+.lesson-prompts { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); margin-top: 0; }
+.doc-card { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.doc-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.doc-ext { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; background: #64748B; flex: none; }
+.doc-ext.ext-pdf { background: #DC2626; }
+.doc-ext.ext-docx, .doc-ext.ext-doc { background: #2563EB; }
+.doc-ext.ext-txt, .doc-ext.ext-md { background: #475569; }
+.doc-name { flex: 1; min-width: 180px; display: flex; flex-direction: column; overflow-wrap: anywhere; }
+.doc-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.doc-pdf { width: 100%; height: min(78vh, 900px); border: 1px solid var(--border); border-radius: var(--radius); background: #fff; }
+.doc-note { margin: 0; font-size: 13px; }
+.doc-text { max-height: 520px; display: flex; flex-direction: column; gap: 2px; padding: 8px; }
+.doc-text::after { background: linear-gradient(transparent, var(--surface)); }
+.doc-para { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 8px; }
+.doc-para:hover { background: var(--bg); }
+.doc-para-text { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.65; }
+.doc-para .copy-mini { opacity: .55; flex: none; }
+.doc-para:hover .copy-mini, .doc-para .copy-mini:focus-visible { opacity: 1; }
+.doc-expand { align-self: flex-start; }
+.doc-list-admin { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.doc-list-admin li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; }
+.doc-list-admin .doc-ext { width: 34px; height: 34px; font-size: 10px; }
+.doc-list-admin .doc-name { min-width: 0; }
+
 /* Nút chuyển sáng / tối */
 .theme-toggle .i-moon, :root[data-theme="dark"] .theme-toggle .i-sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .i-moon { display: inline; }

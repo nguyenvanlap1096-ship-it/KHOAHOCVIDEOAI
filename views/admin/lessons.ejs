@@ -21,6 +21,7 @@
           <span class="body">
             <strong><%= l.title %></strong>
             <small class="muted"><%= typeLabel[l.video_type] %><%= l.video_ratio ? ' ' + l.video_ratio : '' %> · <%= l.duration_sec ? h.fmtDuration(l.duration_sec) : 'chưa có thời lượng' %></small>
+            <% if (Number(l.doc_count) || Number(l.has_prompts)) { %><span class="badge badge-primary upload-pending"><%= [Number(l.doc_count) ? `${l.doc_count} tài liệu` : '', Number(l.has_prompts) ? 'có prompt' : ''].filter(Boolean).join(' · ') %></span><% } %>
             <% if (l.video_missing) { %><span class="badge badge-danger upload-pending">Mất file video – hãy bấm “Tải video” để tải lại</span><% } %>
             <% if (l.video_type === 'upload' && !l.video_ref) { %><span class="badge badge-warn upload-pending" data-pending-lesson="<%= l.id %>">Đang chờ video tải lên</span><% } %>
           </span>

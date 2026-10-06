@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS lessons (
   video_ref VARCHAR(500),
   thumbnail VARCHAR(100),
   video_ratio VARCHAR(8),
+  prompts MEDIUMTEXT,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_lessons_course (course_id, position),
@@ -124,4 +125,17 @@ CREATE TABLE IF NOT EXISTS access (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, scope, course_id),
   CONSTRAINT fk_access_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS lesson_files (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  lesson_id INT UNSIGNED NOT NULL,
+  position INT NOT NULL DEFAULT 0,
+  original_name VARCHAR(200) NOT NULL,
+  stored VARCHAR(64) NOT NULL,
+  size INT UNSIGNED NOT NULL DEFAULT 0,
+  text_content MEDIUMTEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_lesson_files_lesson (lesson_id, position),
+  CONSTRAINT fk_lesson_files_lesson FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

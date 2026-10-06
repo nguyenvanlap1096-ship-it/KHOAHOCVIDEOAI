@@ -140,6 +140,23 @@ function highlightPrompt(text) {
   return escapeHtml(text).replace(/\[[^\]\n]{1,80}\]/g, m => `<mark>${m}</mark>`);
 }
 
+// Nội dung ô "Prompt để học viên sao chép": các prompt cách nhau bằng dòng "---";
+// dòng đầu bắt đầu bằng "#" là tiêu đề của prompt đó.
+function promptBlocks(text) {
+  return String(text || '').replace(/\r/g, '').split(/^\s*-{3,}\s*$/m).map(block => {
+    const lines = block.trim().split('\n');
+    if (!lines[0]) return null;
+    const title = /^#+\s*/.test(lines[0]) ? lines.shift().replace(/^#+\s*/, '').trim() : '';
+    const content = lines.join('\n').trim();
+    return content || title ? { title, content: content || title } : null;
+  }).filter(Boolean);
+}
+
+function fmtSize(bytes) {
+  const b = Number(bytes) || 0;
+  return b > 1048576 ? `${(b / 1048576).toFixed(1).replace('.', ',')} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
+}
+
 function daysSince(dateStr) {
   const t = Date.parse(String(dateStr || '').replace(' ', 'T') + (/[zZ+]/.test(String(dateStr)) ? '' : 'Z'));
   return Number.isFinite(t) ? (Date.now() - t) / 86400000 : Infinity;
@@ -156,4 +173,5 @@ module.exports = {
   LEVELS, fmtDuration, fmtTotal, parseDuration, slugify, youtubeId,
   initials, lines, paragraphs, parseResources, coursePercent, fmtDateTime,
   VIDEO_RATIOS, nearestRatio, ratioParts, coverLabel, imageUrl, lessonThumb, escapeHtml, highlightPrompt, freshness,
+  promptBlocks, fmtSize,
 };
