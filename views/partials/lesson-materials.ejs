@@ -54,7 +54,7 @@
           </div>
           <button type="button" class="btn btn-ghost btn-sm doc-expand" data-expand="doc-<%= d.id %>" aria-expanded="false" aria-controls="doc-<%= d.id %>">Xem đầy đủ</button>
         <% } else { %>
-          <p class="doc-note muted">Tài liệu Word cũ (.doc) không xem trực tiếp được – hãy bấm <strong>Tải về</strong>.</p>
+          <% if (ext === 'doc') { %><p class="doc-note muted">Tài liệu Word cũ (.doc) không xem trực tiếp được – hãy bấm <strong>Tải về</strong>.</p><% } else { %><p class="doc-note muted">Bản Word đầy đủ của bài học (gồm tất cả prompt ở trên) – bấm <strong>Tải về</strong> để lưu về máy.</p><% } %>
         <% } %>
       </article>
     <% }) %>

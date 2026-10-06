@@ -6,8 +6,10 @@ const { slugify } = require('../helpers');
 const CURRICULUM = require('./seed-data/curriculum');
 const fs = require('fs');
 const path = require('path');
-const { removeFile } = require('../uploads');
+const crypto = require('crypto');
+const { removeFile, docPath } = require('../uploads');
 const PROMPT_LIBRARY = require('./seed-data/prompts');
+const MATERIALS = { 15: require('./seed-data/materials-15'), 16: require('./seed-data/materials-16') };
 
 // Đường dẫn các khóa học mẫu đời đầu, được thay bằng chương trình Video AI.
 const OLD_SAMPLE_SLUGS = [
@@ -98,6 +100,47 @@ async function ensurePromptLibrary() {
   });
 }
 
+// Nạp prompt, tóm tắt, link và file Word cho các bài của Module 15 (Kho Prompt) và 16 (Tài nguyên).
+// Chỉ điền vào ô còn trống và chỉ gắn file Word khi bài chưa có tài liệu: không ghi đè nội dung admin đã nhập.
+async function ensureLessonMaterials() {
+  await once('seed:materials-15-16', async () => {
+    let filled = 0;
+    for (const [code, lessons] of Object.entries(MATERIALS)) {
+      const course = await db.get('SELECT id FROM courses WHERE title LIKE ? ORDER BY id LIMIT 1', [`Module ${code}%`]);
+      if (!course) continue;
+      const rows = await db.all('SELECT id, title, summary, key_points, resources, prompts FROM lessons WHERE course_id = ?', [course.id]);
+      for (const [title, d] of Object.entries(lessons)) {
+        const lesson = rows.find(r => String(r.title).trim().toLowerCase() === title.toLowerCase());
+        if (!lesson) continue;
+        const pick = (current, value) => (String(current || '').trim() ? current : value);
+        await db.run(
+          'UPDATE lessons SET summary = ?, key_points = ?, resources = ?, prompts = ? WHERE id = ?',
+          [
+            pick(lesson.summary, d.summary),
+            pick(lesson.key_points, d.keyPoints.join('\n')),
+            pick(lesson.resources, d.resources.map(([t, u]) => `${t} | ${u}`).join('\n')),
+            pick(lesson.prompts, d.prompts.map(([t, c]) => `# ${t}\n${c}`).join('\n---\n')),
+            lesson.id,
+          ],
+        );
+        const source = path.join(__dirname, 'seed-data', 'docs', `module${code}-${slugify(title)}.docx`);
+        const { n } = await db.get('SELECT COUNT(*) AS n FROM lesson_files WHERE lesson_id = ?', [lesson.id]);
+        if (!Number(n) && fs.existsSync(source)) {
+          const stored = crypto.randomBytes(16).toString('hex') + '.docx';
+          fs.mkdirSync(path.dirname(docPath(stored)), { recursive: true });
+          fs.copyFileSync(source, docPath(stored));
+          await db.run(
+            'INSERT INTO lesson_files (lesson_id, position, original_name, stored, size, text_content) VALUES (?, 1, ?, ?, ?, NULL)',
+            [lesson.id, `${title}.docx`, stored, fs.statSync(source).size],
+          );
+        }
+        filled++;
+      }
+    }
+    if (filled) console.log(`[demia] Đã nạp nội dung prompt & tài nguyên cho ${filled} bài (Module 15, 16).`);
+  });
+}
+
 // Bỏ tham chiếu tới ảnh đã mất (ví dụ ảnh lưu trên ổ đĩa bị xóa khi hosting deploy lại)
 // để giao diện quay về ảnh mặc định thay vì hiện ảnh lỗi.
 async function clearMissingImages() {
@@ -126,6 +169,7 @@ async function ensureSeed() {
   await ensureAdmin();
   await ensureCurriculum();
   await ensurePromptLibrary();
+  await ensureLessonMaterials();
   await clearMissingImages();
 }
 
