@@ -64,7 +64,8 @@
       </button>
     </div>
 
-    <%- include('partials/lesson-materials') %>
+    <%# Bài có video: prompt / tài liệu ngay dưới video. Bài đọc (không video): đọc Tóm tắt trước rồi mới tới các thẻ. %>
+    <% if (!docsOnly) { %><%- include('partials/lesson-materials') %><% } %>
 
     <div class="tabs" role="tablist" aria-label="Chi tiết bài học">
       <button class="tab" role="tab" type="button" aria-selected="true" aria-controls="p-summary" id="t-summary"><svg class="i"><use href="#i-grid"/></svg>Tóm tắt</button>
@@ -92,6 +93,8 @@
         </ul>
       <% } else { %><p class="muted">Chưa có tài liệu đính kèm cho bài học này.</p><% } %>
     </div>
+
+    <% if (docsOnly) { %><%- include('partials/lesson-materials') %><% } %>
 
     <nav class="pager" aria-label="Chuyển bài học">
       <% if (prev) { %><a class="btn btn-outline" href="/learn/<%= course.slug %>/<%= prev.id %>"><svg class="i"><use href="#i-chevron-left"/></svg>Bài trước</a><% } else { %><span></span><% } %>

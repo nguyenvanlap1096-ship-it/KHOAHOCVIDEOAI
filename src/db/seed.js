@@ -9,7 +9,11 @@ const path = require('path');
 const crypto = require('crypto');
 const { removeFile, docPath } = require('../uploads');
 const PROMPT_LIBRARY = require('./seed-data/prompts');
-const MATERIALS = { 15: require('./seed-data/materials-15'), 16: require('./seed-data/materials-16') };
+const MATERIALS = {
+  '00': require('./seed-data/materials-00'),
+  '15': require('./seed-data/materials-15'),
+  '16': require('./seed-data/materials-16'),
+};
 const MATERIALS_VI = require('./seed-data/materials-vi');
 
 // Nội dung ô prompt của một bài: "# Tiêu đề\nPrompt EN\n--- Tiếng Việt ---\nBản dịch", các prompt cách nhau bằng "---".
@@ -148,12 +152,13 @@ async function addMorePrompts() {
   });
 }
 
-// Nạp prompt, tóm tắt, link và file Word cho các bài của Module 15 (Kho Prompt) và 16 (Tài nguyên).
+// Nạp prompt, tóm tắt, link và file Word cho các bài của Module 00 (bài đọc mở đầu), 15 (Kho Prompt) và 16 (Tài nguyên).
 // Chỉ điền vào ô còn trống và chỉ gắn file Word khi bài chưa có tài liệu: không ghi đè nội dung admin đã nhập.
-async function ensureLessonMaterials() {
-  await once('seed:materials-15-16', async () => {
+async function ensureLessonMaterials(codes, flag) {
+  await once(flag, async () => {
     let filled = 0;
-    for (const [code, lessons] of Object.entries(MATERIALS)) {
+    for (const code of codes) {
+      const lessons = MATERIALS[code];
       const course = await db.get('SELECT id FROM courses WHERE title LIKE ? ORDER BY id LIMIT 1', [`Module ${code}%`]);
       if (!course) continue;
       const rows = await db.all('SELECT id, title, summary, key_points, resources, prompts FROM lessons WHERE course_id = ?', [course.id]);
@@ -185,7 +190,7 @@ async function ensureLessonMaterials() {
         filled++;
       }
     }
-    if (filled) console.log(`[demia] Đã nạp nội dung prompt & tài nguyên cho ${filled} bài (Module 15, 16).`);
+    if (filled) console.log(`[demia] Đã nạp nội dung cho ${filled} bài (Module ${codes.join(', ')}).`);
   });
 }
 
@@ -194,7 +199,8 @@ async function ensureLessonMaterials() {
 async function addMaterialTranslations() {
   await once('seed:materials-15-16-vi', async () => {
     let updated = 0;
-    for (const [code, lessons] of Object.entries(MATERIALS)) {
+    for (const code of ['15', '16']) {
+      const lessons = MATERIALS[code];
       const course = await db.get('SELECT id FROM courses WHERE title LIKE ? ORDER BY id LIMIT 1', [`Module ${code}%`]);
       if (!course) continue;
       const rows = await db.all('SELECT id, title, prompts FROM lessons WHERE course_id = ?', [course.id]);
@@ -247,8 +253,10 @@ async function ensureSeed() {
   await ensureCurriculum();
   await ensurePromptLibrary();
   await addMorePrompts();
-  await ensureLessonMaterials();
+  await ensureLessonMaterials(['15', '16'], 'seed:materials-15-16');
   await addMaterialTranslations();
+  // Module 00 — 4 bài đọc mở đầu (nạp riêng vì Module 15, 16 đã nạp trước đó trên web thật).
+  await ensureLessonMaterials(['00'], 'seed:materials-00');
   await clearMissingImages();
 }
 

@@ -1,6 +1,19 @@
 // Bản dịch tiếng Việt cho các prompt tiếng Anh của Module 15 / 16 (theo tên bài → tên prompt).
 // Hiện ở nút "Tiếng Việt" trên thẻ prompt để học viên hiểu nội dung; khi dùng với công cụ AI nên chép bản EN.
 module.exports = {
+  // ───────── Module 00 ─────────
+  'Quy trình làm một video AI từ A–Z': {
+    'Ví dụ hoàn chỉnh – Prompt cảnh 1 (VEO3)': `Video dọc 9:16, cận cảnh, ngang tầm mắt. Một cô gái văn phòng trẻ người Việt mặc áo sơ mi trắng, vẻ mệt mỏi, ngồi ở bàn làm việc trong văn phòng hiện đại sáng sủa, nhìn ly cà phê đá bằng nhựa đã tan hết đá. Cô thở dài và nói bằng tiếng Việt: "Mới 10 giờ sáng mà đá tan sạch rồi?"
+Ánh sáng: ánh đèn văn phòng lạnh dịu. Máy quay: đứng yên, xóa phông nhẹ.
+Âm thanh: giọng nói rõ, tiếng văn phòng yên tĩnh, không nhạc. Không phụ đề, không chữ trên màn hình.`,
+    'Ví dụ hoàn chỉnh – Prompt cảnh 3 (Kling, từ ảnh)': `[Dùng ảnh ly giữ nhiệt thật làm khung hình đầu]
+Nắp ly giữ nhiệt từ từ mở ra, để lộ những viên đá bên trong vẫn còn nguyên, hơi lạnh nhẹ nhàng bốc lên từ miệng ly. Nắng chiều chiếu qua cửa sổ.
+Máy quay: tiến chậm vào miệng ly.
+Giữ nguyên hình dáng, màu sắc và logo của ly giống hệt ảnh gốc.
+
+Negative prompt (cần tránh): méo nhãn, biến hình, thêm vật thể, nhấp nháy, chữ`,
+  },
+
   // ───────── Module 15 ─────────
   'Prompt tạo ảnh': {
     'Ảnh chân dung siêu thực (photorealistic)': `Ảnh chân dung siêu thực của [mô tả người: ví dụ một phụ nữ Việt Nam 28 tuổi, tóc đen ngang vai], mặc [trang phục], [biểu cảm: nụ cười nhẹ tự nhiên], ánh mắt hơi lệch khỏi máy ảnh.
