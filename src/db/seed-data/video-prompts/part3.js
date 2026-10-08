@@ -1,0 +1,535 @@
+// Prompt tạo video AI theo ngành – phần 3.
+const { script, director } = require('./format');
+
+const NO_TEXT = 'No subtitles, no text on screen.';
+
+module.exports = [
+  {
+    name: 'Nông nghiệp & Đặc sản', color: '#65A30D', from: ['Nông nghiệp & Đặc sản'],
+    prompts: [
+      {
+        title: 'Prompt đạo diễn: video nông sản, đặc sản vùng miền',
+        tool: 'ChatGPT, Gemini → VEO3, Kling',
+        description: 'Kịch bản video bán nông sản: vùng trồng, người làm, cách thưởng thức.',
+        content: director({
+          role: 'đạo diễn video nông sản – đặc sản, phong cách chân thực',
+          product: '[sản phẩm, vùng trồng, cách trồng / chế biến, chứng nhận nếu có, giá, mùa vụ]',
+          audience: '[ví dụ: gia đình thành thị muốn mua thực phẩm sạch, người mua quà biếu]',
+          goals: 'người xem tin nguồn gốc và đặt mua / đặt trước',
+          styles: '[từ vườn đến bàn ăn / câu chuyện nhà nông / quà Tết / hướng dẫn chế biến]',
+          notes: 'hình ảnh mộc mạc, chân thật; không quảng cáo công dụng chữa bệnh.',
+        }),
+      },
+      {
+        title: 'Từ vườn đến bàn ăn (xoài / sầu riêng)',
+        tool: 'Kling, VEO3',
+        description: 'Hành trình trái cây từ lúc hái đến khi giao tới khách.',
+        content: script({
+          info: '30 giây · dọc 9:16 · Kling + VEO3',
+          character: 'FARMER: a 55-year-old Vietnamese farmer, sun-tanned, conical hat, brown work shirt, kind smile.',
+          scenes: [
+            { time: '0–5s', label: 'HOOK', tool: 'Kling', prompt: 'Early morning in a lush mango orchard in the Mekong Delta, dew on leaves, golden mangoes hanging. Slow push in, soft golden light.' },
+            { time: '5–12s', label: 'THU HOẠCH', tool: 'Kling', prompt: 'FARMER carefully cuts ripe mangoes and places them into a bamboo basket. Handheld close-ups of hands.' },
+            { time: '12–20s', label: 'NGƯỜI LÀM', tool: 'VEO3', prompt: `FARMER holds a mango toward the camera in the orchard. ${NO_TEXT}`, voice: 'Nông dân: "Xoài nhà tui chín cây mới hái, không ủ thuốc đâu con."' },
+            { time: '20–26s', label: 'ĐÓNG GÓI', tool: 'Kling', prompt: 'Mangoes wrapped in paper and packed into ventilated boxes, labeled, ready to ship.' },
+            { time: '26–30s', label: 'THƯỞNG THỨC', tool: 'Kling', prompt: 'A family in a city apartment cuts a juicy mango, golden flesh, kids smile.' },
+          ],
+          audio: 'nhạc dân gian mộc; SFX: chim, lá xào xạc.',
+          text: 'Vùng trồng · "Chín cây" · giá/kg · giao [khu vực].',
+          cta: '"Đặt hàng mùa này – số lượng có hạn."',
+        }),
+      },
+      {
+        title: 'Hộp quà đặc sản Tết',
+        tool: 'Kling, VEO3',
+        description: 'Video quà biếu sang trọng, cảm xúc sum vầy.',
+        content: script({
+          info: '20 giây · dọc 9:16 · Kling (ảnh hộp quà thật) + VEO3',
+          scenes: [
+            { time: '0–4s', label: 'HOOK', tool: 'Kling', prompt: '[Ảnh thật] A red-and-gold Tet gift box sits among apricot blossoms, the lid slowly opens revealing [đặc sản]. Warm festive light. Keep the box design exactly the same as the input image.' },
+            { time: '4–10s', label: 'SẢN PHẨM', tool: 'Kling', prompt: 'Close-ups of each specialty item inside the box, rotating slowly, rich textures.' },
+            { time: '10–17s', label: 'TRAO QUÀ', tool: 'VEO3', prompt: `A young Vietnamese man gives the gift box to his parents in a cozy Tet living room, they smile warmly. ${NO_TEXT}`, voice: 'Con trai: "Con biếu ba mẹ đặc sản quê mình nè!"' },
+            { time: '17–20s', label: 'KẾT', tool: 'Kling', prompt: 'Family laughing around a table, peach blossoms in the foreground.' },
+          ],
+          audio: 'nhạc Tết ấm áp.',
+          text: 'Tên hộp quà · thành phần · giá · đặt trước [ngày].',
+          cta: '"Đặt quà Tết sớm – giao tận nơi, in thiệp riêng."',
+        }),
+      },
+      {
+        title: 'Câu chuyện người nông dân',
+        tool: 'Kling, VEO3, ElevenLabs',
+        description: 'Video thương hiệu cảm xúc về người làm ra sản phẩm.',
+        content: script({
+          info: '40 giây · dọc 9:16 · Kling + VEO3',
+          character: 'GRANDPA: a 68-year-old Vietnamese tea farmer, thin, white hair, brown traditional shirt. GRANDDAUGHTER: a 24-year-old Vietnamese woman, ponytail, plaid shirt.',
+          scenes: [
+            { time: '0–8s', label: 'MỞ ĐẦU', tool: 'Kling', prompt: 'Misty tea hills in Thai Nguyen at dawn, GRANDPA walks between tea rows with a basket. Cinematic, soft light.' },
+            { time: '8–20s', label: 'NGHỀ', tool: 'Kling', prompt: 'Close-ups of GRANDPA\'s hands picking tea buds and roasting tea leaves in a large iron pan over a wood fire.' },
+            { time: '20–32s', label: 'KẾ NGHIỆP', tool: 'VEO3', prompt: `GRANDDAUGHTER sits with GRANDPA on a wooden porch pouring tea, then speaks to the camera. ${NO_TEXT}`, voice: 'Cháu gái: "Ông làm trà 50 năm. Giờ con đưa trà của ông đến khắp nơi."' },
+            { time: '32–40s', label: 'KẾT', tool: 'Kling', prompt: 'Close-up of tea poured into a small cup, steam rising, tea hills behind.' },
+          ],
+          audio: 'nhạc dân tộc nhẹ; SFX: tiếng sao trà, chim rừng.',
+          text: 'Tên thương hiệu trà · vùng trồng.',
+          cta: '"Thưởng thức trà của ông – link đặt hàng ở bio."',
+        }),
+      },
+      {
+        title: 'Hướng dẫn chế biến món từ đặc sản',
+        tool: 'Kling, VEO3',
+        description: 'Video công thức nhanh giúp khách biết cách dùng sản phẩm.',
+        content: script({
+          info: '30 giây · dọc 9:16 · Kling',
+          scenes: [
+            { time: '0–4s', label: 'HOOK', prompt: 'Top-down: [đặc sản: dried squid] grilling over charcoal, flipping, smoke. Appetizing.' },
+            { time: '4–14s', label: 'CHUẨN BỊ', prompt: 'Top-down kitchen counter: hands tear the grilled squid into strips, prepare chili, lime, garlic sauce.' },
+            { time: '14–24s', label: 'HOÀN THIỆN', prompt: 'Hands mix the squid with sauce in a bowl, plate it with herbs.' },
+            { time: '24–30s', label: 'THƯỞNG THỨC', prompt: 'Friends pick up the squid with chopsticks, dipping, laughing, cold drinks.' },
+          ],
+          audio: 'nhạc vui; ASMR: lửa than, xé mực.',
+          text: 'Nguyên liệu · 3 bước · tên sản phẩm.',
+          cta: '"Mua đặc sản chuẩn vị – link ở giỏ hàng."',
+        }),
+      },
+      {
+        title: 'Mở đặt trước mùa vụ',
+        tool: 'VEO3, Kling',
+        description: 'Thông báo nhận đặt trước sản phẩm theo mùa, tạo cảm giác khan hiếm.',
+        content: script({
+          info: '15 giây · dọc 9:16 · VEO3 + Kling',
+          character: 'SELLER: a 30-year-old Vietnamese woman, straw hat, green apron, standing in a farm.',
+          scenes: [
+            { time: '0–4s', label: 'HOOK', tool: 'Kling', prompt: 'Lychee trees heavy with red fruit, sunlight, slow drone pass.' },
+            { time: '4–11s', label: 'THÔNG BÁO', tool: 'VEO3', prompt: `SELLER holds a bunch of lychees, speaks to the camera in the orchard. ${NO_TEXT}`, voice: 'Người bán: "Vải thiều chín rộ rồi! Mùa chỉ 3 tuần, nhận đặt trước từ hôm nay."' },
+            { time: '11–15s', label: 'KẾT', tool: 'Kling', prompt: 'Boxes of lychees stacked and loaded for shipping.' },
+          ],
+          audio: 'nhạc tươi.',
+          text: '"Mùa chỉ 3 tuần" · giá · giao [khu vực].',
+          cta: '"Comment \'ĐẶT\' để giữ hàng."',
+        }),
+      },
+    ],
+  },
+
+  {
+    name: 'Công nghệ & Ứng dụng', color: '#334155', from: ['Lập trình'],
+    prompts: [
+      {
+        title: 'Prompt đạo diễn: video app, phần mềm, thiết bị công nghệ',
+        tool: 'ChatGPT, Gemini → VEO3, Kling',
+        description: 'Kịch bản video giới thiệu app / SaaS / thiết bị công nghệ dễ hiểu.',
+        content: director({
+          role: 'đạo diễn video quảng cáo sản phẩm công nghệ',
+          product: '[tên app / phần mềm / thiết bị, vấn đề giải quyết, 3 tính năng chính, giá / gói dùng thử]',
+          audience: '[ví dụ: chủ shop online, nhân viên văn phòng, sinh viên]',
+          goals: 'người xem hiểu sản phẩm trong 30 giây và tải app / dùng thử',
+          styles: '[vấn đề → giải pháp / demo màn hình / TVC thiết bị / review của người dùng]',
+          notes: 'cảnh màn hình app nên quay màn hình thật rồi ghép; AI chỉ tạo bối cảnh người dùng.',
+        }),
+      },
+      {
+        title: 'Quảng cáo app (problem → solution)',
+        tool: 'VEO3, Kling + quay màn hình',
+        description: 'Nêu vấn đề hằng ngày → app giải quyết → kết quả.',
+        content: script({
+          info: '25 giây · dọc 9:16 · VEO3 + quay màn hình app thật',
+          character: 'OWNER: a 30-year-old Vietnamese female shop owner, hair tied up, apron, surrounded by packages.',
+          scenes: [
+            { time: '0–4s', label: 'VẤN ĐỀ', tool: 'VEO3', prompt: `OWNER sits among piles of order papers and packages, overwhelmed, phone buzzing. ${NO_TEXT}`, voice: 'Chủ shop: "100 đơn mỗi ngày, ghi tay muốn xỉu!"' },
+            { time: '4–14s', label: 'GIẢI PHÁP', tool: 'Quay màn hình', prompt: '(Quay màn hình thật) App tự đồng bộ đơn từ các sàn, in vận đơn 1 chạm, báo cáo doanh thu.', voice: '"Từ khi dùng [tên app], đơn từ mọi sàn về một chỗ, in vận đơn một chạm."' },
+            { time: '14–21s', label: 'KẾT QUẢ', tool: 'VEO3', prompt: `OWNER relaxes with a coffee, packages neatly stacked, she checks her phone and smiles. ${NO_TEXT}`, voice: '"Giờ mình có thời gian chăm khách hơn."' },
+            { time: '21–25s', label: 'CTA', tool: 'Kling', prompt: 'A phone on a desk displaying the app icon, light glow.' },
+          ],
+          audio: 'nhạc từ căng thẳng → tươi sáng; SFX: thông báo đơn hàng.',
+          text: '3 tính năng chính · "Dùng thử miễn phí [x] ngày".',
+          cta: '"Tải app miễn phí – link ở bio."',
+        }),
+      },
+      {
+        title: 'TVC thiết bị công nghệ',
+        tool: 'Kling',
+        description: 'Video sản phẩm công nghệ tối giản phong cách Apple.',
+        content: script({
+          info: '15 giây · dọc 9:16 hoặc ngang 16:9 · Kling (ảnh sản phẩm thật)',
+          scenes: [
+            { time: '0–4s', label: 'HOOK', prompt: '[Ảnh thật] The product emerges from darkness, a thin line of light sweeps across its surface. Keep the product design exactly the same as the input image.' },
+            { time: '4–10s', label: 'CHI TIẾT', prompt: 'Slow macro orbit over ports, buttons and material texture, precise rim lighting, dark navy background.' },
+            { time: '10–15s', label: 'KẾT', prompt: 'The product floats and rotates slowly, soft glow, camera pulls back.' },
+          ],
+          audio: 'nhạc điện tử tối giản; SFX: whoosh nhẹ.',
+          text: 'Tên sản phẩm · 1 thông số nổi bật · ngày mở bán.',
+          cta: '"Đặt trước ngay hôm nay."',
+        }),
+      },
+      {
+        title: 'Demo phần mềm cho doanh nghiệp',
+        tool: 'VEO3 + quay màn hình',
+        description: 'Người dẫn giới thiệu 3 tính năng, chèn màn hình thật.',
+        content: script({
+          info: '40 giây · ngang 16:9 · VEO3 (người dẫn) + quay màn hình',
+          character: 'PRESENTER: a 32-year-old Vietnamese man, neat hair, navy polo shirt, standing in a modern office.',
+          scenes: [
+            { time: '0–5s', label: 'HOOK', tool: 'VEO3', prompt: `PRESENTER in a bright modern office, faces the camera. ${NO_TEXT}`, voice: 'Người dẫn: "Quản lý nhân sự 50 người chỉ với một màn hình – xem nhé!"' },
+            { time: '5–30s', label: 'DEMO', tool: 'Quay màn hình', prompt: '(Quay màn hình thật 3 tính năng: chấm công, tính lương, báo cáo).', voice: '"Một: chấm công bằng điện thoại. Hai: tính lương tự động. Ba: báo cáo theo thời gian thực."' },
+            { time: '30–40s', label: 'CTA', tool: 'VEO3', prompt: `PRESENTER smiles, gestures toward the camera. ${NO_TEXT}`, voice: '"Đăng ký demo 1-1 miễn phí với đội ngũ của chúng tôi."' },
+          ],
+          audio: 'nhạc doanh nghiệp nhẹ.',
+          text: 'Tên tính năng · logo.',
+          cta: '"Đặt lịch demo miễn phí."',
+        }),
+      },
+      {
+        title: 'Khóa học lập trình / công nghệ',
+        tool: 'VEO3, Kling',
+        description: 'Video tuyển sinh khóa học lập trình cho người trái ngành.',
+        content: script({
+          info: '30 giây · dọc 9:16 · VEO3 + Kling',
+          character: 'LEARNER: a 26-year-old Vietnamese woman, glasses, oversized sweater, curious.',
+          scenes: [
+            { time: '0–5s', label: 'HOOK', tool: 'VEO3', prompt: `LEARNER at a retail job counter, looks at the camera. ${NO_TEXT}`, voice: 'Học viên: "6 tháng trước, mình còn đứng quầy bán hàng."' },
+            { time: '5–18s', label: 'HỌC', tool: 'Kling', prompt: 'Montage: LEARNER coding late at night with lo-fi lights, attending online class, pair programming with a mentor.' },
+            { time: '18–26s', label: 'THÀNH QUẢ', tool: 'VEO3', prompt: `LEARNER in a tech office, presents her app on a big screen to colleagues. ${NO_TEXT}`, voice: '"Giờ mình là lập trình viên front-end."' },
+            { time: '26–30s', label: 'CTA', tool: 'Kling', prompt: 'Laptop screen with code, coffee mug, warm light.' },
+          ],
+          audio: 'lo-fi → nhạc truyền cảm hứng.',
+          text: 'Thời lượng khóa · hình thức học · học phí.',
+          cta: '"Đăng ký buổi học thử miễn phí."',
+        }),
+      },
+      {
+        title: 'Review app của người dùng (UGC)',
+        tool: 'VEO3',
+        description: 'Người dùng thật chia sẻ app giúp cuộc sống dễ hơn.',
+        content: script({
+          info: '20 giây · dọc 9:16 · VEO3',
+          character: 'USER: a 27-year-old Vietnamese man, short hair, white T-shirt, sitting on a sofa.',
+          scenes: [
+            { time: '0–4s', label: 'HOOK', prompt: `Selfie-style shot, USER holds his phone up to the camera. ${NO_TEXT}`, voice: 'Người dùng: "App này giúp mình tiết kiệm 2 triệu mỗi tháng!"' },
+            { time: '4–15s', label: 'CHIA SẺ', prompt: `USER scrolls on his phone, talks naturally. ${NO_TEXT}`, voice: '"Nó tự phân loại chi tiêu, nhắc khi mình tiêu quá tay."' },
+            { time: '15–20s', label: 'CTA', prompt: `USER smiles and points down. ${NO_TEXT}`, voice: '"Link tải mình để dưới nhé!"' },
+          ],
+          audio: 'nhạc trend nhẹ.',
+          text: 'Tên app · "Miễn phí trên iOS & Android".',
+          cta: '"Tải app miễn phí."',
+        }),
+      },
+    ],
+  },
+
+  {
+    name: 'Tài chính & Bảo hiểm', color: '#059669', from: ['Kế toán & Tài chính'],
+    prompts: [
+      {
+        title: 'Prompt đạo diễn: video tài chính, bảo hiểm, kế toán (tuân thủ)',
+        tool: 'ChatGPT, Gemini → VEO3, Kling',
+        description: 'Kịch bản video giáo dục tài chính / dịch vụ, không hứa hẹn lợi nhuận.',
+        content: director({
+          role: 'đạo diễn video truyền thông tài chính',
+          product: '[dịch vụ: bảo hiểm / dịch vụ kế toán / app tài chính / kiến thức tài chính cá nhân]',
+          audience: '[ví dụ: người đi làm 25–40 tuổi, chủ doanh nghiệp nhỏ]',
+          goals: 'người xem hiểu vấn đề và liên hệ tư vấn',
+          styles: '[giải thích bằng hoạt hình / câu chuyện gia đình / chuyên gia nói trước camera / cảnh báo lừa đảo]',
+          notes: 'không cam kết lợi nhuận, không khuyến nghị đầu tư cụ thể; ghi "thông tin tham khảo"; tuân thủ quy định ngành.',
+        }),
+      },
+      {
+        title: 'Kiến thức tài chính cá nhân (hoạt hình)',
+        tool: 'Kling, ElevenLabs',
+        description: 'Giải thích quy tắc chia thu nhập bằng hình minh họa 3D.',
+        content: script({
+          info: '40 giây · dọc 9:16 · Kling (3D) + lời kể',
+          scenes: [
+            { time: '0–5s', label: 'HOOK', prompt: '3D animation: a cartoon wallet character with an empty inside, sad face, end of the month calendar. Pixar-like.', voice: 'Lời kể: "Cuối tháng lúc nào cũng cháy túi? Thử quy tắc 50 – 30 – 20!"' },
+            { time: '5–18s', label: '50%', prompt: '3D animation: coins flow into a big jar labeled with a house icon and food icon.', voice: '"50% cho nhu cầu thiết yếu: nhà, ăn, đi lại."' },
+            { time: '18–28s', label: '30%', prompt: '3D animation: coins flow into a jar with icons of coffee, movies, travel.', voice: '"30% cho mong muốn: giải trí, mua sắm."' },
+            { time: '28–40s', label: '20%', prompt: '3D animation: coins flow into a jar with a piggy bank and shield icon, the wallet character smiles.', voice: '"20% để tiết kiệm và quỹ dự phòng. Bắt đầu từ tháng này nhé!"' },
+          ],
+          audio: 'nhạc vui nhẹ; SFX: tiếng xu.',
+          text: '50% Thiết yếu · 30% Mong muốn · 20% Tiết kiệm · "Thông tin tham khảo".',
+          cta: '"Theo dõi để học thêm mẹo quản lý tiền."',
+        }),
+      },
+      {
+        title: 'Bảo hiểm – câu chuyện gia đình',
+        tool: 'Kling, VEO3',
+        description: 'Video cảm xúc về sự an tâm, không gây sợ hãi quá mức.',
+        content: script({
+          info: '35 giây · dọc 9:16 · Kling + VEO3',
+          character: 'DAD: a 38-year-old Vietnamese father, short hair, white shirt. DAUGHTER: an 8-year-old Vietnamese girl, pigtails, school uniform.',
+          scenes: [
+            { time: '0–8s', label: 'MỞ ĐẦU', tool: 'Kling', prompt: 'DAD drives DAUGHTER to school in the morning, they sing together in the car. Warm sunlight.' },
+            { time: '8–18s', label: 'SUY NGHĨ', tool: 'VEO3', prompt: `DAD at night watches his DAUGHTER sleeping, then sits at a desk reviewing papers, thoughtful. Soft lamp light. ${NO_TEXT}`, voice: 'Người bố (lời kể): "Mình luôn tự hỏi: nếu có chuyện gì, con sẽ ra sao?"' },
+            { time: '18–28s', label: 'GIẢI PHÁP', tool: 'VEO3', prompt: `DAD meets a friendly financial advisor at a café, they discuss a plan. ${NO_TEXT}`, voice: '"Một kế hoạch bảo vệ phù hợp giúp mình an tâm hơn mỗi ngày."' },
+            { time: '28–35s', label: 'KẾT', tool: 'Kling', prompt: 'DAD and DAUGHTER fly a kite on a grassy hill at sunset, laughing.' },
+          ],
+          audio: 'piano ấm áp.',
+          text: 'Tên sản phẩm bảo hiểm · "Đọc kỹ quy tắc, điều khoản trước khi tham gia".',
+          cta: '"Nhận tư vấn miễn phí kế hoạch bảo vệ gia đình."',
+        }),
+      },
+      {
+        title: 'Dịch vụ kế toán cho doanh nghiệp nhỏ',
+        tool: 'VEO3, Kling',
+        description: 'Video giới thiệu dịch vụ: chủ shop bận rộn → giao cho chuyên gia.',
+        content: script({
+          info: '25 giây · dọc 9:16 · VEO3 + Kling',
+          character: 'OWNER: a 35-year-old Vietnamese café owner, short hair, black apron. ACCOUNTANT: a 30-year-old Vietnamese woman, glasses, cream blazer.',
+          scenes: [
+            { time: '0–5s', label: 'VẤN ĐỀ', tool: 'VEO3', prompt: `OWNER at a café counter surrounded by invoices, scratching his head. ${NO_TEXT}`, voice: 'Chủ quán: "Hóa đơn, thuế, sổ sách… tôi chỉ muốn pha cà phê thôi!"' },
+            { time: '5–15s', label: 'GIẢI PHÁP', tool: 'VEO3', prompt: `ACCOUNTANT sits with OWNER, organizes documents on a laptop, explains calmly. ${NO_TEXT}`, voice: 'Kế toán: "Để chúng tôi lo sổ sách, báo cáo thuế đúng hạn mỗi kỳ."' },
+            { time: '15–25s', label: 'KẾT', tool: 'Kling', prompt: 'OWNER happily serves coffee to customers, a busy cozy café.' },
+          ],
+          audio: 'nhạc nhẹ nhàng.',
+          text: 'Gói dịch vụ · giá từ [giá]/tháng.',
+          cta: '"Tư vấn miễn phí – gọi [số điện thoại]."',
+        }),
+      },
+      {
+        title: 'App ngân hàng / ví điện tử',
+        tool: 'Kling, VEO3 + quay màn hình',
+        description: 'Video tính năng thanh toán nhanh, an toàn.',
+        content: script({
+          info: '20 giây · dọc 9:16 · Kling + quay màn hình',
+          character: 'USER: a 24-year-old Vietnamese woman, bob hair, yellow cardigan.',
+          scenes: [
+            { time: '0–5s', label: 'HOOK', tool: 'Kling', prompt: 'USER at a street food stall scans a QR code with her phone, the vendor smiles. Bright evening lights.' },
+            { time: '5–14s', label: 'TÍNH NĂNG', tool: 'Quay màn hình', prompt: '(Quay màn hình thật) Chuyển tiền, quét QR, xác thực sinh trắc học.' },
+            { time: '14–20s', label: 'KẾT', tool: 'VEO3', prompt: `USER smiles at the camera holding her phone. ${NO_TEXT}`, voice: 'Cô gái: "Đi đâu cũng chỉ cần chiếc điện thoại."' },
+          ],
+          audio: 'nhạc hiện đại; SFX: "ting" thanh toán.',
+          text: 'Ưu đãi mở tài khoản (đúng chương trình thật).',
+          cta: '"Tải app và mở tài khoản trong 5 phút."',
+        }),
+      },
+      {
+        title: 'Cảnh báo lừa đảo qua điện thoại',
+        tool: 'VEO3',
+        description: 'Video tình huống giúp người xem nhận diện chiêu lừa – rất được chia sẻ.',
+        content: script({
+          info: '35 giây · dọc 9:16 · VEO3',
+          character: 'AUNT: a 55-year-old Vietnamese woman, short hair, floral blouse. SON: a 28-year-old Vietnamese man, glasses, casual shirt.',
+          scenes: [
+            { time: '0–6s', label: 'HOOK', prompt: `AUNT answers a phone call in her living room, looks worried. ${NO_TEXT}`, voice: 'Giọng lạ (qua điện thoại): "Tài khoản của bà đang bị khóa, đọc ngay mã OTP để xác minh!"' },
+            { time: '6–14s', label: 'CĂNG THẲNG', prompt: `AUNT hurriedly looks for her phone messages, nervous. Close-up. ${NO_TEXT}`, voice: 'Bà: "Mã… mã gì đây…"' },
+            { time: '14–26s', label: 'NGĂN CHẶN', prompt: `SON walks in, gently takes the phone and hangs up, explains to AUNT. ${NO_TEXT}`, voice: 'Con trai: "Mẹ ơi, ngân hàng không bao giờ hỏi mã OTP qua điện thoại đâu!"' },
+            { time: '26–35s', label: 'BÀI HỌC', prompt: `SON faces the camera. ${NO_TEXT}`, voice: '"Không đọc OTP, không bấm link lạ, gọi tổng đài chính thức để kiểm tra. Chia sẻ cho ba mẹ bạn nhé!"' },
+          ],
+          audio: 'nhạc hồi hộp → nhẹ nhõm.',
+          text: '3 nguyên tắc: Không đọc OTP · Không bấm link lạ · Gọi tổng đài chính thức.',
+          cta: '"Chia sẻ video này cho người thân."',
+        }),
+      },
+    ],
+  },
+
+  {
+    name: 'Tuyển dụng & Doanh nghiệp', color: '#7C3AED', from: ['Nhân sự'],
+    prompts: [
+      {
+        title: 'Prompt đạo diễn: video tuyển dụng, giới thiệu doanh nghiệp',
+        tool: 'ChatGPT, Gemini → VEO3, Kling',
+        description: 'Kịch bản video employer branding, tuyển dụng, profile công ty.',
+        content: director({
+          role: 'đạo diễn video thương hiệu doanh nghiệp và tuyển dụng',
+          product: '[tên công ty, lĩnh vực, vị trí tuyển / thông điệp thương hiệu, văn hóa, phúc lợi]',
+          audience: '[ví dụ: ứng viên 22–30 tuổi ngành marketing / đối tác B2B]',
+          goals: 'ứng viên muốn ứng tuyển / đối tác tin tưởng hợp tác',
+          styles: '[một ngày làm việc / văn hóa công ty / CEO chia sẻ / tuyển dụng vui nhộn]',
+          notes: 'thông tin lương, phúc lợi phải đúng thực tế; không phân biệt giới tính, tuổi tác.',
+        }),
+      },
+      {
+        title: 'Video tuyển dụng vui nhộn',
+        tool: 'VEO3, Kling',
+        description: 'Nhân viên giới thiệu vị trí đang tuyển theo phong cách trẻ trung.',
+        content: script({
+          info: '25 giây · dọc 9:16 · VEO3 + Kling',
+          character: 'TEAM: three young Vietnamese employees (a woman with a bob haircut in a yellow shirt, a man with glasses in a hoodie, a woman with long hair in a blazer) in a colorful modern office.',
+          scenes: [
+            { time: '0–4s', label: 'HOOK', tool: 'VEO3', prompt: `TEAM pops up one by one from behind desks, looking at the camera playfully. ${NO_TEXT}`, voice: 'Cả nhóm: "Team mình đang thiếu… BẠN!"' },
+            { time: '4–14s', label: 'CÔNG VIỆC', tool: 'Kling', prompt: 'Quick shots: brainstorming on a whiteboard, laughing in a meeting, celebrating a launch with confetti.' },
+            { time: '14–21s', label: 'PHÚC LỢI', tool: 'VEO3', prompt: `The woman in blazer speaks to the camera in the pantry with snacks. ${NO_TEXT}`, voice: '"Lương cạnh tranh, du lịch hằng năm, làm hybrid 2 ngày ở nhà."' },
+            { time: '21–25s', label: 'CTA', tool: 'VEO3', prompt: `TEAM points at the camera together. ${NO_TEXT}`, voice: '"Ứng tuyển ngay nha!"' },
+          ],
+          audio: 'nhạc trend vui.',
+          text: 'Vị trí tuyển · mức lương · hạn nộp hồ sơ.',
+          cta: '"Gửi CV qua [email / link]."',
+        }),
+      },
+      {
+        title: 'Một ngày làm việc của nhân viên',
+        tool: 'Kling, VEO3',
+        description: 'Day-in-the-life giúp ứng viên hình dung công việc thật.',
+        content: script({
+          info: '35 giây · dọc 9:16 · Kling + VEO3',
+          character: 'DESIGNER: a 25-year-old Vietnamese female graphic designer, short dyed brown hair, oversized denim shirt, headphones.',
+          scenes: [
+            { time: '0–6s', label: '8:30', tool: 'Kling', prompt: 'DESIGNER arrives at a bright office, greets colleagues, grabs coffee.' },
+            { time: '6–16s', label: '10:00', tool: 'Kling', prompt: 'DESIGNER works on a large monitor designing a poster, focused, music on headphones.' },
+            { time: '16–24s', label: '12:00', tool: 'Kling', prompt: 'Team lunch together, laughing around a table.' },
+            { time: '24–35s', label: '17:30', tool: 'VEO3', prompt: `DESIGNER packs her bag, smiles at the camera. ${NO_TEXT}`, voice: 'Nhân viên: "Làm việc vui, sếp tâm lý, về đúng giờ – đó là lý do mình ở lại 3 năm."' },
+          ],
+          audio: 'lo-fi nhẹ.',
+          text: 'Giờ trong ngày · vị trí đang tuyển.',
+          cta: '"Xem vị trí đang tuyển tại [link]."',
+        }),
+      },
+      {
+        title: 'Video profile giới thiệu doanh nghiệp',
+        tool: 'Kling, VEO3',
+        description: 'Video 60 giây cho website / hồ sơ năng lực / gửi đối tác.',
+        content: script({
+          info: '60 giây · ngang 16:9 · Kling + VEO3 (CEO)',
+          character: 'CEO: a 45-year-old Vietnamese businessman, grey suit, white shirt, confident and warm.',
+          scenes: [
+            { time: '0–8s', label: 'MỞ ĐẦU', tool: 'Kling', prompt: 'Aerial shot of a modern office building / factory at sunrise, logo reflection on glass.' },
+            { time: '8–25s', label: 'HÀNH TRÌNH', tool: 'VEO3', prompt: `CEO in a glass meeting room with city view speaks to the camera. ${NO_TEXT}`, voice: 'CEO: "Từ một xưởng nhỏ năm [năm], hôm nay chúng tôi phục vụ hơn [số] khách hàng."' },
+            { time: '25–45s', label: 'NĂNG LỰC', tool: 'Kling', prompt: 'Montage: production line, quality inspection, R&D team, warehouse, delivery trucks.' },
+            { time: '45–60s', label: 'CAM KẾT', tool: 'VEO3', prompt: `CEO shakes hands with partners, then faces the camera. ${NO_TEXT}`, voice: '"Chất lượng và uy tín – đó là lời hứa của chúng tôi."' },
+          ],
+          audio: 'nhạc doanh nghiệp hùng tráng.',
+          text: 'Số năm · số khách hàng · chứng nhận (đúng thực tế).',
+          cta: '"Liên hệ hợp tác: [website / hotline]."',
+        }),
+      },
+      {
+        title: 'Văn hóa công ty – team building',
+        tool: 'Kling',
+        description: 'Video không khí gắn kết, dùng cho tuyển dụng và truyền thông nội bộ.',
+        content: script({
+          info: '30 giây · dọc 9:16 · Kling',
+          scenes: [
+            { time: '0–6s', label: 'HOOK', prompt: 'A group of Vietnamese colleagues in matching T-shirts run into the sea at a beach, splashing, laughing. Slow motion.' },
+            { time: '6–16s', label: 'HOẠT ĐỘNG', prompt: 'Team games on the sand, tug of war, cheering, sunset.' },
+            { time: '16–26s', label: 'GALA', prompt: 'Evening gala dinner with lights, awards on stage, colleagues hugging.' },
+            { time: '26–30s', label: 'KẾT', prompt: 'Group photo on the beach at dusk, everyone jumping.' },
+          ],
+          audio: 'nhạc sôi động, tiếng cười.',
+          text: 'Tên công ty · "Chúng tôi là một gia đình".',
+          cta: '"Gia nhập đội ngũ – xem vị trí đang tuyển."',
+        }),
+      },
+      {
+        title: 'Tri ân khách hàng & đối tác',
+        tool: 'Kling, VEO3',
+        description: 'Video cảm ơn cuối năm / kỷ niệm thành lập.',
+        content: script({
+          info: '30 giây · dọc 9:16 hoặc ngang 16:9 · Kling + VEO3',
+          scenes: [
+            { time: '0–8s', label: 'MỞ ĐẦU', tool: 'Kling', prompt: 'Warm montage: handwritten thank-you cards, team packing gift boxes, smiling faces.' },
+            { time: '8–20s', label: 'LỜI CẢM ƠN', tool: 'VEO3', prompt: `The whole team stands together in the office holding a "Thank you" banner, waving. ${NO_TEXT}`, voice: 'Cả đội: "Cảm ơn bạn đã đồng hành cùng chúng tôi suốt [số] năm qua!"' },
+            { time: '20–30s', label: 'KẾT', tool: 'Kling', prompt: 'Fireworks over the city at night, warm golden tones.' },
+          ],
+          audio: 'nhạc ấm áp.',
+          text: 'Cột mốc · ưu đãi tri ân (nếu có).',
+          cta: '"Nhận quà tri ân tại [link]."',
+        }),
+      },
+    ],
+  },
+
+  {
+    name: 'Dịch vụ pháp lý', color: '#78716C', from: ['Pháp lý & Hợp đồng'],
+    prompts: [
+      {
+        title: 'Prompt đạo diễn: video luật sư, dịch vụ pháp lý (tuân thủ)',
+        tool: 'ChatGPT, Gemini → VEO3, Kling',
+        description: 'Kịch bản video kiến thức pháp luật và giới thiệu dịch vụ, an toàn thông tin.',
+        content: director({
+          role: 'đạo diễn video truyền thông cho văn phòng luật',
+          product: '[dịch vụ: tư vấn doanh nghiệp / hôn nhân gia đình / đất đai / sở hữu trí tuệ…; luật sư; địa chỉ]',
+          audience: '[ví dụ: chủ doanh nghiệp nhỏ, người dân cần thủ tục nhà đất]',
+          goals: 'người xem hiểu vấn đề cơ bản và liên hệ tư vấn',
+          styles: '[luật sư giải đáp / tình huống minh họa / kiến thức 60 giây / giới thiệu văn phòng]',
+          notes: 'chỉ cung cấp thông tin tham khảo, không thay thế tư vấn cụ thể; dẫn đúng văn bản pháp luật hiện hành (kiểm tra trước khi đăng).',
+        }),
+      },
+      {
+        title: 'Giới thiệu văn phòng luật',
+        tool: 'Kling, VEO3',
+        description: 'Video tạo niềm tin: đội ngũ, kinh nghiệm, lĩnh vực.',
+        content: script({
+          info: '30 giây · ngang 16:9 hoặc dọc 9:16 · Kling + VEO3',
+          character: 'LAWYER: a 42-year-old Vietnamese male lawyer, dark suit, tie, neat hair, calm and trustworthy.',
+          scenes: [
+            { time: '0–6s', label: 'MỞ ĐẦU', tool: 'Kling', prompt: 'Slow glide through a modern law office with bookshelves of legal books, warm wood, soft light.' },
+            { time: '6–18s', label: 'LUẬT SƯ', tool: 'VEO3', prompt: `LAWYER sits behind a desk, speaks to the camera. ${NO_TEXT}`, voice: 'Luật sư: "Hơn [số] năm, chúng tôi đồng hành cùng doanh nghiệp và gia đình trong các vấn đề pháp lý."' },
+            { time: '18–26s', label: 'ĐỘI NGŨ', tool: 'Kling', prompt: 'Team of lawyers discussing documents in a meeting room, professional.' },
+            { time: '26–30s', label: 'KẾT', tool: 'Kling', prompt: 'LAWYER shakes hands with a client at the office door.' },
+          ],
+          audio: 'nhạc trang trọng nhẹ.',
+          text: 'Lĩnh vực tư vấn · địa chỉ · hotline.',
+          cta: '"Đặt lịch tư vấn với luật sư."',
+        }),
+      },
+      {
+        title: 'Kiến thức pháp luật 60 giây',
+        tool: 'VEO3',
+        description: 'Luật sư giải thích 1 vấn đề phổ biến, dễ hiểu.',
+        content: script({
+          info: '45 giây · dọc 9:16 · VEO3',
+          character: 'LAWYER: a 35-year-old Vietnamese female lawyer, black blazer, hair in a low bun, glasses.',
+          scenes: [
+            { time: '0–5s', label: 'HOOK', prompt: `LAWYER in an office with law books behind, faces the camera. ${NO_TEXT}`, voice: 'Luật sư: "Cho mượn tiền mà không có giấy tờ – có đòi lại được không?"' },
+            { time: '5–30s', label: 'GIẢI ĐÁP', prompt: `LAWYER explains with hand gestures, medium shot. ${NO_TEXT}`, voice: '"Vẫn có thể, nếu bạn còn bằng chứng như tin nhắn, sao kê chuyển khoản, người làm chứng. Lần sau nên lập giấy vay có chữ ký hai bên."' },
+            { time: '30–45s', label: 'CTA', prompt: `LAWYER smiles at the camera. ${NO_TEXT}`, voice: '"Mỗi trường hợp khác nhau, cần tư vấn cụ thể hãy liên hệ chúng tôi."' },
+          ],
+          audio: 'nhạc nền nhẹ.',
+          text: 'Câu hỏi + 3 loại bằng chứng · "Thông tin tham khảo".',
+          cta: '"Gửi câu hỏi của bạn ở phần bình luận."',
+        }),
+      },
+      {
+        title: 'Tình huống pháp lý minh họa',
+        tool: 'VEO3',
+        description: 'Diễn lại tình huống đời thường, luật sư phân tích ở cuối.',
+        content: script({
+          info: '40 giây · dọc 9:16 · VEO3',
+          character: 'TENANT: a 26-year-old Vietnamese man, T-shirt, backpack. LANDLORD: a 50-year-old Vietnamese woman, floral blouse. LAWYER: a 40-year-old Vietnamese man in a suit.',
+          scenes: [
+            { time: '0–10s', label: 'TÌNH HUỐNG', prompt: `In a small rented room, LANDLORD tells TENANT to move out immediately; TENANT looks shocked. ${NO_TEXT}`, voice: 'Chủ nhà: "Tuần này dọn đi, tôi không trả cọc!" – Người thuê: "Hợp đồng còn 6 tháng mà cô!"' },
+            { time: '10–32s', label: 'PHÂN TÍCH', prompt: `LAWYER in an office faces the camera. ${NO_TEXT}`, voice: 'Luật sư: "Nếu hợp đồng còn hạn, chủ nhà muốn chấm dứt trước thời hạn phải theo thỏa thuận và quy định pháp luật về báo trước, bồi thường."' },
+            { time: '32–40s', label: 'LỜI KHUYÊN', prompt: `LAWYER holds up a rental contract. ${NO_TEXT}`, voice: '"Luôn lập hợp đồng rõ ràng về tiền cọc và điều khoản chấm dứt."' },
+          ],
+          audio: 'nhạc hồi hộp nhẹ → trung tính.',
+          text: '"Thông tin tham khảo – kiểm tra quy định hiện hành".',
+          cta: '"Cần rà soát hợp đồng thuê nhà? Liên hệ tư vấn."',
+        }),
+      },
+      {
+        title: 'Dịch vụ thành lập doanh nghiệp',
+        tool: 'VEO3, Kling',
+        description: 'Video dịch vụ trọn gói cho người mới khởi nghiệp.',
+        content: script({
+          info: '25 giây · dọc 9:16 · VEO3 + Kling',
+          character: 'FOUNDER: a 28-year-old Vietnamese woman, white shirt, enthusiastic. CONSULTANT: a 32-year-old Vietnamese man, navy suit.',
+          scenes: [
+            { time: '0–5s', label: 'HOOK', tool: 'VEO3', prompt: `FOUNDER at a café with a laptop, looks confused at forms. ${NO_TEXT}`, voice: 'Người khởi nghiệp: "Muốn mở công ty mà thủ tục rối quá!"' },
+            { time: '5–17s', label: 'GIẢI PHÁP', tool: 'VEO3', prompt: `CONSULTANT sits with FOUNDER, organizes documents, explains steps. ${NO_TEXT}`, voice: 'Tư vấn viên: "Chúng tôi lo trọn gói: hồ sơ, đăng ký, con dấu, tài khoản ngân hàng."' },
+            { time: '17–25s', label: 'KẾT', tool: 'Kling', prompt: 'FOUNDER holds a business registration certificate and smiles in her new small office.' },
+          ],
+          audio: 'nhạc tươi sáng.',
+          text: 'Thời gian hoàn thành · phí trọn gói (đúng thực tế).',
+          cta: '"Nhận báo giá thành lập công ty miễn phí."',
+        }),
+      },
+      {
+        title: 'Luật sư trả lời bình luận',
+        tool: 'VEO3',
+        description: 'Format trả lời câu hỏi từ bình luận – tăng tương tác.',
+        content: script({
+          info: '30 giây · dọc 9:16 · VEO3 (chèn ảnh chụp bình luận bằng CapCut)',
+          character: 'LAWYER: a 38-year-old Vietnamese female lawyer, grey blazer, shoulder-length hair.',
+          scenes: [
+            { time: '0–5s', label: 'HOOK', prompt: `LAWYER reads a comment on her phone, then looks at the camera. ${NO_TEXT}`, voice: 'Luật sư: "Bạn hỏi: bố mẹ mất không để lại di chúc thì chia đất thế nào?"' },
+            { time: '5–24s', label: 'TRẢ LỜI', prompt: `LAWYER explains calmly in an office. ${NO_TEXT}`, voice: '"Khi không có di chúc, tài sản chia theo pháp luật cho những người thừa kế cùng hàng, thường là vợ/chồng, cha mẹ, các con – mỗi người phần bằng nhau."' },
+            { time: '24–30s', label: 'CTA', prompt: `LAWYER smiles. ${NO_TEXT}`, voice: '"Trường hợp cụ thể cần xem giấy tờ – hãy liên hệ để được tư vấn."' },
+          ],
+          audio: 'nhạc nền rất nhẹ.',
+          text: 'Ảnh bình luận · "Thông tin tham khảo".',
+          cta: '"Comment câu hỏi tiếp theo của bạn."',
+        }),
+      },
+    ],
+  },
+];

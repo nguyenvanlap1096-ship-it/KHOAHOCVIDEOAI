@@ -152,6 +152,61 @@ async function addMorePrompts() {
   });
 }
 
+// Chuyển thư viện prompt theo ngành sang prompt TẠO VIDEO AI (kịch bản chuẩn từng cảnh).
+// Chỉ xóa prompt mẫu cũ còn nguyên bản gốc; prompt admin đã sửa hoặc tự thêm được giữ lại.
+async function useVideoPromptLibrary() {
+  await once('seed:prompts-video-v1', async () => {
+    const OLD = [...PROMPT_LIBRARY, ...require('./seed-data/prompts-more-a'), ...require('./seed-data/prompts-more-b')];
+    const NEW = [
+      ...require('./seed-data/video-prompts/part1'),
+      ...require('./seed-data/video-prompts/part2'),
+      ...require('./seed-data/video-prompts/part3'),
+    ];
+    let removed = 0;
+    for (const cat of OLD) {
+      for (const p of cat.prompts) {
+        removed += (await db.run('DELETE FROM prompts WHERE title = ? AND content = ?', [p.title, p.content])).changes || 0;
+      }
+    }
+
+    const keep = new Set();
+    let added = 0;
+    for (let i = 0; i < NEW.length; i++) {
+      const cat = NEW[i];
+      const slug = slugify(cat.name);
+      const names = [cat.name, ...cat.from];
+      let row = await db.get(
+        `SELECT id FROM prompt_categories WHERE slug = ? OR name IN (${names.map(() => '?').join(', ')}) ORDER BY id LIMIT 1`,
+        [slug, ...names],
+      );
+      if (row) {
+        await db.run('UPDATE prompt_categories SET name = ?, slug = ?, color = ?, position = ? WHERE id = ?', [cat.name, slug, cat.color, i + 1, row.id]);
+      } else {
+        row = { id: (await db.run('INSERT INTO prompt_categories (slug, name, color, position) VALUES (?, ?, ?, ?)', [slug, cat.name, cat.color, i + 1])).insertId };
+      }
+      keep.add(Number(row.id));
+      for (const p of cat.prompts) {
+        if (await db.get('SELECT 1 AS x FROM prompts WHERE category_id = ? AND title = ?', [row.id, p.title])) continue;
+        await db.run(
+          'INSERT INTO prompts (category_id, title, description, content, tool) VALUES (?, ?, ?, ?, ?)',
+          [row.id, p.title, p.description, p.content, p.tool],
+        );
+        added++;
+      }
+    }
+
+    // Ngành cũ không còn trong danh sách mới (Marketing, Văn phòng…): xóa nếu đã trống, còn prompt của admin thì giữ và xếp cuối.
+    const others = await db.all('SELECT c.id, COUNT(p.id) AS n FROM prompt_categories c LEFT JOIN prompts p ON p.category_id = c.id GROUP BY c.id ORDER BY c.position, c.id');
+    let pos = NEW.length;
+    for (const c of others) {
+      if (keep.has(Number(c.id))) continue;
+      if (!Number(c.n)) await db.run('DELETE FROM prompt_categories WHERE id = ?', [c.id]);
+      else await db.run('UPDATE prompt_categories SET position = ? WHERE id = ?', [++pos, c.id]);
+    }
+    console.log(`[demia] Thư viện prompt chuyển sang prompt video AI: bỏ ${removed} prompt mẫu cũ, thêm ${added} kịch bản video.`);
+  });
+}
+
 // Nạp prompt, tóm tắt, link và file Word cho các bài của Module 00 (bài đọc mở đầu), 15 (Kho Prompt) và 16 (Tài nguyên).
 // Chỉ điền vào ô còn trống và chỉ gắn file Word khi bài chưa có tài liệu: không ghi đè nội dung admin đã nhập.
 async function ensureLessonMaterials(codes, flag) {
@@ -253,6 +308,7 @@ async function ensureSeed() {
   await ensureCurriculum();
   await ensurePromptLibrary();
   await addMorePrompts();
+  await useVideoPromptLibrary();
   await ensureLessonMaterials(['15', '16'], 'seed:materials-15-16');
   await addMaterialTranslations();
   // Module 00 — 4 bài đọc mở đầu (nạp riêng vì Module 15, 16 đã nạp trước đó trên web thật).

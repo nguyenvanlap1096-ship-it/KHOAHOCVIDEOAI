@@ -3,13 +3,13 @@
   <section class="hero hero-prompts">
     <div>
       <span class="eyebrow"><svg class="i i-sm"><use href="#i-sparkles"/></svg> Thư viện prompt</span>
-      <h1>Prompt AI cho từng ngành nghề</h1>
-      <p><%= total %> câu lệnh mẫu dùng ngay với ChatGPT, Claude, Midjourney, công cụ làm video AI... Bấm <strong>Sao chép</strong> rồi thay các phần <mark>[trong ngoặc vuông]</mark> bằng thông tin của bạn.</p>
+      <h1>Prompt tạo video AI theo ngành nghề</h1>
+      <p><%= total %> kịch bản video AI chuẩn: chia cảnh theo giây, prompt tiếng Anh cho VEO3 / Kling, lời thoại tiếng Việt, âm thanh và CTA. Mỗi ngành có thêm 1 "prompt đạo diễn" để ChatGPT / Gemini tự viết kịch bản mới. Bấm <strong>Sao chép</strong> rồi thay các phần <mark>[trong ngoặc vuông]</mark>.</p>
     </div>
     <form class="hero-search" action="/prompts" method="get" role="search">
       <label for="pq" class="sr-only">Tìm prompt</label>
       <svg class="i"><use href="#i-search"/></svg>
-      <input id="pq" type="search" name="q" value="<%= q %>" placeholder="Tìm prompt: quảng cáo, kịch bản, JD...">
+      <input id="pq" type="search" name="q" value="<%= q %>" placeholder="Tìm: review, unbox, TVC, tuyển sinh...">
       <% if (active) { %><input type="hidden" name="nganh" value="<%= active.slug %>"><% } %>
       <button class="btn btn-primary" type="submit">Tìm</button>
     </form>
