@@ -46,4 +46,12 @@ YÊU CẦU ĐẦU RA:
 5. Gợi ý nhạc nền, 3–5 hiệu ứng âm thanh và lời kêu gọi hành động (CTA) cuối video.${notes ? `\nLƯU Ý: ${notes}` : ''}`;
 }
 
-module.exports = { script, director };
+const NO_TEXT = 'No subtitles, no text on screen.';
+
+// Viết gọn: sc('0–3s', 'HOOK', 'VEO3', 'prompt EN', 'lời thoại') → một cảnh.
+const sc = (time, label, tool, prompt, voice) => ({ time, label, tool, prompt, voice });
+
+// Viết gọn một mục kịch bản: v(tiêu đề, công cụ, mô tả, { info, character, scenes, audio, text, cta }).
+const v = (title, tool, description, spec) => ({ title, tool, description, content: script(spec) });
+
+module.exports = { script, director, sc, v, NO_TEXT };

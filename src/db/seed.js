@@ -207,6 +207,27 @@ async function useVideoPromptLibrary() {
   });
 }
 
+// Bổ sung 14 kịch bản video / ngành (đủ 20 / ngành). Chỉ thêm, không sửa / xóa prompt đang có.
+async function addMoreVideoPrompts() {
+  await once('seed:prompts-video-v2', async () => {
+    const extra = [1, 2, 3, 4, 5, 6].flatMap(i => require(`./seed-data/video-prompts/extra${i}`));
+    let added = 0;
+    for (const cat of extra) {
+      const row = await db.get('SELECT id FROM prompt_categories WHERE slug = ? OR name = ? ORDER BY id LIMIT 1', [slugify(cat.name), cat.name]);
+      if (!row) continue;
+      for (const p of cat.prompts) {
+        if (await db.get('SELECT 1 AS x FROM prompts WHERE category_id = ? AND title = ?', [row.id, p.title])) continue;
+        await db.run(
+          'INSERT INTO prompts (category_id, title, description, content, tool) VALUES (?, ?, ?, ?, ?)',
+          [row.id, p.title, p.description, p.content, p.tool],
+        );
+        added++;
+      }
+    }
+    if (added) console.log(`[demia] Đã bổ sung ${added} kịch bản video vào thư viện prompt theo ngành.`);
+  });
+}
+
 // Nạp prompt, tóm tắt, link và file Word cho các bài của Module 00 (bài đọc mở đầu), 15 (Kho Prompt) và 16 (Tài nguyên).
 // Chỉ điền vào ô còn trống và chỉ gắn file Word khi bài chưa có tài liệu: không ghi đè nội dung admin đã nhập.
 async function ensureLessonMaterials(codes, flag) {
@@ -309,6 +330,7 @@ async function ensureSeed() {
   await ensurePromptLibrary();
   await addMorePrompts();
   await useVideoPromptLibrary();
+  await addMoreVideoPrompts();
   await ensureLessonMaterials(['15', '16'], 'seed:materials-15-16');
   await addMaterialTranslations();
   // Module 00 — 4 bài đọc mở đầu (nạp riêng vì Module 15, 16 đã nạp trước đó trên web thật).

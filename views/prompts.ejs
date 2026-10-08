@@ -15,7 +15,7 @@
     </form>
   </section>
 
-  <nav class="industry-chips" aria-label="Lọc theo ngành nghề">
+  <nav class="industry-chips" id="top-chips" aria-label="Lọc theo ngành nghề">
     <a class="industry-chip" href="/prompts<%= q ? '?q=' + encodeURIComponent(q) : '' %>" <%- !active ? 'aria-current="true"' : '' %>>
       <svg class="i"><use href="#i-grid"/></svg>Tất cả <span class="chip"><%= total %></span>
     </a>
@@ -44,6 +44,13 @@
         </article>
       <% }) %>
     </div>
+    <% if (pages > 1) { %>
+      <nav class="page-nav" aria-label="Phân trang">
+        <% if (page > 1) { %><a class="btn btn-outline btn-sm" href="<%= pageUrl(page - 1) %>" rel="prev"><svg class="i"><use href="#i-chevron-left"/></svg>Trước</a><% } else { %><span></span><% } %>
+        <span class="page-nav-info">Trang <strong><%= page %></strong> / <%= pages %> · <%= found %> kịch bản · <a href="#top-chips">chọn ngành để xem nhanh</a></span>
+        <% if (page < pages) { %><a class="btn btn-primary btn-sm" href="<%= pageUrl(page + 1) %>" rel="next">Trang sau<svg class="i"><use href="#i-chevron-right"/></svg></a><% } else { %><span></span><% } %>
+      </nav>
+    <% } %>
   <% } else { %>
     <div class="empty">
       <svg class="i"><use href="#i-sparkles"/></svg>
