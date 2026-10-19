@@ -16,11 +16,11 @@
     </form>
   </section>
 
-  <%- include('partials/studio-promo') %>
-
   <% if (showShelf) { %><%- include('partials/premium-shelf') %><% } %>
 
   <div class="home-main">
+  <%# Xưởng Kịch bản AI: đặt đầu cột chính (trong lưới 2 cột) để luôn nằm ngay dưới phần tiêu đề. %>
+  <%- include('partials/studio-promo') %>
   <% if (continueLearning.length) { %>
     <section class="section">
       <h2 class="section-title">Tiếp tục học</h2>
