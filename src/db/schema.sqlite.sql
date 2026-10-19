@@ -131,3 +131,17 @@ CREATE TABLE IF NOT EXISTS lesson_files (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_lesson_files_lesson ON lesson_files (lesson_id, position);
+
+-- Xưởng Kịch bản AI: mỗi lần học viên nhờ AI của khoá học viết một kịch bản (để đếm lượt và thống kê).
+CREATE TABLE IF NOT EXISTS studio_jobs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  model_key TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  points INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'processing',
+  error TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_studio_user ON studio_jobs (user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_studio_created ON studio_jobs (created_at);

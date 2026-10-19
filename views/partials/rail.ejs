@@ -5,6 +5,7 @@
     { href: '/prompts', label: 'Thư viện prompt', icon: 'i-sparkles', active: path.startsWith('/prompts') },
     { href: '/my', label: 'Khóa học của tôi', icon: 'i-book-open', active: path === '/my' },
   ];
+  if (locals.studioOpen) railLinks.splice(1, 0, { href: '/studio', label: 'Xưởng Kịch bản AI', icon: 'i-wand', active: false, cls: 'rail-studio' });
   if (user && user.role === 'admin') {
     railLinks.push({ href: '/admin', label: 'Quản trị', icon: 'i-shield', active: path.startsWith('/admin') });
   }
@@ -15,7 +16,7 @@
     <a class="rail-btn new" href="/admin/courses/new" aria-label="Thêm khóa học" title="Thêm khóa học"><svg class="i"><use href="#i-plus"/></svg></a>
   <% } %>
   <% railLinks.forEach(l => { %>
-    <a class="rail-btn" href="<%= l.href %>" aria-label="<%= l.label %>" title="<%= l.label %>" <%- l.active ? 'aria-current="page"' : '' %>>
+    <a class="rail-btn <%= l.cls || '' %>" href="<%= l.href %>" aria-label="<%= l.label %>" title="<%= l.label %>" <%- l.active ? 'aria-current="page"' : '' %>>
       <svg class="i"><use href="#<%= l.icon %>"/></svg>
     </a>
   <% }) %>

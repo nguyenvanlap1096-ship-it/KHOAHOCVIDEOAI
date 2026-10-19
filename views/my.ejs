@@ -1,6 +1,7 @@
 <%- include('partials/top', { crumbs: [{ label: 'Khóa học', href: '/' }, { label: 'Khóa học của tôi' }] }) %>
 <div class="page">
   <h1 class="page-title">Khóa học của tôi</h1>
+  <%- include('partials/studio-promo') %>
 
   <% if (owned.length) { %>
     <section class="section" id="premium">

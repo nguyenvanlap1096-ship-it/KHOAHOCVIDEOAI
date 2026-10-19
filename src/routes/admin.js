@@ -595,6 +595,85 @@ router.post('/settings', acceptFiles(['zalo_qr', 'site_logo']), async (req, res)
   res.redirect('/admin/settings');
 });
 
+/* ---------- Xưởng Kịch bản AI: AI viết kịch bản & prompt cho học viên ---------- */
+const studio = require('../services/studio');
+const { TARGETS: VIDEO_TARGETS, IMAGE_TARGETS } = require('../../public/js/studio-scripts');
+
+async function studioPage(req, res) {
+  const cfg = studio.studioConfig(await getSettings());
+  const since = studio.monthStart();
+  const [totals, perUser, recent, custom] = await Promise.all([
+    db.get(
+      `SELECT COUNT(*) AS jobs, COALESCE(SUM(CASE WHEN kind = 'video' AND status = 'completed' THEN 1 ELSE 0 END), 0) AS video,
+              COALESCE(SUM(CASE WHEN kind = 'image' AND status = 'completed' THEN 1 ELSE 0 END), 0) AS image,
+              COALESCE(SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END), 0) AS failed
+         FROM studio_jobs WHERE created_at >= ?`, [since]),
+    db.all(
+      `SELECT u.id, u.name, u.email, u.role, u.studio_quota,
+              COALESCE(SUM(CASE WHEN j.status <> 'failed' THEN j.points ELSE 0 END), 0) AS used
+         FROM users u JOIN studio_jobs j ON j.user_id = u.id AND j.created_at >= ?
+        GROUP BY u.id, u.name, u.email, u.role, u.studio_quota ORDER BY used DESC LIMIT 100`, [since]),
+    db.all(
+      `SELECT j.id, j.model_key, j.kind, j.status, j.error, j.created_at, u.name
+         FROM studio_jobs j JOIN users u ON u.id = j.user_id ORDER BY j.id DESC LIMIT 30`),
+    db.all('SELECT id, name, email, studio_quota FROM users WHERE studio_quota IS NOT NULL ORDER BY name'),
+  ]);
+  const labels = Object.fromEntries([...VIDEO_TARGETS, ...IMAGE_TARGETS].map(t => [t.key, t.label]));
+  res.render('admin/studio', {
+    title: 'Xưởng Kịch bản AI', cfg, features: studio.FEATURES, totals, perUser, recent, custom, labels,
+    defaultModel: studio.DEFAULT_GOOGLE_MODEL,
+    googleHint: cfg.googleKey ? '••••' + cfg.googleKey.slice(-4) : '',
+    ...nav('studio'),
+  });
+}
+
+router.get('/studio', studioPage);
+
+router.post('/studio', async (req, res) => {
+  const b = req.body || {};
+  const fkeys = studio.FEATURES.map(f => f.key);
+  const feats = [].concat(b.features || []).filter(k => fkeys.includes(k));
+  const values = {
+    studio_open: b.studio_open ? '1' : '0',
+    studio_features: feats.length === fkeys.length ? '' : feats.join(',') || 'none',
+    studio_enabled: b.studio_enabled ? '1' : '',
+    studio_who: b.studio_who === 'paid' ? 'paid' : 'all',
+    studio_points: String(Math.min(100000, Math.max(0, Math.round(Number(b.studio_points) || 0)))),
+    studio_google_model: String(b.studio_google_model || '').trim().replace(/^models\//, '').slice(0, 80),
+  };
+  const gk = String(b.studio_google_key || '').trim();
+  if (gk) values.studio_google_key = gk.slice(0, 200);
+  if (b.remove_google_key) values.studio_google_key = '';
+  await setSettings(values);
+  req.flash('success', 'Đã lưu cài đặt Xưởng Kịch bản AI.');
+  res.redirect('/admin/studio');
+});
+
+router.post('/studio/check', async (req, res) => {
+  const cfg = studio.studioConfig(await getSettings());
+  try {
+    req.flash('success', await studio.checkKey(cfg));
+  } catch (err) {
+    req.flash('error', `Kiểm tra key thất bại: ${err.detail || err.message}`);
+  }
+  res.redirect('/admin/studio');
+});
+
+// Số lượt riêng cho một học viên (để trống = dùng mức chung).
+router.post('/studio/quota', async (req, res) => {
+  const email = String((req.body && req.body.email) || '').trim().toLowerCase();
+  const raw = String((req.body && req.body.quota) || '').trim();
+  const u = await db.get('SELECT id, name FROM users WHERE LOWER(email) = ?', [email]);
+  if (!u) {
+    req.flash('error', `Không tìm thấy học viên có email ${email}.`);
+    return res.redirect('/admin/studio');
+  }
+  const quota = raw === '' ? null : Math.min(100000, Math.max(0, Math.round(Number(raw) || 0)));
+  await db.run('UPDATE users SET studio_quota = ? WHERE id = ?', [quota, u.id]);
+  req.flash('success', quota == null ? `${u.name} dùng lại mức chung.` : `Đã đặt ${quota} lượt viết/tháng cho ${u.name}.`);
+  res.redirect('/admin/studio');
+});
+
 /* ---------- Người dùng ---------- */
 router.get('/users', async (req, res) => {
   const users = await db.all(

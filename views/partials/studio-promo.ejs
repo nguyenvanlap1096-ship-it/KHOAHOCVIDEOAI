@@ -1,0 +1,13 @@
+<%# Khung giới thiệu Xưởng Kịch bản AI — hiện ở trang chủ, Thư viện prompt, Khoá học của tôi (ẩn khi quản trị đóng xưởng). %>
+<% if (locals.studioOpen) { %>
+<a class="studio-promo" href="<%= user ? '/studio' : '/login?next=/studio' %>">
+  <span class="studio-promo-ico" aria-hidden="true"><svg class="i"><use href="#i-wand"/></svg></span>
+  <span class="studio-promo-body">
+    <span class="studio-promo-kicker">Mới · Miễn phí cho học viên</span>
+    <strong>Xưởng Kịch bản AI — nhập ý tưởng, ra kịch bản hoàn chỉnh</strong>
+    <small>Chia cảnh, lời thoại tiếng Việt và prompt chuẩn từng phần mềm. Sao chép là dùng ngay.</small>
+    <span class="studio-promo-tags"><span>Veo 3.1</span><span>Kling</span><span>Sora</span><span>Midjourney</span><span>Nano Banana</span><span>ChatGPT</span></span>
+  </span>
+  <span class="btn studio-promo-btn"><%= user ? 'Viết thử ngay' : 'Đăng nhập để dùng' %><svg class="i i-sm"><use href="#i-arrow-right"/></svg></span>
+</a>
+<% } %>

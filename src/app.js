@@ -98,6 +98,8 @@ module.exports = function createApp() {
     res.locals.sidebar = await sidebarData(req.user && req.user.id);
     // Khung/nút hỗ trợ Zalo chỉ hiện cho người đã đăng nhập.
     res.locals.support = req.user ? supportInfo(settings) : null;
+    // Link Xưởng Kịch bản AI chỉ hiện khi quản trị mở xưởng (quản trị luôn thấy).
+    res.locals.studioOpen = settings.studio_open !== '0' || Boolean(req.user && req.user.role === 'admin');
     res.locals.vnd = fmtVnd;
     res.locals.pendingOrders = req.user && req.user.role === 'admin' ? await countPendingOrders() : 0;
     next();
@@ -108,6 +110,9 @@ module.exports = function createApp() {
   app.use('/', require('./routes/public'));
   app.use('/prompts', require('./routes/prompts'));
   app.use('/', require('./routes/shop'));
+  const studio = require('./routes/studio');
+  app.use('/studio', studio.page);
+  app.use('/api/studio', studio.api);
   app.use('/api', require('./routes/api'));
   app.use('/admin', require('./routes/admin'));
 

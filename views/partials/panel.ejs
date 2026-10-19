@@ -6,6 +6,7 @@
     <input type="search" id="panelSearch" name="q" placeholder="Tìm khóa học..." value="<%= locals.q || '' %>">
   </form>
 
+  <% if (locals.studioOpen) { %><a class="nav-item nav-studio" href="/studio"><svg class="i"><use href="#i-wand"/></svg><span class="t">Xưởng Kịch bản AI</span><span class="chip">Mới</span></a><% } %>
   <a class="nav-item" href="/" <%- path === '/' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-grid"/></svg><span class="t">Tất cả khóa học</span></a>
   <a class="nav-item" href="/videos" <%- path === '/videos' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-video"/></svg><span class="t">Video mới cập nhật</span></a>
   <a class="nav-item" href="/prompts" <%- path.startsWith('/prompts') ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-sparkles"/></svg><span class="t">Prompt theo ngành nghề</span></a>
@@ -19,6 +20,7 @@
       <a class="nav-item" href="/admin/courses" <%- locals.adminNav === 'courses' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-layers"/></svg><span class="t">Khóa học &amp; bài học</span></a>
       <a class="nav-item" href="/admin/prompts" <%- locals.adminNav === 'prompts' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-sparkles"/></svg><span class="t">Prompt &amp; ngành nghề</span></a>
       <a class="nav-item" href="/admin/orders" <%- locals.adminNav === 'orders' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-receipt"/></svg><span class="t">Đơn hàng</span><% if (pendingOrders) { %><span class="chip chip-alert"><%= pendingOrders %></span><% } %></a>
+      <a class="nav-item" href="/admin/studio" <%- locals.adminNav === 'studio' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-wand"/></svg><span class="t">Xưởng Kịch bản AI</span></a>
       <a class="nav-item" href="/admin/users" <%- locals.adminNav === 'users' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-users"/></svg><span class="t">Người dùng</span></a>
       <a class="nav-item" href="/admin/settings" <%- locals.adminNav === 'settings' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-settings"/></svg><span class="t">Cài đặt &amp; Zalo</span></a>
     </div>

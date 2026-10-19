@@ -1,0 +1,149 @@
+<%- include('../partials/top', { crumbs: [{ label: 'Quản trị', href: '/admin' }, { label: 'Xưởng Kịch bản AI' }] }) %>
+<div class="page page-narrow">
+  <div class="page-head">
+    <h1 class="page-title">Xưởng Kịch bản AI</h1>
+    <a class="btn btn-outline" href="/studio" target="_blank" rel="noopener"><svg class="i"><use href="#i-sparkles"/></svg>Mở xưởng</a>
+  </div>
+  <p class="muted">Học viên vào <strong>/studio</strong>, chọn ngành, nhập ý tưởng là AI viết kịch bản video (chia cảnh) hoặc kịch bản bộ ảnh, kèm prompt đúng cú pháp từng phần mềm (Veo 3.1, Kling, Sora, Midjourney, Nano Banana, ChatGPT…). Học viên sao chép prompt sang phần mềm đó để làm. <strong>Hoàn toàn miễn phí</strong>: dùng key Google AI Studio gói miễn phí (key chỉ nằm trên máy chủ), hoặc học viên bấm "Nhờ Gemini/ChatGPT viết" để viết bằng Gemini/ChatGPT bản miễn phí.</p>
+
+  <% if (!cfg.open) { %>
+    <div class="promo-strip promo-warn"><span class="body"><strong>Xưởng đang ĐÓNG với học viên</strong><small>Học viên không vào được /studio và không thấy link trên menu. Bạn (quản trị) vẫn vào được để chuẩn bị.</small></span></div>
+  <% } %>
+
+  <div class="stats">
+    <div class="stat card"><span class="stat-ico"><svg class="i"><use href="#i-video"/></svg></span><span class="stat-value"><%= Number(totals.video).toLocaleString('vi-VN') %></span><span class="stat-label">Kịch bản video tháng này</span></div>
+    <div class="stat card"><span class="stat-ico"><svg class="i"><use href="#i-sparkles"/></svg></span><span class="stat-value"><%= Number(totals.image).toLocaleString('vi-VN') %></span><span class="stat-label">Kịch bản ảnh tháng này</span></div>
+    <div class="stat card"><span class="stat-ico"><svg class="i"><use href="#i-x"/></svg></span><span class="stat-value"><%= Number(totals.failed).toLocaleString('vi-VN') %></span><span class="stat-label">Lượt lỗi (đã hoàn lượt)</span></div>
+  </div>
+
+  <form method="post" action="/admin/studio" class="form card form-card">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+    <h2 class="form-section">Bật / tắt xưởng</h2>
+    <label class="switch">
+      <input type="checkbox" name="studio_open" value="1" <%= cfg.open ? 'checked' : '' %>>
+      <span class="switch-ui" aria-hidden="true"></span>
+      <span><strong>Mở Xưởng Kịch bản AI cho học viên</strong><small class="d-block muted">Tắt để đóng toàn bộ xưởng: ẩn link trên menu, học viên vào /studio sẽ thấy thông báo tạm đóng.</small></span>
+    </label>
+    <fieldset class="field">
+      <legend>Tính năng học viên được dùng</legend>
+      <% features.forEach(f => { %>
+        <label class="check" style="display:flex"><input type="checkbox" name="features" value="<%= f.key %>" <%= cfg.features.includes(f.key) ? 'checked' : '' %>> <%= f.label %></label>
+      <% }) %>
+      <p class="field-hint">Bỏ chọn để ẩn tính năng với học viên (máy chủ cũng chặn luôn). Quản trị viên luôn thấy đủ.</p>
+    </fieldset>
+
+    <h2 class="form-section">AI viết kịch bản của khoá học</h2>
+    <label class="switch">
+      <input type="checkbox" name="studio_enabled" value="1" <%= cfg.switchedOn ? 'checked' : '' %>>
+      <span class="switch-ui" aria-hidden="true"></span>
+      <span><strong>Cho học viên dùng AI của khoá học (key Google miễn phí)</strong><small class="d-block muted">Tắt thì học viên vẫn dùng được nút "Nhờ Gemini/ChatGPT viết" (miễn phí, dán qua lại) hoặc key Google miễn phí của riêng họ.<% if (cfg.switchedOn && !cfg.provider) { %> <strong>Đang bật nhưng chưa có key nên chưa chạy.</strong><% } %></small></span>
+    </label>
+
+    <div class="field">
+      <label for="studio_google_key">API key Google AI Studio <span class="badge badge-primary">Miễn phí</span></label>
+      <input id="studio_google_key" name="studio_google_key" type="password" autocomplete="off" spellcheck="false" placeholder="<%= googleHint ? 'Đã lưu key ' + googleHint + ' — để trống nếu không đổi' : 'AIza… lấy tại aistudio.google.com/apikey' %>">
+      <p class="field-hint">Tạo miễn phí tại <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> bằng Gmail — không cần thẻ. <strong>Đừng bật thanh toán (billing)</strong> cho dự án của key để luôn ở gói miễn phí, không bao giờ bị tính tiền. Gói miễn phí giới hạn số lần viết mỗi phút / mỗi ngày: khi quá tải học viên được nhắc dùng nút "Nhờ Gemini/ChatGPT viết".</p>
+      <% if (googleHint) { %><label class="check"><input type="checkbox" name="remove_google_key" value="1"> Xoá key Google đã lưu</label><% } %>
+    </div>
+    <div class="field">
+      <label for="studio_google_model">Mã model Gemini</label>
+      <input id="studio_google_model" name="studio_google_model" value="<%= cfg.googleModel === defaultModel ? '' : cfg.googleModel %>" placeholder="<%= defaultModel %>" spellcheck="false">
+      <p class="field-hint">Để trống dùng <code><%= defaultModel %></code>. Nếu Google đổi tên model, bấm "Kiểm tra key" để xem tên đang có rồi sửa ở đây.</p>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="studio_points">Lượt viết mỗi tháng / học viên</label>
+        <input id="studio_points" name="studio_points" type="number" min="0" max="100000" value="<%= cfg.points %>">
+        <p class="field-hint">Mỗi kịch bản (video hoặc bộ ảnh) = 1 lượt. Lượt lỗi tự hoàn. Làm mới ngày 1 hằng tháng. Giữ con số vừa phải để key miễn phí đủ dùng cho cả lớp.</p>
+      </div>
+      <div class="field">
+        <label for="studio_who">Ai được dùng AI của khoá học</label>
+        <select id="studio_who" name="studio_who">
+          <option value="all" <%= cfg.who === 'all' ? 'selected' : '' %>>Mọi học viên đã đăng nhập</option>
+          <option value="paid" <%= cfg.who === 'paid' ? 'selected' : '' %>>Chỉ học viên đã mua khoá chuyên sâu</option>
+        </select>
+        <p class="field-hint">Quản trị viên luôn dùng được, không giới hạn.</p>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit" data-loading-text="Đang lưu...">Lưu cài đặt</button>
+    </div>
+  </form>
+
+  <form method="post" action="/admin/studio/check" class="inline-form" style="margin:12px 0 28px">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <button class="btn btn-outline" type="submit" <%= cfg.provider ? '' : 'disabled' %>>Kiểm tra key</button>
+    <span class="muted"><%= cfg.provider ? 'Đang dùng: Google AI Studio (miễn phí)' : 'Chưa có key' %></span>
+  </form>
+
+  <section class="section">
+    <div class="section-head"><h2 class="section-title">Lượt viết riêng cho một học viên</h2></div>
+    <form method="post" action="/admin/studio/quota" class="form card form-card">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="field-row">
+        <div class="field"><label for="q_email">Email học viên</label><input id="q_email" name="email" type="email" required placeholder="hocvien@gmail.com"></div>
+        <div class="field"><label for="q_quota">Lượt mỗi tháng</label><input id="q_quota" name="quota" type="number" min="0" max="100000" placeholder="Để trống = dùng mức chung"><p class="field-hint">Đặt 0 để chặn học viên này dùng AI của khoá học.</p></div>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Lưu</button></div>
+    </form>
+    <% if (custom.length) { %>
+      <div class="table-wrap card" style="margin-top:12px">
+        <table class="table">
+          <thead><tr><th>Học viên</th><th>Email</th><th class="ta-right">Lượt / tháng</th></tr></thead>
+          <tbody><% custom.forEach(u => { %><tr><td><%= u.name %></td><td><%= u.email %></td><td class="ta-right"><%= u.studio_quota %></td></tr><% }) %></tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2 class="section-title">Học viên dùng nhiều nhất tháng này</h2></div>
+    <% if (!perUser.length) { %>
+      <p class="muted">Chưa có ai viết trong tháng này.</p>
+    <% } else { %>
+      <div class="table-wrap card">
+        <table class="table">
+          <thead><tr><th>Học viên</th><th>Email</th><th class="ta-right">Đã dùng</th><th class="ta-right">Lượt / tháng</th></tr></thead>
+          <tbody>
+            <% perUser.forEach(u => { %>
+              <tr>
+                <td><%= u.name %></td><td><%= u.email %></td><td class="ta-right"><%= u.used %></td>
+                <td class="ta-right"><%= u.role === 'admin' ? 'Không giới hạn' : (u.studio_quota != null ? u.studio_quota + ' (riêng)' : cfg.points) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2 class="section-title">30 lượt gần nhất</h2></div>
+    <% if (!recent.length) { %>
+      <p class="muted">Chưa có lượt nào.</p>
+    <% } else { %>
+      <div class="table-wrap card">
+        <table class="table">
+          <thead><tr><th>Thời gian</th><th>Học viên</th><th>Loại</th><th>Viết cho</th><th>Trạng thái</th></tr></thead>
+          <tbody>
+            <% recent.forEach(j => { %>
+              <tr>
+                <td><%= h.fmtDateTime(j.created_at) %></td>
+                <td><%= j.name %></td>
+                <td><%= { video: 'Kịch bản video', image: 'Kịch bản ảnh' }[j.kind] || j.kind %></td>
+                <td><%= labels[j.model_key] || j.model_key %></td>
+                <td>
+                  <span class="badge <%= j.status === 'completed' ? 'badge-primary' : '' %>"><%= { completed: 'Xong', failed: 'Lỗi', processing: 'Đang viết' }[j.status] || j.status %></span>
+                  <% if (j.error) { %><small class="d-block muted"><%= j.error %></small><% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+</div>
+<%- include('../partials/bottom') %>

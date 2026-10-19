@@ -22,6 +22,14 @@ const DEFAULTS = {
   bundle_title: 'Trọn bộ khóa chuyên sâu',
   bundle_price: '',
   bundle_description: 'Mở toàn bộ khóa chuyên sâu hiện có và các khóa chuyên sâu ra mắt sau này.',
+  // Xưởng Kịch bản AI: AI viết kịch bản của khoá học (key Google AI Studio gói miễn phí, chỉ nằm trên máy chủ).
+  studio_open: '1',
+  studio_features: '',
+  studio_enabled: '',
+  studio_google_key: '',
+  studio_google_model: '',
+  studio_who: 'all',
+  studio_points: '30',
 };
 
 let cache = null;

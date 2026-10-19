@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Xưởng Kịch bản AI · <%= siteName %></title>
+<link rel="icon" href="<%= siteLogo %>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Unbounded:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="/css/studio.css?v=<%= assetV %>">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="13" height="13" rx="2.5"/><path d="m15.5 10 6-3.5v11l-6-3.5"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3.5" width="18" height="17" rx="2.5"/><circle cx="9" cy="9.5" r="1.8"/><path d="m21 16-5-5-9 9.5"/></symbol>
+  <symbol id="i-saved" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4.5L5 21V4.5a1 1 0 0 1 1-1z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></symbol>
+  <symbol id="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5"/><path d="M4 19.5h16"/></symbol>
+</svg>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#1C1307" stroke-width="2.2" stroke-linecap="round"><path d="M5 5h14M5 10h14M5 15h9M5 20h6"/></svg></div>
+      <div><div class="brand-name">Xưởng Kịch bản AI</div><div class="brand-sub">Prompt chuẩn cho từng phần mềm</div></div>
+    </div>
+    <nav class="nav-group" aria-label="Viết">
+      <div class="nav-label">Viết</div>
+      <button class="nav-btn" data-view="video"><svg><use href="#i-video"/></svg>Kịch bản video</button>
+      <button class="nav-btn" data-view="image"><svg><use href="#i-image"/></svg>Kịch bản ảnh</button>
+    </nav>
+    <nav class="nav-group" aria-label="Lưu trữ">
+      <div class="nav-label">Lưu trữ</div>
+      <button class="nav-btn" data-view="saved"><svg><use href="#i-saved"/></svg>Đã lưu<span class="count mono" id="savedCount">0</span></button>
+    </nav>
+    <div class="side-foot">
+      <a class="nav-btn" href="/"><svg><use href="#i-back"/></svg>Về khoá học</a>
+      <button class="nav-btn" data-view="settings"><svg><use href="#i-gear"/></svg>Cài đặt</button>
+      <button class="key-pill" data-view="settings"><span class="dot" id="keyDot"></span><span id="keyText">…</span></button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <% [
+      { v: 'video', title: 'Kịch bản video', desc: 'Ý tưởng → chia cảnh → prompt đúng cú pháp Veo 3.1, Kling, Sora, Seedance, Grok, Hailuo, Wan. Sao chép sang phần mềm đó để làm video.' },
+      { v: 'image', title: 'Kịch bản ảnh', desc: 'Ý tưởng → bộ ảnh theo mục đích → prompt đúng cú pháp Midjourney, Nano Banana, ChatGPT, Seedream, Flux, Grok. Sao chép sang phần mềm đó để tạo ảnh.' },
+    ].forEach(sec => { const p = sec.v === 'video' ? 'v' : 'i'; %>
+    <section class="view" id="view-<%= sec.v %>" hidden>
+      <div class="studio">
+        <form class="controls" id="<%= p %>Form" autocomplete="off">
+          <div class="controls-scroll">
+            <p class="hint"><%= sec.desc %></p>
+            <div class="field">
+              <label class="field-label" for="<%= p %>Ind">Ngành</label>
+              <select class="select" id="<%= p %>Ind"></select>
+              <div class="hint" id="<%= p %>IndHint"></div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="<%= p %>Pur"><%= sec.v === 'video' ? 'Mục đích video' : 'Loại bộ ảnh' %></label>
+              <select class="select" id="<%= p %>Pur"></select>
+              <div class="hint" id="<%= p %>PurHint"></div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="<%= p %>Target">Viết prompt chuẩn cho</label>
+              <select class="select" id="<%= p %>Target"></select>
+              <div class="hint" id="<%= p %>TargetHint"></div>
+            </div>
+            <div class="field">
+              <div class="field-label"><label for="<%= p %>Idea">Ý tưởng / sản phẩm</label><span class="opt mono" id="<%= p %>Count">0</span></div>
+              <textarea class="textarea" id="<%= p %>Idea" placeholder="<%= sec.v === 'video' ? 'Ví dụ: Quảng cáo serum vitamin C cho da xỉn màu, khách nữ 25–35 tuổi văn phòng, da sáng sau 2 tuần, mua 1 tặng 1' : 'Ví dụ: Bộ ảnh quảng cáo trà sữa trân châu đường đen mới, khách học sinh sinh viên, tông nâu kem, ưu đãi mua 2 tặng 1' %>"></textarea>
+            </div>
+            <div class="field">
+              <label class="field-label" for="<%= p %>Brand">Tên thương hiệu / sản phẩm <span class="opt">không bắt buộc</span></label>
+              <input class="input" id="<%= p %>Brand" maxlength="120">
+            </div>
+            <div class="field"><div class="field-label"><%= sec.v === 'video' ? 'Số cảnh' : 'Số ảnh' %></div><div class="seg" id="<%= p %>N"></div></div>
+            <% if (sec.v === 'video') { %><div class="field"><div class="field-label">Mỗi cảnh dài</div><div class="seg" id="vDur"></div></div><% } %>
+            <div class="field"><div class="field-label">Tỉ lệ khung hình</div><div class="seg" id="<%= p %>Ratio"></div></div>
+            <% if (sec.v === 'video') { %>
+              <div class="field"><label class="field-label" for="vVoice">Lời thoại</label><select class="select" id="vVoice"></select></div>
+            <% } %>
+            <div class="field">
+              <label class="field-label" for="<%= p %>Style">Phong cách hình ảnh <span class="opt">không bắt buộc</span></label>
+              <input class="input" id="<%= p %>Style" placeholder="ảnh thật điện ảnh, tông ấm; hoặc hoạt hình 3D Pixar…">
+            </div>
+            <details class="paste-box" id="<%= p %>PasteBox">
+              <summary>Đã nhờ Gemini / ChatGPT viết? Dán kết quả vào đây</summary>
+              <textarea class="textarea" id="<%= p %>Paste" placeholder="Dán nguyên câu trả lời (khối JSON)"></textarea>
+              <button type="button" class="btn primary" id="<%= p %>PasteGo">Đọc kết quả</button>
+            </details>
+          </div>
+          <div class="controls-foot">
+            <button type="submit" class="btn-go" id="<%= p %>Go"><svg><use href="#i-spark"/></svg><span>Viết <%= sec.v === 'video' ? 'kịch bản video' : 'kịch bản ảnh' %></span></button>
+            <div class="kbd" id="<%= p %>Kbd"></div>
+            <div class="alt">Cách khác: <button type="button" class="linkbtn" data-ask="gemini" data-kind="<%= sec.v %>">nhờ Gemini viết</button> · <button type="button" class="linkbtn" data-ask="chatgpt" data-kind="<%= sec.v %>">nhờ ChatGPT viết</button></div>
+          </div>
+        </form>
+        <div class="stage">
+          <div class="stage-head">
+            <span class="row grow"><b>Kết quả</b><span id="<%= p %>Summary">chưa có</span></span>
+            <span class="row">
+              <button class="btn sm" id="<%= p %>CopyAll" type="button" disabled><svg><use href="#i-copy"/></svg>Sao chép tất cả</button>
+              <button class="btn sm" id="<%= p %>Txt" type="button" disabled><svg><use href="#i-down"/></svg>Tải .txt</button>
+            </span>
+          </div>
+          <div class="feed" id="<%= p %>Out"></div>
+        </div>
+      </div>
+    </section>
+    <% }) %>
+
+    <section class="view" id="view-saved" hidden>
+      <div class="view-head"><div><h2 class="view-title">Đã lưu</h2><p class="view-desc">Mọi kịch bản bạn đã viết, lưu ngay trên trình duyệt của máy này (tối đa 60 bản gần nhất).</p></div></div>
+      <div class="grid-wrap"><div class="saved-list" id="savedList"></div></div>
+    </section>
+
+    <section class="view" id="view-settings" hidden>
+      <div class="view-head"><div><h2 class="view-title">Cài đặt</h2><p class="view-desc">AI dùng để viết kịch bản.</p></div></div>
+      <div class="settings"><div class="settings-inner">
+        <div class="card" id="houseCard">
+          <h3>AI của khoá học</h3>
+          <p id="houseText"></p>
+          <div class="progress"><i id="houseBar"></i></div>
+        </div>
+        <div class="card">
+          <h3>Cách khác: nhờ Gemini / ChatGPT viết</h3>
+          <p>Ứng dụng luôn tự viết được kịch bản (bằng AI của khoá học, hoặc Trình viết nhanh khi AI bận). Nếu muốn một bản khác, bấm <b>Nhờ Gemini viết</b> hoặc <b>Nhờ ChatGPT viết</b>: công cụ sao chép sẵn lệnh viết chuẩn và mở trang Gemini / ChatGPT. Bạn bấm Ctrl + V, gửi, rồi sao chép câu trả lời dán vào ô "Dán kết quả" là ra đủ kịch bản. Không tốn lượt của khoá học.</p>
+        </div>
+        <div class="card">
+          <h3>Key Google miễn phí của riêng bạn (không bắt buộc)</h3>
+          <p>Dán key Google AI Studio của bạn thì công cụ viết bằng key đó, không trừ lượt của khoá học. Key tạo miễn phí bằng Gmail, không cần thẻ — đừng bật thanh toán để luôn miễn phí. Key chỉ lưu trong trình duyệt của máy này.</p>
+          <label class="field-label" for="setGKey">API key Google AI Studio (<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">tạo miễn phí</a>)</label>
+          <div class="key-row"><input class="input" id="setGKey" type="password" placeholder="AIza…" spellcheck="false"><button class="btn primary" id="setGSave" type="button">Lưu</button></div>
+          <div class="msg" id="setMsg"></div>
+          <div class="row"><button class="btn sm danger" id="setDel" type="button">Xoá key khỏi máy này</button></div>
+        </div>
+      </div></div>
+    </section>
+  </main>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script type="application/json" id="studioBoot"><%- JSON.stringify(boot).replace(/</g, String.fromCharCode(92) + 'u003c') %></script>
+<script src="/js/studio-scripts.js?v=<%= assetV %>"></script>
+<script src="/js/studio-quick.js?v=<%= assetV %>"></script>
+<script src="/js/studio.js?v=<%= assetV %>"></script>
+</body>
+</html>

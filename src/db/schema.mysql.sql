@@ -140,3 +140,18 @@ CREATE TABLE IF NOT EXISTS lesson_files (
   INDEX idx_lesson_files_lesson (lesson_id, position),
   CONSTRAINT fk_lesson_files_lesson FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Xưởng Kịch bản AI: mỗi lần học viên nhờ AI của khoá học viết một kịch bản (để đếm lượt và thống kê).
+CREATE TABLE IF NOT EXISTS studio_jobs (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL,
+  model_key VARCHAR(40) NOT NULL,
+  kind VARCHAR(10) NOT NULL,
+  points INT UNSIGNED NOT NULL DEFAULT 0,
+  status VARCHAR(12) NOT NULL DEFAULT 'processing',
+  error VARCHAR(500) NULL DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_studio_user (user_id, created_at),
+  INDEX idx_studio_created (created_at),
+  CONSTRAINT fk_studio_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
