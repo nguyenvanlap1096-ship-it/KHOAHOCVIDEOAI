@@ -130,13 +130,14 @@ QUY TẮC CHUNG:
 - Mỗi cảnh dài đúng ${dur} giây: hành động và lời thoại phải vừa ${dur} giây (khoảng ${Math.round(dur * 2.3)} từ tiếng Việt nói được).
 - Cảnh 1 là HOOK mạnh trong 2 giây đầu; cảnh cuối có lời kêu gọi hành động (CTA) rõ ràng.
 - Không đưa chữ, logo, watermark vào hình (trừ khi người dùng yêu cầu). Không nội dung nhạy cảm, không hứa hẹn sai sự thật.
+- Mỗi prompt tiếng Anh PHẢI kèm một bản DỊCH TIẾNG VIỆT đầy đủ, sát nghĩa, dễ hiểu (trường *_vi) để người học hiểu prompt nói gì; giữ nguyên tham số kỹ thuật (ví dụ --ar 9:16, [Push in], Shot 1:) và lời thoại trong ngoặc kép.
 - image_prompt: prompt tiếng Anh 50–90 từ để tạo ẢNH KHUNG ĐẦU của cảnh (dùng cho Nano Banana / Midjourney / ChatGPT, rồi đưa ảnh vào chế độ ảnh → video): subject, composition, setting, lens, lighting, color palette, style, "photorealistic" hoặc phong cách đã chọn, tỉ lệ ${o.ratio || "16:9"}.
 
 CÚ PHÁP BẮT BUỘC CHO video_prompt:
 ${tg.guide}${refRules}
 
 ĐẦU RA: CHỈ TRẢ VỀ MỘT KHỐI JSON hợp lệ, không markdown, không giải thích, đúng cấu trúc:
-{"title":"tên video tiếng Việt","hook":"câu hook tiếng Việt",${R.has ? '"reference_analysis":"phân tích tham chiếu bằng tiếng Việt",' : ''}"character":"mô tả nhân vật chính bằng tiếng Anh (để trống nếu không có)","scenes":[{"n":1,"purpose":"vai trò cảnh (Hook/Vấn đề/Giải pháp/Chứng minh/CTA…)","description_vi":"mô tả cảnh bằng tiếng Việt cho người đọc","camera":"góc máy & chuyển động (tiếng Việt)","image_prompt":"…","video_prompt":"…"${tg.negative ? ',"negative_prompt":"…"' : ''},"dialogue_vi":"lời thoại/lời dẫn tiếng Việt hoặc rỗng","sound":"âm thanh & nhạc (tiếng Việt)"}],"caption_vi":"caption đăng mạng xã hội kèm emoji","hashtags":["#…"]}`;
+{"title":"tên video tiếng Việt","hook":"câu hook tiếng Việt",${R.has ? '"reference_analysis":"phân tích tham chiếu bằng tiếng Việt",' : ''}"character":"mô tả nhân vật chính bằng tiếng Anh (để trống nếu không có)","scenes":[{"n":1,"purpose":"vai trò cảnh (Hook/Vấn đề/Giải pháp/Chứng minh/CTA…)","description_vi":"mô tả cảnh bằng tiếng Việt cho người đọc","camera":"góc máy & chuyển động (tiếng Việt)","image_prompt":"…","image_prompt_vi":"bản dịch tiếng Việt của image_prompt","video_prompt":"…","video_prompt_vi":"bản dịch tiếng Việt của video_prompt"${tg.negative ? ',"negative_prompt":"…"' : ''},"dialogue_vi":"lời thoại/lời dẫn tiếng Việt hoặc rỗng","sound":"âm thanh & nhạc (tiếng Việt)"}],"caption_vi":"caption đăng mạng xã hội kèm emoji","hashtags":["#…"]}`;
     const user = [
       `NGÀNH: ${ind.label}`,
       `ĐẶC TRƯNG NGÀNH: ${ind.guide}`,
@@ -170,7 +171,7 @@ ${tg.guide}${refRules}
     const s = v => (v == null ? "" : String(v)).trim();
     const scenes = (Array.isArray(j.scenes) ? j.scenes : []).map((c, i) => ({
       n: Number(c.n) || i + 1, purpose: s(c.purpose), description_vi: s(c.description_vi || c.description), camera: s(c.camera),
-      image_prompt: s(c.image_prompt), video_prompt: s(c.video_prompt || c.prompt), negative_prompt: s(c.negative_prompt),
+      image_prompt: s(c.image_prompt), image_prompt_vi: s(c.image_prompt_vi), video_prompt: s(c.video_prompt || c.prompt), video_prompt_vi: s(c.video_prompt_vi), negative_prompt: s(c.negative_prompt),
       dialogue_vi: s(c.dialogue_vi || c.dialogue), sound: s(c.sound)
     })).filter(c => c.video_prompt);
     if (!scenes.length) throw new Error("AI chưa viết được cảnh nào. Thử viết rõ ý tưởng hơn rồi bấm Viết lại.");
@@ -234,12 +235,13 @@ QUY TẮC CHUNG:
 - Mỗi ảnh có vai trò khác nhau, không trùng ý.
 - Không nội dung nhạy cảm, không dùng logo/thương hiệu của người khác, không hứa hẹn sai sự thật.
 - Tỉ lệ khung hình: ${ratio}.
+- Mỗi prompt tiếng Anh PHẢI kèm một bản DỊCH TIẾNG VIỆT đầy đủ, sát nghĩa, dễ hiểu (trường *_vi) để người học hiểu prompt nói gì; giữ nguyên tham số kỹ thuật (ví dụ --ar 9:16, [Push in], Shot 1:) và lời thoại trong ngoặc kép.
 
 CÚ PHÁP BẮT BUỘC CHO prompt:
 ${tg.guide.split("{RATIO}").join(ratio)}${refRules}
 
 ĐẦU RA: CHỈ TRẢ VỀ MỘT KHỐI JSON hợp lệ, không markdown, không giải thích, đúng cấu trúc:
-{"title":"tên bộ ảnh tiếng Việt","concept":"ý tưởng chung tiếng Việt",${R.has ? '"reference_analysis":"phân tích tham chiếu bằng tiếng Việt",' : ''}"character":"mô tả nhân vật/sản phẩm cố định bằng tiếng Anh (để trống nếu không có)","palette":"bảng màu chủ đạo","images":[{"n":1,"purpose":"vai trò ảnh","description_vi":"mô tả ảnh bằng tiếng Việt","layout":"bố cục & góc chụp (tiếng Việt)","prompt":"…","text_overlay":"chữ nên thêm lên ảnh (tiếng Việt) hoặc rỗng"}],"caption_vi":"caption đăng mạng xã hội kèm emoji","hashtags":["#…"]}`;
+{"title":"tên bộ ảnh tiếng Việt","concept":"ý tưởng chung tiếng Việt",${R.has ? '"reference_analysis":"phân tích tham chiếu bằng tiếng Việt",' : ''}"character":"mô tả nhân vật/sản phẩm cố định bằng tiếng Anh (để trống nếu không có)","palette":"bảng màu chủ đạo","images":[{"n":1,"purpose":"vai trò ảnh","description_vi":"mô tả ảnh bằng tiếng Việt","layout":"bố cục & góc chụp (tiếng Việt)","prompt":"…","prompt_vi":"bản dịch tiếng Việt của prompt","text_overlay":"chữ nên thêm lên ảnh (tiếng Việt) hoặc rỗng"}],"caption_vi":"caption đăng mạng xã hội kèm emoji","hashtags":["#…"]}`;
     const user = [
       `NGÀNH: ${ind.label}`,
       `ĐẶC TRƯNG NGÀNH: ${ind.guide}`,
@@ -267,7 +269,7 @@ ${tg.guide.split("{RATIO}").join(ratio)}${refRules}
     const s = v => (v == null ? "" : String(v)).trim();
     const images = (Array.isArray(j.images) ? j.images : []).map((c, i) => ({
       n: Number(c.n) || i + 1, purpose: s(c.purpose), description_vi: s(c.description_vi || c.description), layout: s(c.layout),
-      prompt: s(c.prompt), text_overlay: s(c.text_overlay)
+      prompt: s(c.prompt), prompt_vi: s(c.prompt_vi), text_overlay: s(c.text_overlay)
     })).filter(c => c.prompt);
     if (!images.length) throw new Error("AI chưa viết được ảnh nào. Thử viết rõ ý tưởng hơn rồi bấm Viết lại.");
     return { title: s(j.title), concept: s(j.concept), reference_analysis: s(j.reference_analysis), character: s(j.character), palette: s(j.palette), images, caption_vi: s(j.caption_vi), hashtags: Array.isArray(j.hashtags) ? j.hashtags.map(s).filter(Boolean) : [] };

@@ -29,6 +29,48 @@
     other:      { set:"a setting that matches the idea", props:"the key product or object of the idea", light:"soft cinematic light", person:"a Vietnamese main character in their 20s, neat casual outfit", palette:"harmonious natural colors", sfx:"ambient sound, light background music", cta:"Liên hệ ngay hôm nay để nhận ưu đãi!" }
   };
 
+  // Bản tiếng Việt của hình ảnh ngành — dùng để dịch prompt cho người học dễ hiểu.
+  const LOOK_VI = {
+    fnb:        { set:"quán ăn Việt ấm cúng, có bếp và khu bàn ăn", props:"món ăn bốc khói, rau thơm tươi, chảo xèo xèo", light:"ánh đèn vàng ấm, hơi nước mờ ảo", person:"đầu bếp Việt Nam khoảng 30 tuổi, tạp dề trắng, tóc đen ngắn, thân thiện", palette:"vàng hổ phách, đỏ đậm, xanh lá tươi", sfx:"tiếng dầu xèo xèo, bát đĩa va nhẹ, tiếng khách trò chuyện" },
+    coffee:     { set:"quán cà phê Việt ngập nắng, bàn gỗ, cây xanh", props:"phin cà phê nhỏ giọt, ly đá đọng nước, sữa xoáy", light:"nắng sớm vàng xuyên qua cửa sổ, bóng đổ mềm", person:"cô pha chế Việt Nam khoảng 20 tuổi, tạp dề be, tóc búi thấp", palette:"nâu cà phê, kem, xanh lá nhạt", sfx:"tiếng cà phê nhỏ giọt, đá va ly, không khí quán nhẹ nhàng" },
+    beauty:     { set:"phòng tắm / phòng spa tối giản, sáng sủa", props:"chai mỹ phẩm sang trọng, khăn sạch, giọt nước, hoa", light:"ánh sáng ban ngày khuếch tán mềm, làn da sáng bóng", person:"cô gái Việt Nam cuối tuổi 20, tóc đen ngang vai, áo choàng lụa màu kem, trang điểm tự nhiên", palette:"hồng phấn, nude, trắng", sfx:"tiếng nước nhẹ, bọt êm, nhạc piano nhẹ nhàng" },
+    fashion:    { set:"phố thời thượng và studio trắng tinh", props:"vải bay, giá treo đồ, phụ kiện", light:"ánh sáng tạp chí rõ nét, bóng đổ sắc", person:"người mẫu nữ Việt Nam tuổi 20, tóc dài suôn, dáng tự tin", palette:"be trung tính, đen, màu nhấn của trang phục", sfx:"tiếng bước chân, vải sột soạt, nhạc thời trang sôi động" },
+    realestate: { set:"căn hộ hiện đại có ban công nhìn ra thành phố, hồ bơi, công viên", props:"phòng khách rộng mở, cửa kính lớn, hồ bơi vô cực", light:"nắng giờ vàng ấm áp, thoáng đãng", person:"gia đình trẻ Việt Nam, bố mẹ khoảng 30 tuổi và một bé nhỏ", palette:"trắng ấm, gỗ, xanh da trời", sfx:"tiếng chim, gió nhẹ, nhạc dàn dây nhẹ nhàng" },
+    edu:        { set:"lớp học hiện đại sáng sủa, bảng trắng và máy tính", props:"vở ghi, sơ đồ trên bảng, chứng chỉ", light:"ánh sáng tự nhiên trong trẻo", person:"cô giáo Việt Nam khoảng 30 tuổi năng động cùng các học viên chăm chú", palette:"trắng, xanh navy, vàng ấm", sfx:"tiếng bút viết, tiếng cười nhẹ, nhạc truyền cảm hứng" },
+    travel:     { set:"cảnh đẹp Việt Nam và khu nghỉ dưỡng boutique", props:"view biển, hồ bơi vô cực, món địa phương, rèm cửa mở ra", light:"ánh bình minh và hoàng hôn vàng", person:"cặp đôi trẻ Việt Nam cuối tuổi 20, trang phục mùa hè", palette:"xanh ngọc, vàng cát, cam hoàng hôn", sfx:"sóng biển, hải âu, gió nhẹ" },
+    auto:       { set:"đường đèo uốn lượn và showroom bóng bẩy", props:"thân xe bóng loáng, đèn pha, mâm xe, nội thất da", light:"ánh sáng viền kịch tính, mặt đường ướt phản chiếu", person:"người đàn ông Việt Nam khoảng 30 tuổi, áo khoác lịch lãm", palette:"bạc ánh kim, đen sâu, đỏ nhấn", sfx:"tiếng nổ máy, lốp xe trên đường, tiếng bass trầm" },
+    tech:       { set:"studio tối giản và góc làm việc hiện đại", props:"thiết bị xoay, màn hình phát sáng, cổng kết nối và chi tiết", light:"ánh sáng viền lạnh, phản chiếu mềm", person:"nhân viên văn phòng Việt Nam tuổi 20, áo sơ mi giản dị", palette:"đen, xanh điện, bạc", sfx:"tiếng bấm giao diện nhẹ, hiệu ứng lướt, nhạc điện tử" },
+    health:     { set:"phòng khám hiện đại sạch sẽ, sáng sủa", props:"thiết bị hiện đại, đồng phục trắng, quầy lễ tân", light:"ánh sáng trắng mềm, sạch", person:"nữ bác sĩ Việt Nam khoảng 30 tuổi, áo blouse trắng, nụ cười hiền", palette:"trắng, xanh bạc hà, xanh nhạt", sfx:"không khí yên tĩnh, nhạc nhẹ" },
+    fitness:    { set:"phòng gym hiện đại và phòng yoga ngập nắng", props:"tạ tay, thảm yoga, chai nước, giọt mồ hôi", light:"ánh sáng tương phản mạnh; nắng sớm cho cảnh yoga", person:"huấn luyện viên Việt Nam cuối tuổi 20, dáng khoẻ, đồ tập đen", palette:"đen, màu neon nhấn, tông da ấm", sfx:"tiếng tạ chạm sàn, hơi thở mạnh, nhạc sôi động" },
+    baby:       { set:"phòng khách gia đình ấm cúng, gọn gàng và phòng của bé", props:"thú bông, đồ dùng cho bé, chăn màu pastel", light:"ánh sáng cửa sổ ấm, mềm", person:"người mẹ Việt Nam cuối tuổi 20 dịu dàng và bé nhỏ vui tươi", palette:"kem pastel, hồng nhạt, xanh baby", sfx:"tiếng bé cười khúc khích, nhạc ru nhẹ" },
+    furniture:  { set:"phòng khách được biến đổi trước và sau", props:"đồ gỗ có vân, sofa vải mềm, đồ gia dụng", light:"nắng ấm xuyên qua rèm mỏng", person:"cặp vợ chồng trẻ Việt Nam khoảng 30 tuổi, đồ mặc nhà thoải mái", palette:"gỗ ấm, be, xanh ô liu", sfx:"tiếng bước chân nhẹ, nhạc guitar mộc" },
+    agri:       { set:"nông trại Việt Nam xanh mướt lúc bình minh và khu đóng gói sạch", props:"nông sản tươi đọng sương, thúng tre, bao bì thân thiện", light:"ánh bình minh mềm cùng sương sớm", person:"bác nông dân Việt Nam khoảng 50 tuổi, đội nón lá, nụ cười hiền hậu", palette:"xanh tươi, nâu đất, nắng vàng", sfx:"tiếng chim, lá xào xạc, giai điệu dân gian" },
+    finance:    { set:"văn phòng hiện đại sáng sủa và tổ ấm gia đình hạnh phúc", props:"ứng dụng ngân hàng trên điện thoại, biểu đồ, giấy tờ", light:"ánh sáng tự nhiên trong trẻo", person:"nữ chuyên viên tư vấn Việt Nam khoảng 30 tuổi, vest xanh navy", palette:"xanh navy, trắng, vàng", sfx:"piano nhẹ, nhạc tự tin" },
+    wedding:    { set:"sảnh cưới sang trọng với hoa và nến", props:"váy cưới, nhẫn cưới, ly sâm panh, pháo giấy", light:"ánh nến bokeh ấm áp, giờ vàng", person:"cô dâu chú rể Việt Nam cuối tuổi 20, váy trắng và vest đen", palette:"trắng ngà, hồng phấn, vàng", sfx:"nhạc dây lãng mạn, tiếng vỗ tay" },
+    pet:        { set:"spa thú cưng sáng sủa và ngôi nhà ấm áp", props:"khăn bông, bát thức ăn, đồ chơi", light:"ánh sáng ban ngày tươi vui", person:"cô chủ Việt Nam tuổi 20 tươi cười cùng chú corgi lông xù", palette:"vàng ấm, xanh trời, trắng", sfx:"tiếng sủa vui, nhạc tinh nghịch" },
+    jewelry:    { set:"kệ trưng bày nhung đen sang trọng và cửa hàng thanh lịch", props:"nhẫn kim cương lấp lánh, dây chuyền vàng, đồng hồ", light:"đèn spot chính xác làm trang sức lấp lánh", person:"người phụ nữ Việt Nam khoảng 30 tuổi thanh lịch, váy dạ hội đen", palette:"đen, vàng, trắng kim cương", sfx:"tiếng chuông nhẹ, piano sang trọng" },
+    affiliate:  { set:"phòng ngủ hoặc bàn làm việc thật, quay cầm tay kiểu người thật (UGC)", props:"sản phẩm cầm trên tay, hộp đang mở, điện thoại", light:"ánh sáng cửa sổ tự nhiên, chân thật", person:"cô gái Việt Nam đầu tuổi 20 gần gũi, áo thun giản dị, nói thẳng vào camera", palette:"tự nhiên, tươi sáng, chân thật", sfx:"tiếng mở hộp, giọng nói tự nhiên, nhạc đang thịnh hành" },
+    story:      { set:"những địa điểm đời thường Việt Nam quay kiểu điện ảnh", props:"một đồ vật ý nghĩa xuyên suốt câu chuyện", light:"ánh sáng điện ảnh theo cảm xúc", person:"nhân vật chính Việt Nam tuổi 20 với trang phục đặc trưng", palette:"tông điện ảnh xanh ngọc – cam", sfx:"nhạc nền cảm xúc, âm thanh môi trường" },
+    other:      { set:"bối cảnh phù hợp với ý tưởng", props:"sản phẩm hoặc đồ vật chính của ý tưởng", light:"ánh sáng điện ảnh mềm", person:"nhân vật chính Việt Nam tuổi 20, trang phục gọn gàng", palette:"màu sắc tự nhiên hài hoà", sfx:"âm thanh môi trường, nhạc nền nhẹ" }
+  };
+  // Dịch các cụm góc máy hay dùng.
+  const CAM_VI = [
+    [/extreme close-up/g,"cận cảnh rất sát"],[/medium close-up/g,"cận trung"],[/close-up/g,"cận cảnh"],[/medium shots?/g,"trung cảnh"],[/wide establishing shot/g,"toàn cảnh mở đầu"],[/wide shot/g,"toàn cảnh"],
+    [/aerial drone shot/g,"flycam từ trên cao"],[/slow forward glide/g,"lướt chậm về phía trước"],[/fast push-in/g,"đẩy máy vào nhanh"],[/slow push-in/g,"đẩy máy vào chậm"],[/slight dolly-in/g,"đẩy máy nhẹ vào"],
+    [/slow dolly-in/g,"đẩy máy chậm vào"],[/handheld/g,"máy cầm tay"],[/smooth tracking shot/g,"máy bám theo mượt"],[/low-angle tracking shot/g,"máy bám theo từ góc thấp"],[/macro shot/g,"chụp macro"],[/macro handheld shot/g,"macro cầm tay"],
+    [/slow orbit around the product/g,"xoay chậm quanh sản phẩm"],[/slow orbit/g,"xoay chậm quanh chủ thể"],[/slow crane up/g,"cẩu máy lên chậm"],[/crane up/g,"cẩu máy lên"],[/quick montage of/g,"dựng nhanh nhiều"],
+    [/static tripod, then slow push-in/g,"máy đứng yên trên chân rồi đẩy chậm vào"],[/static tripod/g,"máy đứng yên trên chân"],[/static wide shot, gentle fade/g,"toàn cảnh tĩnh, mờ dần"],[/static/g,"máy đứng yên"],
+    [/selfie-style handheld close-up/g,"cận cảnh cầm tay kiểu selfie"],[/selfie-style medium shot/g,"trung cảnh kiểu selfie"],[/selfie-style close-up/g,"cận cảnh kiểu selfie"],[/top-down handheld shot/g,"quay từ trên xuống, cầm tay"],
+    [/top-down close-up/g,"cận cảnh từ trên xuống"],[/natural movement/g,"chuyển động tự nhiên"],[/handheld medium shots, natural feel/g,"trung cảnh cầm tay, cảm giác tự nhiên"],[/split-feel quick cut/g,"cắt nhanh kiểu chia đôi"],
+    [/slow lateral tracking/g,"lia ngang chậm"],[/macro to medium/g,"từ macro ra trung cảnh"],[/slow motion close-up, rack focus/g,"cận cảnh quay chậm, chuyển tiêu điểm"],[/shallow depth of field/g,"xoá phông"],
+    [/on the face/g,"vào khuôn mặt"],[/slow pull out/g,"kéo máy ra chậm"],[/quick handheld push/g,"đẩy nhanh bằng máy cầm tay"],[/then/g,"rồi"]
+  ];
+  // Dịch cụm dài trước để không bị cụm ngắn ("close-up") ăn mất cụm dài ("selfie-style handheld close-up").
+  CAM_VI.sort((a, b) => b[0].source.length - a[0].source.length);
+  const camVi = cam => CAM_VI.reduce((t, [re, v]) => t.replace(re, v), String(cam));
+  const low1 = t => String(t).charAt(0).toLowerCase() + String(t).slice(1);
+  const ratioVi = r => r === "9:16" ? "dọc 9:16" : r === "1:1" ? "vuông 1:1" : r === "4:5" ? "dọc 4:5" : r === "3:4" ? "dọc 3:4" : "ngang 16:9";
+
   // Nhận ngành từ ý tưởng (ví dụ "dầu gội" → mỹ phẩm) để bối cảnh không lệch khi học viên chọn nhầm ngành.
   const KEYWORDS = {
     beauty:["dầu gội","dầu xả","sữa tắm","serum","kem dưỡng","kem chống nắng","mỹ phẩm","son ","son môi","spa","làm đẹp","chăm sóc da","nước hoa","sữa rửa mặt","toner","trang điểm","nail","tóc","da mặt","mặt nạ"],
@@ -55,7 +97,8 @@
     const hit = k => (KEYWORDS[k] || []).some(w => text.includes(w));
     const keep = ["affiliate","story","other"].includes(o.industry) || hit(o.industry);
     const found = keep ? null : Object.keys(KEYWORDS).find(hit);
-    return { look: LOOK[found || o.industry] || LOOK.other, autoIndustry: found || "" };
+    const key = LOOK[found || o.industry] ? (found || o.industry) : "other";
+    return { look: LOOK[key], vi: LOOK_VI[key] || LOOK_VI.other, autoIndustry: found || "" };
   }
   // Tên sản phẩm cho prompt tiếng Anh: luôn kèm mô tả từ ý tưởng để AI tạo video hiểu đúng sản phẩm.
   function productEn(o, idea) {
@@ -181,8 +224,33 @@
   }
   const cap = s => String(s).charAt(0).toUpperCase() + String(s).slice(1);
 
+  // Bản dịch tiếng Việt của prompt video (cùng bố cục với bản tiếng Anh để người học đối chiếu).
+  function videoPromptVi(target, c) {
+    const st = c.style ? c.style + ", " : "";
+    const say = c.line ? (c.voice === "vo" ? `Lời dẫn (tiếng Việt): “${c.line}”` : `Lời thoại: nhân vật nói tiếng Việt “${c.line}”`) : "";
+    const cam = camVi(c.cam);
+    switch (target) {
+      case "seedance": return [
+        `${cap(c.vi.person)} trong ${c.vi.set}, ${c.vi.light}, tông màu ${c.vi.palette}, ${st}phong cách điện ảnh chân thực.`,
+        `Shot 1: toàn cảnh mở đầu, đẩy máy chậm vào, cho thấy ${c.vi.set} với ${c.vi.props}.`,
+        `Shot 2: ${cam}, ${low1(c.what)}.`,
+        `Shot 3: cận cảnh chi tiết, đẩy máy chậm vào, biểu cảm cảm xúc.`,
+        `Âm thanh: ${c.vi.sfx}.` + (c.line ? ` Câu thoại tiếng Việt: “${c.line}”` : "")
+      ].join("\n");
+      case "hailuo": return `${cap(c.vi.person)}, ${low1(c.what)} [lệnh máy quay: ${cam}], trong ${c.vi.set} với ${c.vi.props}, biểu cảm rõ và chuyển động vật lý chân thực, ${c.vi.light}, ${st}phong cách điện ảnh, tông ${c.vi.palette}.`;
+      default: return [
+        `Góc máy: ${cam}. Diễn biến: ${c.what}.`,
+        `Nhân vật: ${c.vi.person}. Bối cảnh: ${c.vi.set}, có ${c.vi.props}.`,
+        `Ánh sáng & phong cách: ${c.vi.light}, tông màu ${c.vi.palette}, ${st}chân thực kiểu điện ảnh, khung ${ratioVi(c.ratio)}.`,
+        say,
+        `Âm thanh: ${c.vi.sfx}.`,
+        target === "veo3" ? "Không phụ đề, không chữ trên hình, không logo chìm." : ""
+      ].filter(Boolean).join("\n");
+    }
+  }
+
   function quickVideo(o, T) {
-    const { look, autoIndustry } = lookFor(o);
+    const { look, vi, autoIndustry } = lookFor(o);
     const tg = T.TARGETS.find(t => t.key === o.target) || T.TARGETS[0];
     const n = Math.min(12, Math.max(1, Number(o.scenes) || 5));
     const dur = tg.durs.includes(Number(o.dur)) ? Number(o.dur) : tg.dur;
@@ -198,6 +266,8 @@
       return {
         n: i + 1, purpose: b.role,
         description_vi: fill(b.vi, { sp }) + ".",
+        video_prompt_vi: videoPromptVi(tg.key, { what: fill(b.vi, { sp }), cam: b.cam, vi, style: o.style, ratio: o.ratio, voice: o.voice, line, sp }),
+        image_prompt_vi: `Ảnh khung đầu: ${vi.person}; ${low1(fill(b.vi, { sp }))}; bối cảnh ${vi.set}, có ${vi.props}; ${vi.light}; tông màu ${vi.palette}${o.style ? "; phong cách " + o.style : ""}; ảnh chân thực, khung ${ratioVi(o.ratio)}.`,
         camera: b.cam, image_prompt: `${cap(char)}, ${act}, in ${look.set}, ${look.props}, ${look.light}, ${o.style ? o.style + ", " : ""}${look.palette} palette, photorealistic, ${ratioWord(o.ratio)} composition, first frame of a video scene.`,
         video_prompt: videoPrompt(tg.key, c),
         negative_prompt: tg.negative ? "blurry, distorted face, extra fingers, deformed hands, warped text, watermark, flicker, low quality" : "",
@@ -271,7 +341,7 @@
   }
 
   function quickImages(o, T) {
-    const { look, autoIndustry } = lookFor(o);
+    const { look, vi, autoIndustry } = lookFor(o);
     const tg = T.IMAGE_TARGETS.find(t => t.key === o.target) || T.IMAGE_TARGETS[0];
     const n = Math.min(12, Math.max(1, Number(o.count) || 6));
     const ratio = ["1:1","4:5","9:16","16:9","3:4","2:3"].includes(o.ratio) ? o.ratio : "1:1";
@@ -287,6 +357,15 @@
         n: i + 1, purpose: role + (round ? " (phương án " + (round + 1) + ")" : ""),
         description_vi: (o.brand || "").trim() ? role + " của " + o.brand.trim() + "." : role + " theo ý tưởng: " + idea.slice(0, 120) + ".", layout,
         prompt: imagePrompt(tg.key, { subject, look, style: o.style, text: t, layoutEn: layout ? "balanced composition, " + (role === "Ảnh chủ đạo" ? "product centered with headline space" : "clear focal point") : "balanced composition" }, ratio),
+        prompt_vi: [
+          `${role}${round ? " (phương án " + (round + 1) + ")" : ""} cho ${(o.brand || "").trim() ? "“" + o.brand.trim() + "” (" + idea.slice(0, 80) + ")" : "sản phẩm “" + idea.slice(0, 80) + "”"}.`,
+          layout ? `Bố cục: ${layout}.` : "",
+          o.purpose === "character" || o.purpose === "storyboard" ? `Nhân vật: ${vi.person}.` : "",
+          `Bối cảnh: ${vi.set}. Ánh sáng: ${vi.light}. Tông màu: ${vi.palette}.`,
+          `Phong cách: ${o.style ? o.style + ", " : ""}ảnh quảng cáo chân thực, nét cao. Tỉ lệ ${ratio}.`,
+          t ? `Chữ trên ảnh: “${t}”.` : "",
+          tg.key === "midjourney" ? "Phần tham số cuối (--ar, --v 7, --style raw, --s, --no …) giữ nguyên khi dán vào Midjourney." : ""
+        ].filter(Boolean).join(" "),
         text_overlay: t
       };
     });

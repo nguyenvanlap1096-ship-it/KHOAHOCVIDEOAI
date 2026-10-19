@@ -126,14 +126,17 @@ function itemText(kind, c, tg){
     c.description_vi && "Mô tả: " + c.description_vi, c.camera && "Máy quay: " + c.camera,
     c.dialogue_vi && "Lời thoại: " + c.dialogue_vi, c.sound && "Âm thanh: " + c.sound,
     "\nPROMPT VIDEO (" + tg.label + "):\n" + c.video_prompt,
+    c.video_prompt_vi && "\nDỊCH TIẾNG VIỆT:\n" + c.video_prompt_vi,
     c.negative_prompt && "\nNEGATIVE PROMPT:\n" + c.negative_prompt,
-    c.image_prompt && "\nPROMPT ẢNH KHUNG ĐẦU:\n" + c.image_prompt
+    c.image_prompt && "\nPROMPT ẢNH KHUNG ĐẦU:\n" + c.image_prompt,
+    c.image_prompt_vi && "\nDỊCH TIẾNG VIỆT:\n" + c.image_prompt_vi
   ].filter(Boolean).join("\n");
   return [
     "ẢNH " + String(c.n).padStart(2,"0") + (c.purpose ? " — " + c.purpose : ""),
     c.description_vi && "Mô tả: " + c.description_vi, c.layout && "Bố cục: " + c.layout,
     c.text_overlay && "Chữ trên ảnh: " + c.text_overlay,
-    "\nPROMPT (" + tg.label + "):\n" + c.prompt
+    "\nPROMPT (" + tg.label + "):\n" + c.prompt,
+    c.prompt_vi && "\nDỊCH TIẾNG VIỆT:\n" + c.prompt_vi
   ].filter(Boolean).join("\n");
 }
 function allText(it){
@@ -172,8 +175,13 @@ function field(it, obj, key, label, opt={}){
   } else body = h("div",{class:"fld-read"}, opt.quote ? "“" + obj[key] + "”" : obj[key]);
   const acts = h("div",{class:"fld-acts"}, copyBtn(opt.big ? "Sao chép prompt" : "Sao chép", val, opt.big));
   if (opt.url) acts.append(h("button",{class:"btn sm",type:"button",onclick:async()=>{ const ok = await copyText(val()); openTab(opt.url.href); toast(ok ? "Đã sao chép. Dán (Ctrl + V) vào " + opt.url.name + "." : "Không tự sao chép được — bôi đen rồi Ctrl + C.", !ok); }}, icon("i-open"), "Sao chép & mở " + opt.url.name));
+  // Bản dịch tiếng Việt của prompt (để hiểu prompt nói gì) — sao chép riêng được.
+  const viText = opt.viKey && String(obj[opt.viKey] || "").trim();
+  const vi = viText ? h("div",{class:"fld-vi"},
+    h("div",{class:"fld-vi-head"}, h("span",null,"📖 Dịch tiếng Việt"), copyBtn("Sao chép bản dịch", () => String(obj[opt.viKey] || ""))),
+    h("div",{class:"fld-vi-text"}, viText)) : null;
   return h("section",{class:"fld" + (opt.big ? " big" : "") + (opt.cls ? " " + opt.cls : "")},
-    h("div",{class:"fld-head"}, h("span",{class:"fld-label"}, opt.icon ? h("span",{class:"fld-ico"}, opt.icon) : null, label), acts), body);
+    h("div",{class:"fld-head"}, h("span",{class:"fld-label"}, opt.icon ? h("span",{class:"fld-ico"}, opt.icon) : null, label), acts), body, vi);
 }
 function renderResult(kind){
   const K = KINDS[kind], p = K.p, it = ST[kind].current, out = $("#" + p + "Out");
@@ -215,12 +223,12 @@ function renderResult(kind){
   for (const c of items){
     const fields = [];
     if (kind === "video"){
-      fields.push(field(it, c, "video_prompt", "Prompt video · " + tg.label, { editable:true, big:true, url:tool, icon:"🎬" }));
+      fields.push(field(it, c, "video_prompt", "Prompt video · " + tg.label, { editable:true, big:true, url:tool, icon:"🎬", viKey:"video_prompt_vi" }));
       if (c.dialogue_vi) fields.push(field(it, c, "dialogue_vi", "Lời thoại / lời dẫn", { quote:true, icon:"💬", cls:"say" }));
-      if (c.image_prompt) fields.push(field(it, c, "image_prompt", "Prompt ảnh khung đầu (Nano Banana / Midjourney / ChatGPT)", { editable:true, icon:"🖼️" }));
+      if (c.image_prompt) fields.push(field(it, c, "image_prompt", "Prompt ảnh khung đầu (Nano Banana / Midjourney / ChatGPT)", { editable:true, icon:"🖼️", viKey:"image_prompt_vi" }));
       if (c.negative_prompt) fields.push(field(it, c, "negative_prompt", "Negative prompt (những thứ cần tránh)", { editable:true, icon:"🚫" }));
     } else {
-      fields.push(field(it, c, "prompt", "Prompt ảnh · " + tg.label, { editable:true, big:true, url:tool, icon:"🖼️" }));
+      fields.push(field(it, c, "prompt", "Prompt ảnh · " + tg.label, { editable:true, big:true, url:tool, icon:"🖼️", viKey:"prompt_vi" }));
       if (c.text_overlay) fields.push(field(it, c, "text_overlay", "Chữ trên ảnh", { quote:true, icon:"🔤", cls:"say" }));
     }
     const info = [];
