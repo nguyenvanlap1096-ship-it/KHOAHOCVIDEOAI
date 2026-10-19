@@ -8,7 +8,7 @@
   const LOOK = {
     fnb:        { set:"a cozy Vietnamese restaurant kitchen and dining area", props:"steaming dishes, fresh herbs, sizzling pan", light:"warm 3200K tungsten light with soft steam haze", person:"a friendly Vietnamese chef in his 30s, white apron, short black hair", palette:"warm amber, deep red, fresh green", sfx:"sizzling oil, clinking bowls, lively chatter", cta:"Ghé quán hoặc gọi giao hàng ngay hôm nay!" },
     coffee:     { set:"a sunlit Vietnamese café with wooden tables and plants", props:"phin coffee filter dripping, iced glass with condensation, milk swirl", light:"golden morning sunlight through windows, soft shadows", person:"a young Vietnamese barista in her 20s, beige apron, hair in a low bun", palette:"coffee brown, cream, soft green", sfx:"coffee dripping, ice cubes clinking, soft café ambience", cta:"Ghé quán thưởng thức hoặc đặt online, combo ưu đãi đang chờ bạn!" },
-    beauty:     { set:"a bright minimal bathroom vanity and spa room", props:"glass serum bottle, cream texture, fresh towel, flowers", light:"soft diffused daylight, glowing skin highlights", person:"a Vietnamese woman in her late 20s, shoulder-length black hair, cream silk robe, natural makeup", palette:"blush pink, nude, white", sfx:"soft dropper click, gentle water, calm piano", cta:"Đặt mua ngay hoặc nhắn tin để được tư vấn làn da miễn phí!" },
+    beauty:     { set:"a bright minimal bathroom vanity and spa room", props:"elegant beauty product bottles, fresh towel, water droplets, flowers", light:"soft diffused daylight, glowing skin highlights", person:"a Vietnamese woman in her late 20s, shoulder-length black hair, cream silk robe, natural makeup", palette:"blush pink, nude, white", sfx:"soft water sounds, gentle foam, calm piano", cta:"Đặt mua ngay hoặc nhắn tin để được tư vấn miễn phí!" },
     fashion:    { set:"a stylish city street and a clean white studio", props:"flowing fabric, clothing rack, accessories", light:"bright editorial light with crisp shadows", person:"a Vietnamese female model in her 20s, sleek long hair, confident posture", palette:"neutral beige, black, accent color of the outfit", sfx:"footsteps, fabric swish, upbeat fashion beat", cta:"Xem trọn bộ sưu tập và inbox ngay để chọn size!" },
     realestate: { set:"a modern apartment project with balcony city view, pool and green park", props:"open living room, large windows, infinity pool", light:"golden hour sunlight, warm and airy", person:"a young Vietnamese family, parents in their 30s and a small child", palette:"warm white, wood, sky blue", sfx:"birds, gentle wind, soft orchestral music", cta:"Đặt lịch tham quan nhà mẫu và nhận bảng giá ưu đãi!" },
     edu:        { set:"a bright modern classroom with whiteboard and laptops", props:"notebooks, whiteboard diagrams, certificates", light:"clean natural daylight", person:"an energetic Vietnamese teacher in her 30s, smart casual, and focused students", palette:"white, navy blue, warm yellow", sfx:"pen writing, light laughter, uplifting music", cta:"Đăng ký học thử miễn phí ngay hôm nay!" },
@@ -28,6 +28,40 @@
     story:      { set:"cinematic Vietnamese everyday locations", props:"meaningful object that ties the story together", light:"cinematic mood lighting that follows the emotion", person:"a Vietnamese main character in their 20s with a distinctive outfit", palette:"cinematic teal and orange", sfx:"emotional score, ambient sound", cta:"Theo dõi kênh để xem phần tiếp theo nhé!" },
     other:      { set:"a setting that matches the idea", props:"the key product or object of the idea", light:"soft cinematic light", person:"a Vietnamese main character in their 20s, neat casual outfit", palette:"harmonious natural colors", sfx:"ambient sound, light background music", cta:"Liên hệ ngay hôm nay để nhận ưu đãi!" }
   };
+
+  // Nhận ngành từ ý tưởng (ví dụ "dầu gội" → mỹ phẩm) để bối cảnh không lệch khi học viên chọn nhầm ngành.
+  const KEYWORDS = {
+    beauty:["dầu gội","dầu xả","sữa tắm","serum","kem dưỡng","kem chống nắng","mỹ phẩm","son ","son môi","spa","làm đẹp","chăm sóc da","nước hoa","sữa rửa mặt","toner","trang điểm","nail","tóc","da mặt","mặt nạ"],
+    fnb:["phở","bún","cơm","nhà hàng","quán ăn","bánh mì","lẩu","nướng","món ăn","đồ ăn","gà rán","pizza","bánh"],
+    coffee:["cà phê","cafe","coffee","trà sữa","trà chanh","nước ép","sinh tố","đồ uống","matcha"],
+    fashion:["áo","quần","váy","đầm","giày","túi xách","thời trang","dép","mũ"],
+    realestate:["căn hộ","nhà đất","bất động sản","chung cư","biệt thự","đất nền"],
+    edu:["khoá học","khóa học","tiếng anh","trung tâm","lớp học","học online","luyện thi"],
+    travel:["du lịch","khách sạn","homestay","resort","tour"],
+    auto:["ô tô","xe máy","xe hơi","oto","xe điện"],
+    tech:["điện thoại","laptop","phần mềm","tai nghe","máy tính","app ","ứng dụng","camera"],
+    health:["nha khoa","phòng khám","bệnh viện","niềng răng","răng"],
+    fitness:["gym","yoga","thể hình","giảm cân","tập luyện"],
+    baby:["mẹ và bé","em bé","sữa bột","bỉm","đồ chơi","trẻ em"],
+    furniture:["nội thất","sofa","bàn ghế","gia dụng","nồi","chảo","máy lọc"],
+    agri:["nông sản","trái cây","gạo","đặc sản","ocop","mật ong","rau sạch"],
+    finance:["bảo hiểm","ngân hàng","khoản vay","tài chính","đầu tư"],
+    wedding:["đám cưới","tiệc cưới","sự kiện","studio ảnh","chụp cưới"],
+    pet:["chó","mèo","thú cưng","pet"],
+    jewelry:["trang sức","nhẫn","kim cương","dây chuyền","đồng hồ"]
+  };
+  function lookFor(o) {
+    const text = (" " + (o.idea || "") + " " + (o.brand || "") + " ").toLowerCase();
+    const hit = k => (KEYWORDS[k] || []).some(w => text.includes(w));
+    const keep = ["affiliate","story","other"].includes(o.industry) || hit(o.industry);
+    const found = keep ? null : Object.keys(KEYWORDS).find(hit);
+    return { look: LOOK[found || o.industry] || LOOK.other, autoIndustry: found || "" };
+  }
+  // Tên sản phẩm cho prompt tiếng Anh: luôn kèm mô tả từ ý tưởng để AI tạo video hiểu đúng sản phẩm.
+  function productEn(o, idea) {
+    const brand = (o.brand || "").trim(), what = idea.slice(0, 110);
+    return brand ? `"${brand}" (${what})` : `the product "${what}"`;
+  }
 
   // Nhịp cảnh theo mục đích video: vai trò, mô tả tiếng Việt, hành động & góc máy (tiếng Anh), lời thoại mẫu.
   const BEATS = {
@@ -148,13 +182,13 @@
   const cap = s => String(s).charAt(0).toUpperCase() + String(s).slice(1);
 
   function quickVideo(o, T) {
-    const look = LOOK[o.industry] || LOOK.other;
+    const { look, autoIndustry } = lookFor(o);
     const tg = T.TARGETS.find(t => t.key === o.target) || T.TARGETS[0];
     const n = Math.min(12, Math.max(1, Number(o.scenes) || 5));
     const dur = tg.durs.includes(Number(o.dur)) ? Number(o.dur) : tg.dur;
     const idea = String(o.idea || "").trim();
-    const sp = (o.brand || "").trim() || "sản phẩm";
-    const spEn = (o.brand || "").trim() ? `"${o.brand.trim()}"` : `the product described as "${idea.slice(0, 120)}"`;
+    const sp = (o.brand || "").trim() || idea.slice(0, 60) || "sản phẩm";
+    const spEn = productEn(o, idea);
     const char = look.person;
     const beats = pickBeats(BEATS[o.purpose] || BEATS.ads, n);
     const scenes = beats.map((b, i) => {
@@ -177,7 +211,7 @@
       scenes,
       caption_vi: `${sp === "sản phẩm" ? idea.slice(0, 80) : sp} ✨ ${look.cta}`,
       hashtags: ["#" + (o.brand || "video").replace(/[^\p{L}\p{N}]/gu, ""), "#xuhuong", "#review"],
-      quick: true, dur
+      quick: true, dur, autoIndustry
     };
   }
 
@@ -237,12 +271,12 @@
   }
 
   function quickImages(o, T) {
-    const look = LOOK[o.industry] || LOOK.other;
+    const { look, autoIndustry } = lookFor(o);
     const tg = T.IMAGE_TARGETS.find(t => t.key === o.target) || T.IMAGE_TARGETS[0];
     const n = Math.min(12, Math.max(1, Number(o.count) || 6));
     const ratio = ["1:1","4:5","9:16","16:9","3:4","2:3"].includes(o.ratio) ? o.ratio : "1:1";
     const idea = String(o.idea || "").trim();
-    const spEn = (o.brand || "").trim() ? `"${o.brand.trim()}"` : `the product described as "${idea.slice(0, 120)}"`;
+    const spEn = productEn(o, idea);
     const list = SHOTS[o.purpose] || SHOTS.ads;
     const images = Array.from({ length: n }, (_, i) => {
       const [role, en, layout, text] = list[i % list.length];
@@ -260,7 +294,7 @@
       title: (o.brand ? o.brand + " — " : "") + idea.slice(0, 60), concept: "Bộ ảnh " + (T.IMAGE_PURPOSES.find(p => p.key === o.purpose) || T.IMAGE_PURPOSES[0]).label.toLowerCase(),
       character: o.purpose === "character" ? look.person : "", palette: look.palette, images,
       caption_vi: `${(o.brand || "").trim() || idea.slice(0, 80)} ✨ ${look.cta}`, hashtags: ["#" + (o.brand || "anh").replace(/[^\p{L}\p{N}]/gu, ""), "#xuhuong"],
-      quick: true
+      quick: true, autoIndustry
     };
   }
 

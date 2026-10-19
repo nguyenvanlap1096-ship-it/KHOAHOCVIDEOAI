@@ -195,6 +195,10 @@ function renderResult(kind){
 
   // Thẻ tổng quan
   const overview = [];
+  if (r.autoIndustry){
+    const ind = INDUSTRIES.find(i => i.key===r.autoIndustry);
+    if (ind) overview.push(h("p",{class:"res-note"}, "💡 Ý tưởng của bạn thuộc ngành “" + ind.label + "” nên Trình viết nhanh đã dùng bối cảnh của ngành này. Lần sau chọn đúng ngành ở ô Ngành để kết quả sát hơn."));
+  }
   if (r.reference_analysis) overview.push(field(it, r, "reference_analysis", "Phân tích tham chiếu", { icon:"🔍" }));
   if (r.hook) overview.push(field(it, r, "hook", "Hook mở đầu", { icon:"⚡" }));
   if (r.concept) overview.push(field(it, r, "concept", "Ý tưởng chung", { icon:"💡" }));
