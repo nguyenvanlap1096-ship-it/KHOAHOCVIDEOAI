@@ -151,16 +151,29 @@ function allText(it){
 function copyBtn(label, getText, primary){
   return h("button",{class:"btn sm" + (primary ? " primary" : ""),type:"button",onclick:async()=>{ const ok = await copyText(typeof getText==="function" ? getText() : getText); toast(ok ? "Đã sao chép." : "Không tự sao chép được — bôi đen rồi Ctrl + C.", !ok); }}, icon("i-copy"), label);
 }
-function autoSize(ta){ ta.style.height = "auto"; ta.style.height = Math.min(520, ta.scrollHeight + 2) + "px"; }
-// Ô prompt sửa được; sửa xong tự lưu vào bản đã lưu.
-function promptBlock(it, obj, field, label, tg, main){
-  const ta = h("textarea",{class:"ptext" + (main ? " main" : ""),spellcheck:"false","aria-label":label});
-  ta.value = obj[field];
-  ta.addEventListener("input", () => { obj[field] = ta.value; autoSize(ta); touchSaved(it); });
-  requestAnimationFrame(() => autoSize(ta));
-  const acts = h("span",{class:"row"}, copyBtn("Sao chép", () => ta.value, main));
-  if (main && tg.url) acts.append(h("button",{class:"btn sm",type:"button",onclick:async()=>{ const ok = await copyText(ta.value); openTab(tg.url); toast(ok ? "Đã sao chép. Dán (Ctrl + V) vào " + tg.label + "." : "Không tự sao chép được — bôi đen rồi Ctrl + C.", !ok); }}, icon("i-open"), "Sao chép & mở " + tg.label.split(" (")[0]));
-  return h("div",{class:"pblock"}, h("div",{class:"plabel"}, label, acts), ta);
+// Ô chữ tự cao theo nội dung. Chỉ đo khi ô đang hiển thị (ô trong tab ẩn đo ra 0 → đo lại khi mở tab).
+function autoSize(ta){
+  if (!ta.offsetParent) return;
+  ta.style.height = "auto";
+  ta.style.height = Math.min(640, Math.max(ta.scrollHeight + 2, 64)) + "px";
+}
+function autoSizeAll(root){ $$("textarea.fld-text", root || document).forEach(autoSize); }
+window.addEventListener("resize", () => autoSizeAll());
+// Một mục của kết quả: nhãn rõ ràng + nút Sao chép riêng. Prompt là ô sửa được (sửa xong tự lưu).
+function field(it, obj, key, label, opt={}){
+  const val = () => opt.editable ? ta.value : String(obj[key] || "");
+  let ta = null, body;
+  if (opt.editable){
+    ta = h("textarea",{class:"fld-text" + (opt.mono ? " mono" : ""),spellcheck:"false","aria-label":label,rows:String(Math.min(14, Math.max(3, Math.ceil(String(obj[key]||"").length / 90) + String(obj[key]||"").split("\n").length)))});
+    ta.value = obj[key];
+    ta.addEventListener("input", () => { obj[key] = ta.value; autoSize(ta); if (it) touchSaved(it); });
+    requestAnimationFrame(() => autoSize(ta));
+    body = ta;
+  } else body = h("div",{class:"fld-read"}, opt.quote ? "“" + obj[key] + "”" : obj[key]);
+  const acts = h("div",{class:"fld-acts"}, copyBtn(opt.big ? "Sao chép prompt" : "Sao chép", val, opt.big));
+  if (opt.url) acts.append(h("button",{class:"btn sm",type:"button",onclick:async()=>{ const ok = await copyText(val()); openTab(opt.url.href); toast(ok ? "Đã sao chép. Dán (Ctrl + V) vào " + opt.url.name + "." : "Không tự sao chép được — bôi đen rồi Ctrl + C.", !ok); }}, icon("i-open"), "Sao chép & mở " + opt.url.name));
+  return h("section",{class:"fld" + (opt.big ? " big" : "") + (opt.cls ? " " + opt.cls : "")},
+    h("div",{class:"fld-head"}, h("span",{class:"fld-label"}, opt.icon ? h("span",{class:"fld-ico"}, opt.icon) : null, label), acts), body);
 }
 function renderResult(kind){
   const K = KINDS[kind], p = K.p, it = ST[kind].current, out = $("#" + p + "Out");
@@ -177,46 +190,55 @@ function renderResult(kind){
     return;
   }
   const tg = targetOf(kind, it.target), r = it.result, items = K.items(r);
+  const tool = tg.url ? { href: tg.url, name: tg.label.split(" (")[0] } : null;
   $("#" + p + "Summary").textContent = items.length + " " + K.unit + " · prompt chuẩn " + tg.label;
-  const meta = h("dl",{class:"meta"},
-    r.hook ? [h("dt",null,"Hook"), h("dd",null,r.hook)] : null,
-    r.concept ? [h("dt",null,"Ý tưởng"), h("dd",null,r.concept)] : null,
-    r.palette ? [h("dt",null,"Bảng màu"), h("dd",null,r.palette)] : null);
-  const head = h("article",{class:"card-out"},
-    h("div",{class:"card-head"}, h("span",{class:"t"}, r.title || it.idea), h("span",{class:"right"},
-      r.quick ? h("span",{class:"tag quick"},"Viết nhanh (không dùng AI)") : h("span",{class:"tag"},"AI viết"),
-      h("span",{class:"tag"}, tg.label),
-      r.quick && aiReady() ? h("button",{class:"btn sm",type:"button",onclick:()=>write(kind)}, icon("i-spark"), "Viết lại bằng AI") : null)),
-    h("div",{class:"card-body"}, meta, r.character ? promptBlock(it, r, "character", kind==="video" ? "Nhân vật chính (dán vào mọi cảnh để giữ nhân vật)" : "Nhân vật / sản phẩm cố định", tg, false) : null));
-  out.append(head);
+
+  // Thẻ tổng quan
+  const overview = [];
+  if (r.reference_analysis) overview.push(field(it, r, "reference_analysis", "Phân tích tham chiếu", { icon:"🔍" }));
+  if (r.hook) overview.push(field(it, r, "hook", "Hook mở đầu", { icon:"⚡" }));
+  if (r.concept) overview.push(field(it, r, "concept", "Ý tưởng chung", { icon:"💡" }));
+  if (r.palette) overview.push(field(it, r, "palette", "Bảng màu", { icon:"🎨" }));
+  if (r.character) overview.push(field(it, r, "character", kind==="video" ? "Nhân vật chính — dán vào mọi cảnh để giữ đúng nhân vật" : "Nhân vật / sản phẩm cố định", { icon:"👤", editable:true }));
+  out.append(h("article",{class:"res-card res-top"},
+    h("header",{class:"res-head"},
+      h("div",{class:"res-title"}, h("h2",null, r.title || it.idea),
+        h("div",{class:"res-tags"}, r.quick ? h("span",{class:"tag quick"},"Viết nhanh (không dùng AI)") : h("span",{class:"tag ai"},"AI viết"), h("span",{class:"tag"}, tg.label), h("span",{class:"tag"}, items.length + " " + K.unit))),
+      r.quick && aiReady() ? h("button",{class:"btn sm",type:"button",onclick:()=>write(kind)}, icon("i-spark"), "Viết lại bằng AI") : null),
+    overview.length ? h("div",{class:"res-body"}, overview) : null));
+
+  // Từng cảnh / từng ảnh: prompt chính đặt trên cùng, các mục khác bên dưới — mục nào cũng sao chép riêng được.
   for (const c of items){
-    const body = [h("dl",{class:"meta"},
-      c.description_vi ? [h("dt",null,"Mô tả"), h("dd",null,c.description_vi)] : null,
-      c.camera ? [h("dt",null,"Máy quay"), h("dd",null,c.camera)] : null,
-      c.layout ? [h("dt",null,"Bố cục"), h("dd",null,c.layout)] : null,
-      c.dialogue_vi ? [h("dt",null,"Lời thoại"), h("dd",null,"“" + c.dialogue_vi + "”")] : null,
-      c.sound ? [h("dt",null,"Âm thanh"), h("dd",null,c.sound)] : null,
-      c.text_overlay ? [h("dt",null,"Chữ trên ảnh"), h("dd",null,c.text_overlay)] : null)];
+    const fields = [];
     if (kind === "video"){
-      body.push(promptBlock(it, c, "video_prompt", "Prompt video — " + tg.label, tg, true));
-      if (c.negative_prompt) body.push(promptBlock(it, c, "negative_prompt", "Negative prompt", tg, false));
-      if (c.image_prompt) body.push(promptBlock(it, c, "image_prompt", "Prompt ảnh khung đầu (Nano Banana / Midjourney / ChatGPT)", tg, false));
+      fields.push(field(it, c, "video_prompt", "Prompt video · " + tg.label, { editable:true, big:true, url:tool, icon:"🎬" }));
+      if (c.dialogue_vi) fields.push(field(it, c, "dialogue_vi", "Lời thoại / lời dẫn", { quote:true, icon:"💬", cls:"say" }));
+      if (c.image_prompt) fields.push(field(it, c, "image_prompt", "Prompt ảnh khung đầu (Nano Banana / Midjourney / ChatGPT)", { editable:true, icon:"🖼️" }));
+      if (c.negative_prompt) fields.push(field(it, c, "negative_prompt", "Negative prompt (những thứ cần tránh)", { editable:true, icon:"🚫" }));
     } else {
-      body.push(promptBlock(it, c, "prompt", "Prompt — " + tg.label, tg, true));
+      fields.push(field(it, c, "prompt", "Prompt ảnh · " + tg.label, { editable:true, big:true, url:tool, icon:"🖼️" }));
+      if (c.text_overlay) fields.push(field(it, c, "text_overlay", "Chữ trên ảnh", { quote:true, icon:"🔤", cls:"say" }));
     }
-    body.push(h("div",{class:"row"}, copyBtn("Sao chép cả " + K.unit + " này", () => itemText(kind, c, tg))));
-    out.append(h("article",{class:"card-out"},
-      h("div",{class:"card-head"}, h("span",{class:"t"}, (kind==="video" ? "CẢNH " : "ẢNH ") + String(c.n).padStart(2,"0")), c.purpose ? h("span",null,"· " + c.purpose) : null,
-        h("span",{class:"right mono"}, kind==="video" ? (it.form.dur || "") + "s · " + it.form.ratio : it.form.ratio)),
-      h("div",{class:"card-body"}, body)));
+    const info = [];
+    if (c.description_vi) info.push(field(it, c, "description_vi", "Mô tả cảnh", { icon:"📝" }));
+    if (c.camera) info.push(field(it, c, "camera", "Máy quay", { icon:"🎥" }));
+    if (c.layout) info.push(field(it, c, "layout", "Bố cục", { icon:"📐" }));
+    if (c.sound) info.push(field(it, c, "sound", "Âm thanh", { icon:"🔊" }));
+    out.append(h("article",{class:"res-card"},
+      h("header",{class:"res-head scene"},
+        h("span",{class:"res-num"}, String(c.n)),
+        h("div",{class:"res-title"}, h("h3",null, (kind==="video" ? "Cảnh " : "Ảnh ") + c.n + (c.purpose ? " — " + c.purpose : "")),
+          h("div",{class:"res-sub"}, kind==="video" ? (it.form.dur || r.dur || "") + " giây · khung " + it.form.ratio : "Khung " + it.form.ratio)),
+        copyBtn("Sao chép cả " + K.unit, () => itemText(kind, c, tg))),
+      h("div",{class:"res-body"}, fields, info.length ? h("div",{class:"res-info"}, info) : null)));
   }
   if (r.caption_vi || (r.hashtags && r.hashtags.length)){
     const cap = { text: [r.caption_vi, (r.hashtags||[]).join(" ")].filter(Boolean).join("\n\n") };
-    const ta = h("textarea",{class:"ptext","aria-label":"Caption"}); ta.value = cap.text; requestAnimationFrame(() => autoSize(ta));
-    out.append(h("article",{class:"card-out"},
-      h("div",{class:"card-head"}, h("span",{class:"t"},"CAPTION ĐĂNG BÀI"), h("span",{class:"right"}, copyBtn("Sao chép", () => ta.value))),
-      h("div",{class:"card-body"}, ta)));
+    out.append(h("article",{class:"res-card"},
+      h("header",{class:"res-head"}, h("div",{class:"res-title"}, h("h3",null,"Caption đăng bài"))),
+      h("div",{class:"res-body"}, field(null, cap, "text", "Caption + hashtag", { editable:true, icon:"📣" }))));
   }
+  requestAnimationFrame(() => autoSizeAll(out));
 }
 
 /* ---------------- viết ---------------- */
@@ -362,10 +384,21 @@ function show(view){
   $$(".nav-btn").forEach(b => b.classList.toggle("on", b.dataset.view===view));
   try{ localStorage.setItem("xks.view", view); }catch{}
   if (view==="saved") renderSaved();
+  requestAnimationFrame(() => autoSizeAll());
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-view]"); if (b) show(b.dataset.view); });
 
+/* ---------------- sáng / tối ---------------- */
+function applyTheme(t){
+  document.documentElement.dataset.theme = t;
+  try{ localStorage.setItem("xks.theme", t); }catch{}
+  const b = $("#themeBtn"); if (b) b.lastChild.textContent = t === "dark" ? "Giao diện sáng" : "Giao diện tối";
+}
+document.addEventListener("click", e => { if (e.target.closest("#themeBtn")) applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"); });
+
 (function boot(){
+  let theme = "light"; try{ theme = localStorage.getItem("xks.theme") || "light"; }catch{}
+  applyTheme(theme === "dark" ? "dark" : "light");
   initForm("video"); initForm("image"); initSettings();
   persistSaved(); renderKeyState();
   $$("[data-view]").forEach(b => { if (!featOn(b.dataset.view)) b.hidden = true; });

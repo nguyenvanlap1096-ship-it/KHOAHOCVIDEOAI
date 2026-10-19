@@ -163,7 +163,7 @@
       const c = { act, cam: b.cam, char, look, style: o.style, ratio: o.ratio, voice: o.voice, line };
       return {
         n: i + 1, purpose: b.role,
-        description_vi: fill(b.vi, { sp }) + ". Bối cảnh theo ý tưởng: " + idea.slice(0, 140),
+        description_vi: fill(b.vi, { sp }) + ".",
         camera: b.cam, image_prompt: `${cap(char)}, ${act}, in ${look.set}, ${look.props}, ${look.light}, ${o.style ? o.style + ", " : ""}${look.palette} palette, photorealistic, ${ratioWord(o.ratio)} composition, first frame of a video scene.`,
         video_prompt: videoPrompt(tg.key, c),
         negative_prompt: tg.negative ? "blurry, distorted face, extra fingers, deformed hands, warped text, watermark, flicker, low quality" : "",
@@ -251,7 +251,7 @@
       const t = fill(text, { brand: (o.brand || "").trim() || "ƯU ĐÃI" });
       return {
         n: i + 1, purpose: role + (round ? " (phương án " + (round + 1) + ")" : ""),
-        description_vi: role + " cho: " + idea.slice(0, 140), layout,
+        description_vi: (o.brand || "").trim() ? role + " của " + o.brand.trim() + "." : role + " theo ý tưởng: " + idea.slice(0, 120) + ".", layout,
         prompt: imagePrompt(tg.key, { subject, look, style: o.style, text: t, layoutEn: layout ? "balanced composition, " + (role === "Ảnh chủ đạo" ? "product centered with headline space" : "clear focal point") : "balanced composition" }, ratio),
         text_overlay: t
       };
