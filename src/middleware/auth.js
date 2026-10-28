@@ -3,7 +3,7 @@ const db = require('../db');
 async function loadUser(req, res, next) {
   req.user = null;
   if (req.session.userId) {
-    const user = await db.get('SELECT id, name, email, role FROM users WHERE id = ?', [req.session.userId]);
+    const user = await db.get('SELECT id, name, email, role, muse_enabled FROM users WHERE id = ?', [req.session.userId]);
     if (user) req.user = user;
     else delete req.session.userId;
   }

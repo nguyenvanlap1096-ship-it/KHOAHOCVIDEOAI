@@ -1,0 +1,173 @@
+<%- include('partials/top', { crumbs: [{ label: 'Muse Studio', href: '/muse' }, { label: 'Hướng dẫn' }] }) %>
+<style>
+  .mg h2{display:flex;gap:10px;align-items:center;font-size:18px;margin:0 0 8px}
+  .mg .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-size:14px}
+  .mg .card{padding:18px 20px;margin-bottom:14px}
+  .mg ol,.mg ul{padding-left:22px;margin:6px 0}.mg li{margin:5px 0}
+  .mg code{background:var(--surface-2);border-radius:6px;padding:1px 6px;font-size:13px}
+  .mg .tip{background:var(--surface-2);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:14px}
+  .mg .warn{background:color-mix(in srgb,#E8890C 14%,transparent);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:14px}
+  .mg pre{background:var(--surface-2);border-radius:10px;padding:12px;white-space:pre-wrap;font-size:13px}
+  .mg .toc{columns:2;font-size:14px}.mg .toc a{text-decoration:none}
+  @media (max-width:640px){.mg .toc{columns:1}}
+</style>
+<div class="page page-narrow mg">
+  <div class="page-head">
+    <h1 class="page-title">Hướng dẫn Muse Studio</h1>
+    <a class="btn btn-primary" href="/muse"><svg class="i"><use href="#i-video"/></svg>Mở Muse Studio</a>
+  </div>
+  <p class="muted">Tạo video &amp; ảnh AI bằng <strong>tài khoản muse.ai của chính bạn</strong>: tạo lẻ, chạy hàng loạt, giữ nhân vật giống nhau, ghép thành phim — ngay trên web khoá học. Lần đầu cài bộ chạy khoảng 10–15 phút; từ lần sau chỉ bấm 1 cái.</p>
+
+  <div class="card">
+    <h2>Vì sao phải cài bộ chạy 1 lần?</h2>
+    <p>muse.ai không có cổng kết nối chính thức cho phần mềm bên ngoài. Bộ chạy <strong>Muse2API</strong> chạy trên máy bạn, giữ phiên đăng nhập muse.ai <em>của bạn</em> và tạo video giúp bạn. Trang Muse Studio trên web khoá học chỉ là bảng điều khiển: nó nói chuyện thẳng với bộ chạy trên máy bạn. <strong>Web khoá học không nhận, không lưu key hay tài khoản muse của bạn.</strong></p>
+    <div class="toc">
+      <div>1. <a href="#b1">Chuẩn bị</a></div><div>2. <a href="#b2">Tải &amp; giải nén bộ cài</a></div>
+      <div>3. <a href="#b3">Chạy bộ cài</a></div><div>4. <a href="#b4">Cài tiện ích Chrome</a></div>
+      <div>5. <a href="#b5">Đăng nhập muse.ai</a></div><div>6. <a href="#b6">Thêm tài khoản</a></div>
+      <div>7. <a href="#b7">Tạo video đầu tiên</a></div><div>8. <a href="#b8">Giữ nhân vật</a></div>
+      <div>9. <a href="#b9">Hàng loạt &amp; phim nhiều cảnh</a></div><div>10. <a href="#b10">Ghép thành phim</a></div>
+      <div>11. <a href="#b11">Những lần sau</a></div><div>12. <a href="#b12">Lỗi thường gặp</a></div>
+      <div>13. <a href="#b13">Giữ an toàn</a></div>
+    </div>
+  </div>
+
+  <div class="card" id="b1">
+    <h2><span class="n">1</span>Chuẩn bị</h2>
+    <ul>
+      <li>Máy <strong>Windows 10/11 (64-bit)</strong> với <strong>Google Chrome</strong> (hoặc Edge). Máy Mac/điện thoại chưa dùng được bộ chạy.</li>
+      <li>Ổ <strong>C:</strong> trống khoảng <strong>10 GB</strong>, Internet ổn định.</li>
+      <li><strong>Tài khoản muse.ai của bạn</strong> (miễn phí): vào <a href="https://muse.ai" target="_blank" rel="noopener">muse.ai</a> đăng ký bằng email hoặc Google.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="b2">
+    <h2><span class="n">2</span>Tải &amp; giải nén bộ cài</h2>
+    <p><a class="btn btn-primary" href="/muse/tai-bo-cai">⬇ Tải bộ cài Muse Studio (Windows)</a></p>
+    <ol>
+      <li>Mở thư mục <strong>Downloads</strong>, chuột phải file <code>Muse-Studio-Cai-Dat.zip</code> → <strong>Properties</strong> → nếu có ô <strong>Unblock</strong> thì tick → <strong>OK</strong>.</li>
+      <li>Chuột phải file zip → <strong>Extract All…</strong> → <strong>Extract</strong>. Bạn được thư mục <strong>Muse-Studio</strong>.</li>
+    </ol>
+    <div class="warn">Phải giải nén ra rồi mới chạy — đừng bấm file .bat ngay trong cửa sổ xem trước của file zip.</div>
+  </div>
+
+  <div class="card" id="b3">
+    <h2><span class="n">3</span>Chạy bộ cài</h2>
+    <ol>
+      <li>Trong thư mục <strong>Muse-Studio</strong>, bấm đôi <code>MO_MUSE_STUDIO.bat</code>.</li>
+      <li>Windows hiện màn hình xanh <em>“Windows protected your PC”</em> → <strong>More info</strong> → <strong>Run anyway</strong> (có thể hiện 2 lần).</li>
+      <li><strong>Lần đầu</strong> cửa sổ đen tự tải bộ chạy Muse2API (khoảng 164 MB, vài phút), kiểm tra đúng bản gốc và cài vào <code>C:\muse2api-test</code>. Cứ để nó chạy.</li>
+      <li>Xong, trình duyệt tự mở <strong>Muse Studio trên web khoá học</strong> và tự kết nối. Ngoài Desktop có thêm shortcut <strong>“Muse Studio”</strong>.</li>
+      <li>Nếu Chrome hỏi <em>“muốn truy cập các thiết bị trong mạng cục bộ”</em> → bấm <strong>Cho phép</strong>. (Đây là bộ chạy trên chính máy bạn.)</li>
+    </ol>
+    <div class="tip">Dưới thanh taskbar có cửa sổ thu nhỏ <strong>“Muse2API – dong cua so nay la dung dich vu”</strong>. Đó là bộ chạy — <strong>đừng đóng</strong> khi đang tạo video.</div>
+  </div>
+
+  <div class="card" id="b4">
+    <h2><span class="n">4</span>Cài tiện ích Chrome (1 lần)</h2>
+    <p>Tiện ích chuyển phiên đăng nhập muse.ai của bạn vào bộ chạy trên máy bạn.</p>
+    <ol>
+      <li>Gõ vào thanh địa chỉ Chrome: <code>chrome://extensions</code> → Enter.</li>
+      <li>Góc trên bên phải, bật <strong>Chế độ dành cho nhà phát triển</strong>.</li>
+      <li>Bấm <strong>Tải tiện ích đã giải nén</strong> → chọn thư mục <code>C:\muse2api-test\muse2api-extension</code>.</li>
+      <li>Bấm biểu tượng 🧩 trên thanh Chrome → ghim 📌 tiện ích <strong>“Kết nối Muse2API”</strong> (hiện chữ <strong>M</strong>).</li>
+    </ol>
+  </div>
+
+  <div class="card" id="b5">
+    <h2><span class="n">5</span>Đăng nhập muse.ai</h2>
+    <p>Trong <strong>cùng Chrome đó</strong>, mở tab mới vào <a href="https://muse.ai" target="_blank" rel="noopener">muse.ai</a> và đăng nhập tài khoản của bạn. Chỉ nhập mật khẩu trên trang muse.ai chính thức.</p>
+  </div>
+
+  <div class="card" id="b6">
+    <h2><span class="n">6</span>Thêm tài khoản vào Muse Studio</h2>
+    <p>Muse Studio đang hiện khung tím <strong>“Chưa có tài khoản muse.ai”</strong>:</p>
+    <ol>
+      <li>Bấm <strong>📋 Sao chép API key</strong>.</li>
+      <li>Bấm tiện ích <strong>M</strong> trên thanh Chrome → bấm vào ô <strong>API key</strong> → <kbd>Ctrl</kbd>+<kbd>V</kbd>.</li>
+      <li>Bấm <strong>Lấy Cookie và thêm tài khoản</strong> → hiện chữ xanh <strong>✓ Đã thêm tài khoản</strong>.</li>
+      <li>Quay lại Muse Studio → <strong>↻ Tôi đã thêm xong</strong>. Khung tím biến mất là xong.</li>
+    </ol>
+    <div class="warn">Mỗi tài khoản chỉ bấm “Lấy Cookie” 1 lần. Tiện ích báo đỏ “Chưa có API key” nghĩa là ô API key còn trống.</div>
+  </div>
+
+  <div class="card" id="b7">
+    <h2><span class="n">7</span>Tạo video đầu tiên</h2>
+    <ol>
+      <li>Gõ mô tả cảnh (tiếng Anh chi tiết thường đẹp hơn), ví dụ: <em>A fluffy orange kitten chases a red ball of yarn through a sunny flower garden, slow cinematic tracking shot, warm golden light, Pixar-style 3D animation</em>.</li>
+      <li>Chọn <strong>🎬 Video</strong>, khung <strong>9:16</strong> (TikTok/Reels) hoặc <strong>16:9</strong> (YouTube), <strong>10 giây</strong>.</li>
+      <li>Bấm <strong>✦ Tạo ngay</strong> → xem tiến độ ở cột <strong>Hàng đợi render</strong> (thường 1–3 phút) → video tự phát → <strong>⬇ Tải xuống</strong>.</li>
+    </ol>
+    <div class="tip">Mỗi video tạo ra trừ vào hạn mức tuần của tài khoản muse của bạn. Bấm <strong>Kiểm tra hạn mức</strong> ở cột trái để xem.</div>
+  </div>
+
+  <div class="card" id="b8">
+    <h2><span class="n">8</span>Giữ nhân vật giống nhau ở mọi cảnh</h2>
+    <ol>
+      <li>Tạo <strong>ảnh nhân vật</strong>: chọn <strong>🖼 Ảnh</strong>, khung <strong>1:1</strong>, mô tả kiểu <em>Character reference sheet of one character: a chubby black cat with golden eyes, a red knitted scarf, full body, front view, plain light-grey background, Pixar-style 3D animation, no text</em>.</li>
+      <li>Ảnh ưng ý → bấm <strong>👤 Dùng làm nhân vật</strong> ngay dưới ảnh.</li>
+      <li>Về <strong>🎬 Video</strong>; mỗi mô tả cảnh thêm câu <em>“Use the cat character from reference image 1.”</em> và giữ cùng một phong cách.</li>
+    </ol>
+  </div>
+
+  <div class="card" id="b9">
+    <h2><span class="n">9</span>Chạy hàng loạt &amp; làm phim nhiều cảnh</h2>
+    <ol>
+      <li>Bấm <strong>Hàng loạt</strong> ở menu trái của Muse Studio.</li>
+      <li>Dán mỗi dòng 1 prompt — <strong>hoặc</strong> dán nguyên kịch bản <code>CANH:</code> / <code>THOAI:</code> lấy từ <a href="/studio">Xưởng Kịch bản AI → Phim dài tập</a> (Sao chép kịch bản tập). Mỗi cảnh thành 1 video, lời thoại tiếng Việt được ghép vào.</li>
+      <li>Bấm <strong>▶ Chạy hàng loạt</strong>. Có Tạm dừng / Tiếp tục / Dừng / Tạo lại prompt lỗi.</li>
+    </ol>
+<pre>CANH: Pixar-style 3D animation. Use the cat character from reference image 1. Wide shot of a cozy cat village at sunrise.
+THOAI: Người kể chuyện: Ngày xửa ngày xưa, có một ngôi làng mèo rất yên bình.
+
+CANH: Pixar-style 3D animation. Use the cat character from reference image 1. Close-up of the black cat waving at the camera.
+THOAI: Mèo Mun: Chào cả nhà, hôm nay trời đẹp quá!</pre>
+    <div class="tip">Chạy hàng loạt luôn ở chế độ <strong>Độc lập</strong> (nếu đang chọn Chuỗi đồng bộ, Studio tự chuyển và ghép ghi chú nhân vật vào từng cảnh) — chế độ chuỗi của bộ chạy bị lặp video khi chạy lô.</div>
+  </div>
+
+  <div class="card" id="b10">
+    <h2><span class="n">10</span>Ghép các cảnh thành 1 phim</h2>
+    <ul>
+      <li><strong>Từ một lô:</strong> lô chạy xong → bấm <strong>🎬 Ghép thành phim</strong> ở lô đó.</li>
+      <li><strong>Tự chọn:</strong> ở <strong>Thư viện</strong> bấm <strong>☑ Chọn video để ghép</strong> → bấm lần lượt theo thứ tự cảnh → <strong>🎬 Ghép … video</strong>.</li>
+      <li>Ghép mất thời gian bằng độ dài phim (60 giây ≈ 1 phút). <strong>Giữ nguyên tab</strong> trong lúc ghép.</li>
+      <li>Xong → xem thử → <strong>⬇ Tải phim về máy</strong> (MP4).</li>
+    </ul>
+  </div>
+
+  <div class="card" id="b11">
+    <h2><span class="n">11</span>Những lần sau</h2>
+    <p>Bấm đôi shortcut <strong>“Muse Studio”</strong> ở Desktop → bộ chạy bật lên và Muse Studio trên web tự mở. Hoặc tự mở <a href="/muse">Muse Studio</a> trên web khoá học — nếu bộ chạy chưa bật, trang sẽ nhắc và tự kết nối khi bạn bật.</p>
+    <p>Phiên đăng nhập muse.ai hết hạn sau vài ngày: khi Studio báo phiên hết hạn hoặc cảnh nào cũng lỗi → đăng nhập lại muse.ai trong Chrome rồi làm lại <a href="#b6">bước 6</a>.</p>
+  </div>
+
+  <div class="card" id="b12">
+    <h2><span class="n">12</span>Lỗi thường gặp</h2>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Hiện tượng</th><th>Cách xử lý</th></tr></thead>
+        <tbody>
+          <tr><td>Trang báo <strong>“Chưa kết nối được bộ chạy trên máy bạn”</strong></td><td>Bấm shortcut “Muse Studio” ở Desktop và đợi 10–20 giây — trang tự kết nối.</td></tr>
+          <tr><td>Đã bật bộ chạy mà vẫn không kết nối</td><td>Có thể bạn đã bấm <em>Chặn</em> khi Chrome hỏi quyền mạng cục bộ: bấm biểu tượng bên trái thanh địa chỉ → <strong>Cài đặt trang web</strong> → mục <strong>Truy cập mạng cục bộ</strong> → <strong>Cho phép</strong> → tải lại trang. Vẫn không được: dùng bản trên máy tại <code>http://127.0.0.1:18610/batch</code> (cùng giao diện, cùng tính năng).</td></tr>
+          <tr><td>Trang hỏi <strong>API key</strong></td><td>Mở <code>C:\muse2api-test\app\Muse2API_VI_Portable_1.6.8\.env</code> bằng Notepad, chép phần sau <code>MUSE2API_KEY=</code>, dán vào ô → Kết nối.</td></tr>
+          <tr><td>Cửa sổ đen báo <strong>không tải được / mã kiểm tra không khớp</strong></td><td>Kiểm tra Internet rồi bấm đôi lại <code>MO_MUSE_STUDIO.bat</code>.</td></tr>
+          <tr><td>Báo <strong>Muse2API không mở lên được</strong></td><td>Mở tay <code>C:\muse2api-test\app\Muse2API_VI_Portable_1.6.8\02_CHAY_MUSE2API.bat</code> (SmartScreen: More info → Run anyway), rồi tải lại trang.</td></tr>
+          <tr><td>Tiện ích báo <strong>Không tìm thấy Cookie</strong></td><td>Chưa đăng nhập muse.ai trong Chrome đó — làm <a href="#b5">bước 5</a>.</td></tr>
+          <tr><td>Một cảnh báo <strong>Hết thời gian chờ</strong></td><td>muse.ai đang nghẽn — bấm Tạo lại (hoặc Tạo lại prompt lỗi).</td></tr>
+          <tr><td>Cảnh nào cũng lỗi</td><td>Phiên muse hết hạn hoặc hết hạn mức tuần — làm lại <a href="#b6">bước 6</a>.</td></tr>
+          <tr><td><strong>muse.ai từ chối nội dung</strong></td><td>Viết lại mô tả khác, tránh nội dung nhạy cảm.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="b13">
+    <h2><span class="n">13</span>Giữ an toàn</h2>
+    <ul>
+      <li><strong>Không gửi cho ai:</strong> file <code>.env</code>, thư mục <code>data</code>, API key, mật khẩu muse.ai. Chụp màn hình nhờ hỗ trợ thì che phần key.</li>
+      <li>Không chép thư mục <code>C:\muse2api-test</code> cho người khác sau khi đã thêm tài khoản — trong đó có phiên đăng nhập của bạn.</li>
+      <li>Bộ chạy đăng nhập muse.ai theo cách không chính thức: muse.ai có thể giới hạn hoặc khoá tài khoản. Hãy dùng tài khoản của chính bạn và tự cân nhắc.</li>
+    </ul>
+  </div>
+</div>
+<%- include('partials/bottom') %>

@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const db = require('../db');
 const { safeNext } = require('../middleware/auth');
+const { getSettings } = require('../services/settings');
+const { museConfig } = require('../services/muse');
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -71,8 +73,8 @@ router.post('/register', limiter, async (req, res) => {
   }
   const hash = await bcrypt.hash(password, 12);
   const { insertId } = await db.run(
-    "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'student')",
-    [values.name, values.email, hash],
+    "INSERT INTO users (name, email, password_hash, role, muse_enabled) VALUES (?, ?, ?, 'student', ?)",
+    [values.name, values.email, hash, museConfig(await getSettings()).autoNew ? 1 : 0],
   );
   await logIn(req, { id: insertId });
   req.flash('success', `Chào mừng ${values.name}! Tài khoản của bạn đã sẵn sàng.`);

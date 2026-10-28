@@ -1,0 +1,84 @@
+<%- include('../partials/top', { crumbs: [{ label: 'Quản trị', href: '/admin' }, { label: 'Muse Studio' }] }) %>
+<div class="page">
+  <div class="page-head">
+    <h1 class="page-title">Muse Studio</h1>
+    <span class="row-actions">
+      <a class="btn btn-outline" href="/muse/huong-dan" target="_blank" rel="noopener"><svg class="i"><use href="#i-book-open"/></svg>Hướng dẫn học viên</a>
+      <a class="btn btn-outline" href="/muse" target="_blank" rel="noopener"><svg class="i"><use href="#i-video"/></svg>Mở Muse Studio</a>
+    </span>
+  </div>
+  <p class="muted">Học viên được bật sẽ thấy mục <strong>Muse Studio</strong> trên menu: tạo video/ảnh AI, chạy hàng loạt, giữ nhân vật, ghép phim — bằng <strong>tài khoản muse.ai của chính họ</strong>. Lần đầu học viên tải bộ cài (1 file) và bấm chạy trên máy Windows; sau đó chỉ cần mở trang trên web là dùng. Máy chủ khoá học không giữ key hay tài khoản muse của học viên.</p>
+
+  <% if (!cfg.open) { %>
+    <div class="promo-strip promo-warn"><span class="body"><strong>Muse Studio đang ĐÓNG với mọi học viên</strong><small>Kể cả học viên đã được bật cũng không vào được. Bạn (quản trị) vẫn vào được để thử.</small></span></div>
+  <% } %>
+
+  <div class="stats">
+    <div class="stat card"><span class="stat-ico"><svg class="i"><use href="#i-users"/></svg></span><span class="stat-value"><%= students.length %></span><span class="stat-label">Học viên</span></div>
+    <div class="stat card"><span class="stat-ico"><svg class="i"><use href="#i-video"/></svg></span><span class="stat-value"><%= on %></span><span class="stat-label">Đang được bật</span></div>
+    <div class="stat card"><span class="stat-ico"><svg class="i"><use href="#i-x"/></svg></span><span class="stat-value"><%= students.length - on %></span><span class="stat-label">Đang tắt</span></div>
+  </div>
+
+  <form method="post" action="/admin/muse" class="form card form-card">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <h2 class="form-section">Cài đặt chung</h2>
+    <label class="switch">
+      <input type="checkbox" name="muse_open" value="1" <%= cfg.open ? 'checked' : '' %>>
+      <span class="switch-ui" aria-hidden="true"></span>
+      <span><strong>Mở Muse Studio</strong><small class="d-block muted">Tắt để đóng với mọi học viên cùng lúc (giữ nguyên danh sách bật/tắt bên dưới để mở lại sau).</small></span>
+    </label>
+    <label class="switch">
+      <input type="checkbox" name="muse_auto_new" value="1" <%= cfg.autoNew ? 'checked' : '' %>>
+      <span class="switch-ui" aria-hidden="true"></span>
+      <span><strong>Tự bật cho học viên đăng ký mới</strong><small class="d-block muted">Tài khoản tạo sau khi bật sẽ được dùng Muse Studio ngay, không cần bạn bật tay.</small></span>
+    </label>
+    <div class="form-actions"><button class="btn btn-primary" type="submit" data-loading-text="Đang lưu...">Lưu cài đặt</button></div>
+  </form>
+
+  <h2 class="form-section" style="margin-top:28px">Danh sách học viên</h2>
+  <form method="post" action="/admin/muse/bulk" id="museBulk" class="card form-card" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <span class="muted" data-checked-count>Đã chọn 0</span>
+    <button class="btn btn-sm btn-primary" type="submit" name="action" value="on">Bật cho người đã chọn</button>
+    <button class="btn btn-sm btn-outline" type="submit" name="action" value="off">Tắt người đã chọn</button>
+    <span style="flex:1"></span>
+    <button class="btn btn-sm btn-outline" type="submit" name="action" value="paid-on" data-confirm="Bật Muse Studio cho tất cả học viên đã mua khoá chuyên sâu?">Bật cho học viên khoá chuyên sâu</button>
+    <button class="btn btn-sm btn-outline" type="submit" name="action" value="all-on" data-confirm="Bật Muse Studio cho TẤT CẢ <%= students.length %> học viên?">Bật tất cả</button>
+    <button class="btn btn-sm btn-outline btn-danger" type="submit" name="action" value="all-off" data-confirm="Tắt Muse Studio của TẤT CẢ học viên?">Tắt tất cả</button>
+  </form>
+
+  <label class="search" style="margin:14px 0">
+    <svg class="i"><use href="#i-search"/></svg>
+    <input type="search" placeholder="Tìm theo tên hoặc email…" data-filter-input value="<%= locals.query && query.q ? query.q : '' %>" aria-label="Tìm học viên">
+  </label>
+
+  <div class="table-wrap card">
+    <table class="table">
+      <thead><tr>
+        <th style="width:36px"><input type="checkbox" data-check-all aria-label="Chọn tất cả học viên đang hiện"></th>
+        <th>Học viên</th><th>Email</th><th>Khoá chuyên sâu</th><th>Ngày tham gia</th><th>Muse Studio</th>
+      </tr></thead>
+      <tbody>
+        <% if (!students.length) { %><tr><td colspan="6" class="muted">Chưa có học viên nào.</td></tr><% } %>
+        <% students.forEach(s => { const isOn = Number(s.muse_enabled) === 1; %>
+          <tr data-filter-row data-text="<%= (s.name + ' ' + s.email).toLowerCase() %>">
+            <td><input type="checkbox" name="ids" value="<%= s.id %>" form="museBulk" data-check-item aria-label="Chọn <%= s.name %>"></td>
+            <td><span class="cell-user"><span class="avatar avatar-sm"><%= h.initials(s.name) %></span><%= s.name %></span></td>
+            <td><%= s.email %></td>
+            <td><%= Number(s.paid) ? '✓ Có' : '—' %></td>
+            <td><%= String(s.created_at).slice(0, 10) %></td>
+            <td>
+              <form method="post" action="/admin/muse/users/<%= s.id %>" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <input type="hidden" name="enabled" value="<%= isOn ? '0' : '1' %>">
+                <span class="badge <%= isOn ? 'badge-success' : '' %>"><%= isOn ? 'Đang bật' : 'Đang tắt' %></span>
+                <button class="btn btn-sm <%= isOn ? 'btn-ghost' : 'btn-outline' %>" type="submit"><%= isOn ? 'Tắt' : 'Bật' %></button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/bottom', { scripts: ['/js/admin-muse.js'] }) %>

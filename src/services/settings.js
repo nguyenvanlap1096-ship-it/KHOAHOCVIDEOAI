@@ -30,6 +30,9 @@ const DEFAULTS = {
   studio_google_model: '',
   studio_who: 'all',
   studio_points: '30',
+  // Muse Studio: công tắc chung (tắt thì chỉ quản trị vào được) + tự bật cho tài khoản đăng ký mới.
+  muse_open: '1',
+  muse_auto_new: '',
 };
 
 let cache = null;

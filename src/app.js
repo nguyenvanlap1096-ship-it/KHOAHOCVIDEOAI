@@ -11,6 +11,7 @@ const { loadUser } = require('./middleware/auth');
 const csrf = require('./middleware/csrf');
 const { serveImage } = require('./uploads');
 const { getSettings, supportInfo, siteInfo } = require('./services/settings');
+const { museAccess } = require('./services/muse');
 const { fmtVnd, countPendingOrders } = require('./services/shop');
 
 function sessionStore() {
@@ -100,6 +101,8 @@ module.exports = function createApp() {
     res.locals.support = req.user ? supportInfo(settings) : null;
     // Link Xưởng Kịch bản AI chỉ hiện khi quản trị mở xưởng (quản trị luôn thấy).
     res.locals.studioOpen = settings.studio_open !== '0' || Boolean(req.user && req.user.role === 'admin');
+    // Link Muse Studio chỉ hiện với người được mở (quản trị luôn thấy).
+    res.locals.museOpen = (await museAccess(req.user, settings)).allowed;
     res.locals.vnd = fmtVnd;
     res.locals.pendingOrders = req.user && req.user.role === 'admin' ? await countPendingOrders() : 0;
     next();
@@ -113,6 +116,7 @@ module.exports = function createApp() {
   const studio = require('./routes/studio');
   app.use('/studio', studio.page);
   app.use('/api/studio', studio.api);
+  app.use('/muse', require('./routes/muse'));
   app.use('/api', require('./routes/api'));
   app.use('/admin', require('./routes/admin'));
 

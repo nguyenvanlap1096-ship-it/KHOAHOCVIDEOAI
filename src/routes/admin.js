@@ -11,6 +11,7 @@ const { listCategories, listPrompts } = require('../services/prompts');
 const { BANKS } = require('../services/vietqr');
 const { ORDER_STATUS, fmtVnd, salesOpen, grantAccess, revokeAccess, countPendingOrders } = require('../services/shop');
 const { safeNext } = require('../middleware/auth');
+const { museConfig } = require('../services/muse');
 
 router.use(requireAdmin);
 router.use('/uploads', require('./admin-uploads'));
@@ -672,6 +673,57 @@ router.post('/studio/quota', async (req, res) => {
   await db.run('UPDATE users SET studio_quota = ? WHERE id = ?', [quota, u.id]);
   req.flash('success', quota == null ? `${u.name} dùng lại mức chung.` : `Đã đặt ${quota} lượt viết/tháng cho ${u.name}.`);
   res.redirect('/admin/studio');
+});
+
+/* ---------- Muse Studio: bật/tắt cho từng học viên ---------- */
+router.get('/muse', async (req, res) => {
+  const cfg = museConfig(await getSettings());
+  const students = await db.all(
+    `SELECT u.id, u.name, u.email, u.created_at, u.muse_enabled,
+            (SELECT COUNT(*) FROM access a WHERE a.user_id = u.id) AS paid
+       FROM users u WHERE u.role = 'student' ORDER BY u.muse_enabled DESC, u.id DESC`,
+  );
+  const on = students.filter(s => Number(s.muse_enabled) === 1).length;
+  res.render('admin/muse', { title: 'Muse Studio', cfg, students, on, ...nav('muse') });
+});
+
+router.post('/muse', async (req, res) => {
+  const b = req.body || {};
+  await setSettings({ muse_open: b.muse_open ? '1' : '0', muse_auto_new: b.muse_auto_new ? '1' : '' });
+  req.flash('success', 'Đã lưu cài đặt Muse Studio.');
+  res.redirect('/admin/muse');
+});
+
+router.post('/muse/users/:id', async (req, res) => {
+  const id = Number(req.params.id) || 0;
+  const on = req.body && req.body.enabled === '1' ? 1 : 0;
+  const u = await db.get("SELECT name FROM users WHERE id = ? AND role = 'student'", [id]);
+  if (u) {
+    await db.run('UPDATE users SET muse_enabled = ? WHERE id = ?', [on, id]);
+    req.flash('success', on ? `Đã bật Muse Studio cho ${u.name}.` : `Đã tắt Muse Studio của ${u.name}.`);
+  }
+  res.redirect('/admin/muse' + (req.body && req.body.q ? '?q=' + encodeURIComponent(req.body.q) : ''));
+});
+
+// Bật/tắt hàng loạt: những người đang chọn, tất cả học viên, hoặc học viên đã mua khoá chuyên sâu.
+router.post('/muse/bulk', async (req, res) => {
+  const b = req.body || {};
+  const action = String(b.action || '');
+  const ids = [].concat(b.ids || []).map(Number).filter(n => n > 0).slice(0, 5000);
+  let r = { changes: 0 }, msg = '';
+  if (action === 'on' || action === 'off') {
+    if (!ids.length) { req.flash('error', 'Chưa chọn học viên nào. Tick ô bên trái tên học viên trước.'); return res.redirect('/admin/muse'); }
+    r = await db.run(`UPDATE users SET muse_enabled = ? WHERE role = 'student' AND id IN (${ids.map(() => '?').join(',')})`, [action === 'on' ? 1 : 0, ...ids]);
+    msg = (action === 'on' ? 'Đã bật' : 'Đã tắt') + ` Muse Studio cho ${r.changes} học viên đã chọn.`;
+  } else if (action === 'all-on' || action === 'all-off') {
+    r = await db.run("UPDATE users SET muse_enabled = ? WHERE role = 'student'", [action === 'all-on' ? 1 : 0]);
+    msg = (action === 'all-on' ? 'Đã bật' : 'Đã tắt') + ` Muse Studio cho tất cả ${r.changes} học viên.`;
+  } else if (action === 'paid-on') {
+    r = await db.run("UPDATE users SET muse_enabled = 1 WHERE role = 'student' AND id IN (SELECT user_id FROM access)");
+    msg = `Đã bật Muse Studio cho ${r.changes} học viên khoá chuyên sâu.`;
+  }
+  if (msg) req.flash('success', msg);
+  res.redirect('/admin/muse');
 });
 
 /* ---------- Người dùng ---------- */

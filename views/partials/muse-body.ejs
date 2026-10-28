@@ -1,0 +1,138 @@
+<div class="card connect hidden" id="connectBox">
+  <div class="brand"><div class="logo">✦</div><div><b>Muse Studio</b><small>Kết nối tới chương trình Muse2API trên máy bạn</small></div></div>
+  <div class="only-web small">
+    <b>Lần đầu dùng (làm 1 lần, khoảng 5 phút):</b>
+    <ol style="margin:6px 0 10px;padding-left:20px">
+      <li>Tải bộ cài → chuột phải file zip → <b>Extract All</b> → bấm đôi <b>MO_MUSE_STUDIO.bat</b> (lần đầu tự tải bộ chạy khoảng 164 MB). Windows hiện màn hình xanh thì bấm <b>More info → Run anyway</b>.</li>
+      <li>Cài xong, trang này <b>tự mở và tự kết nối</b>. Nếu Chrome hỏi quyền truy cập <b>thiết bị trong mạng cục bộ</b>, bấm <b>Cho phép</b>.</li>
+    </ol>
+    <b>Những lần sau:</b> bấm shortcut <b>“Muse Studio”</b> ở Desktop.
+    <div class="row" style="margin-top:12px"><a class="btn primary" href="/muse/tai-bo-cai">⬇ Tải bộ cài (Windows)</a><a class="btn" href="/muse/huong-dan" target="_blank" rel="noopener">📘 Hướng dẫn chi tiết</a></div>
+  </div>
+  <div class="small muted">Dán API key: mở file <b>.env</b> trong thư mục Muse2API, chép phần sau <b>MUSE2API_KEY=</b> (hoặc trong cửa sổ Muse2API: Cài đặt → Sao chép API key). Key chỉ lưu trên trình duyệt này.</div>
+  <input type="password" id="keyInput" placeholder="API key">
+  <button class="btn primary" id="keyBtn">Kết nối</button>
+  <div class="err" id="keyErr"></div>
+  <details class="only-web small muted">
+    <summary>Nâng cao: địa chỉ bộ chạy</summary>
+    <div class="row" style="margin-top:8px"><input type="text" id="baseInput" placeholder="http://127.0.0.1:18610" class="grow"><button class="btn" id="baseSave" type="button">Lưu</button></div>
+    <div style="margin-top:6px">Chỉ đổi khi bạn đã đổi cổng MUSE2API_PORT trong file .env.</div>
+  </details>
+</div>
+
+<div class="app hidden" id="app">
+  <section class="card noacc hidden" id="noAcc">
+    <div class="txt"><b>⚠ Chưa có tài khoản muse.ai</b><span class="small muted">Làm 1 lần trong Chrome của bạn:<br>
+      1) Mở <b>chrome://extensions</b> → bật <b>Chế độ dành cho nhà phát triển</b> → <b>Tải tiện ích đã giải nén</b> → chọn thư mục <b>C:\muse2api-test\muse2api-extension</b>.<br>
+      2) Đăng nhập <b>muse.ai</b> trong Chrome đó.<br>
+      3) Bấm <b>📋 Sao chép API key</b> bên cạnh → bấm biểu tượng tiện ích <b>M</b> trên thanh Chrome → dán (Ctrl + V) vào ô <b>API key</b> → <b>Lấy Cookie và thêm tài khoản</b>. Xong quay lại đây bấm <b>Tôi đã thêm xong</b>.</span></div>
+    <button class="btn primary" data-copykey type="button">📋 Sao chép API key</button>
+    <button class="btn" id="noAccRe" type="button">↻ Tôi đã thêm xong</button>
+  </section>
+  <aside class="side">
+    <div class="card">
+      <div class="brand"><div class="logo">✦</div><div><b>Muse Studio</b><small>Tạo video &amp; ảnh bằng Muse</small></div></div>
+      <nav class="nav">
+        <button data-tab="create" class="on">✦ Tạo mới</button>
+        <button data-tab="batch">▤ Hàng loạt</button>
+        <button data-tab="library">▦ Thư viện</button>
+        <a href="/admin" target="_blank" rel="noopener">⚙ Quản trị nâng cao</a>
+        <a class="only-web" href="/muse/huong-dan" target="_blank" rel="noopener">📘 Hướng dẫn</a>
+        <a class="only-web" href="/muse/tai-bo-cai">⬇ Tải bộ cài</a>
+        <a class="only-web" href="/">← Về khoá học</a>
+      </nav>
+      <div class="sub" style="margin-top:12px">
+        <div class="small" style="font-weight:700"><span class="dot" id="svcDot"></span><span id="svcText">Đang kết nối…</span></div>
+        <div class="label" style="margin-top:12px">Tài khoản tạo</div>
+        <select id="accountSel"><option value="">Tự động chọn tài khoản</option></select>
+        <div class="small muted" id="accInfo" style="margin-top:8px"></div>
+        <button class="btn full" id="quotaBtn" style="margin-top:10px">Kiểm tra hạn mức</button>
+        <div class="quota hidden" id="quotaBox">
+          <div class="row small"><b id="quotaPlan"></b><span class="grow"></span><span id="quotaPct" class="muted"></span></div>
+          <div class="bar" style="margin-top:6px"><i id="quotaBar" style="width:0"></i></div>
+          <div class="small dimc" id="quotaNote" style="margin-top:5px"></div>
+        </div>
+      </div>
+      <div class="sub" style="margin-top:12px">
+        <label class="check"><input type="checkbox" id="dlEnabled"> Tự lưu về thư mục</label>
+        <input type="text" id="dlFolder" placeholder="F:\AnhVideo" style="margin-top:9px">
+        <div class="row" style="margin-top:9px"><button class="btn grow" id="dlChoose">Chọn thư mục…</button><button class="btn grow" id="dlSave">Lưu</button></div>
+        <div class="small dimc" id="dlStatus" style="margin-top:7px"></div>
+      </div>
+      <button class="btn full theme-btn" data-copykey type="button">📋 Sao chép API key</button>
+      <button class="btn full theme-btn" id="themeBtn" type="button">🌙 Giao diện tối</button>
+      <div class="small dimc" style="margin-top:12px">Giao diện Studio mới — lõi tạo video của Muse2API giữ nguyên. <a href="/admin" target="_blank" rel="noopener" style="color:var(--acc)">Mở quản trị cũ</a> khi cần thêm tài khoản.</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <section class="card">
+      <div class="head"><h2>✦ Tạo video / ảnh</h2><span class="grow"></span><span class="hint">Mỗi lần tạo 1 cảnh — muốn nhiều cảnh liên tiếp, dùng Hàng loạt bên dưới</span></div>
+      <textarea id="prompt" rows="3" placeholder="Mô tả cảnh muốn tạo… Ví dụ: Một chú mèo cam đuổi theo cuộn len đỏ trong khu vườn đầy hoa, nắng vàng, máy quay chậm rãi"></textarea>
+      <div class="ctrls">
+        <div class="seg" id="kindSeg"><button data-kind="video" class="on">🎬 Video</button><button data-kind="image">🖼 Ảnh</button></div>
+        <select id="sizeSel">
+          <option value="1280x720">16:9 · 1280×720</option>
+          <option value="720x1280">9:16 · 720×1280</option>
+          <option value="1080x1920">9:16 HD · 1080×1920</option>
+          <option value="1024x1024">1:1 · 1024×1024</option>
+        </select>
+        <select id="durSel"></select>
+        <select id="modeSel"><option value="independent">Tạo độc lập</option><option value="coherent">Chuỗi đồng bộ nhân vật</option></select>
+        <span class="grow"></span>
+        <button class="btn primary big" id="genBtn">✦ Tạo ngay</button>
+      </div>
+      <div class="hidden" id="coherentBox" style="margin-top:10px">
+        <textarea id="continuity" rows="2" placeholder="Ghi chú giữ nhất quán (nhân vật, trang phục, bối cảnh) cho cả chuỗi"></textarea>
+        <div class="row" style="margin-top:6px"><span class="small muted grow">Các cảnh tạo liên tiếp sẽ dùng chung một hội thoại để giữ nhân vật.</span><button class="btn" id="newSeqBtn">Bắt đầu chuỗi mới</button></div>
+      </div>
+      <details>
+        <summary>Ảnh / tài liệu tham chiếu (tối đa 8 ảnh + 8 tài liệu, mỗi tệp 5 MB)</summary>
+        <div class="row" style="margin-top:10px"><label class="btn">＋ Thêm tệp<input type="file" id="refInput" multiple accept="image/*,.pdf,.txt,.doc,.docx" hidden></label><button class="btn" id="refClear">Xoá hết</button></div>
+        <div class="refs" id="refList"></div>
+      </details>
+    </section>
+
+    <section class="card stagebox" id="stageCard">
+      <div class="stage" id="stage"><div class="empty"><div class="big">🎬</div><div>Kết quả sẽ hiện ngay tại đây</div><div class="small">Nhập mô tả ở trên rồi bấm Tạo ngay</div></div></div>
+      <div class="stagefoot"><span class="p" id="stagePrompt"></span><a class="btn hidden" id="dlBtn">⬇ Tải xuống</a><button class="btn hidden" id="regenBtn">↻ Tạo lại</button><button class="btn primary hidden" id="charBtn" type="button">👤 Dùng làm nhân vật</button></div>
+    </section>
+
+    <section class="card hidden" id="filmCard">
+      <div class="head"><h2>🎬 Ghép phim</h2><span class="grow"></span><button class="btn" id="filmClose" type="button">Đóng</button></div>
+      <div id="filmProg">
+        <div class="bar"><i id="filmBar" style="width:0"></i></div>
+        <div class="small muted" id="filmStatus" style="margin-top:8px"></div>
+      </div>
+      <div class="hidden" id="filmResult">
+        <video id="filmVideo" controls playsinline style="display:block;max-height:70vh;max-width:100%;margin:0 auto;background:#000;border-radius:12px"></video>
+        <div class="row" style="margin-top:12px"><span class="small muted grow" id="filmInfo"></span><a class="btn primary" id="filmDl">⬇ Tải phim về máy</a></div>
+      </div>
+    </section>
+
+    <section class="card" id="batchCard">
+      <div class="head"><h2>▤ Tạo hàng loạt</h2><span class="grow"></span><span class="hint">Mỗi dòng = 1 prompt · tối đa 500 · dùng chung cài đặt + ảnh mẫu ở trên</span></div>
+      <textarea id="batchPrompts" rows="7" placeholder="Mỗi dòng một prompt.&#10;Hoặc dán kịch bản CANH: / THOAI: (từ Xưởng Kịch bản AI → Phim dài tập) — mỗi cảnh thành 1 prompt, lời thoại được ghép vào."></textarea>
+      <div class="ctrls">
+        <span class="small muted" id="batchCount">0 prompt</span>
+        <label class="btn">📄 Nạp file .txt / .xlsx<input type="file" id="batchFile" accept=".txt,.csv,.xlsx,.docx" hidden></label>
+        <select id="concSel"><option value="1">1 tác vụ mỗi lần</option><option value="2">2 tác vụ song song</option></select>
+        <span class="grow"></span>
+        <button class="btn primary" id="batchBtn">▶ Chạy hàng loạt</button>
+      </div>
+      <div id="batchList"></div>
+    </section>
+
+    <section class="card" id="libCard">
+      <div class="head"><h2>▦ Thư viện</h2><span class="small muted" id="libCount"></span><span class="grow"></span><button class="btn" id="pickBtn" type="button">☑ Chọn video để ghép</button><button class="btn hidden" id="pickClear" type="button">Bỏ chọn</button><button class="btn primary hidden" id="pickGo" type="button">🎬 Ghép</button><button class="btn" id="libRefresh">↻ Làm mới</button></div>
+      <div class="small muted hidden" id="pickHint" style="margin:-4px 0 10px">Bấm lần lượt các video theo đúng thứ tự cảnh (số trên góc là thứ tự trong phim), rồi bấm <b>🎬 Ghép</b>.</div>
+      <div class="grid" id="libGrid"></div>
+    </section>
+  </main>
+
+  <aside class="card queue-col">
+    <div class="head" style="margin-bottom:0"><h2>⚡ Hàng đợi render</h2><span class="grow"></span><span class="chip run" id="qActive">0 đang chạy</span></div>
+    <div id="queue"></div>
+  </aside>
+</div>
+<div class="toasts" id="toasts"></div>

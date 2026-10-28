@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="vi" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Muse Studio · <%= siteName %></title>
+<link rel="icon" href="<%= siteLogo %>">
+<link rel="stylesheet" href="/css/muse-studio.css?v=<%= assetV %>">
+</head>
+<body>
+<%- include('partials/muse-body') %>
+<script type="application/json" id="museCfg"><%- JSON.stringify(cfg).replace(/</g, String.fromCharCode(92) + 'u003c') %></script>
+<script src="/js/muse-studio.js?v=<%= assetV %>"></script>
+</body>
+</html>

@@ -87,6 +87,8 @@ const MIGRATIONS = [
   { table: 'courses', column: 'price', mysql: 'INT UNSIGNED NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0' },
   // Số lượt viết Xưởng Kịch bản AI riêng cho từng học viên mỗi tháng (NULL = dùng mức chung trong cài đặt).
   { table: 'users', column: 'studio_quota', mysql: 'INT NULL DEFAULT NULL', sqlite: 'INTEGER' },
+  // Muse Studio (tạo video bằng bộ chạy Muse2API trên máy học viên): quản trị bật/tắt cho từng học viên.
+  { table: 'users', column: 'muse_enabled', mysql: 'TINYINT(1) NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0' },
   {
     table: 'courses', column: 'position', mysql: 'INT NOT NULL DEFAULT 0', sqlite: 'INTEGER NOT NULL DEFAULT 0',
     // Đánh số theo đúng thứ tự trang chủ đang hiển thị để không ai thấy khác đi sau khi cập nhật.
