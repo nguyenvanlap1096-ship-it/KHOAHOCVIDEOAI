@@ -33,6 +33,7 @@
       <div class="nav-label">Viết</div>
       <button class="nav-btn" data-view="video"><svg><use href="#i-video"/></svg>Kịch bản video</button>
       <button class="nav-btn" data-view="image"><svg><use href="#i-image"/></svg>Kịch bản ảnh</button>
+      <button class="nav-btn" data-view="series"><svg><use href="#i-video"/></svg>Phim dài tập</button>
     </nav>
     <nav class="nav-group" aria-label="Lưu trữ">
       <div class="nav-label">Lưu trữ</div>
@@ -115,6 +116,58 @@
     </section>
     <% }) %>
 
+    <section class="view" id="view-series" hidden>
+      <div class="studio">
+        <form class="controls" id="sForm" autocomplete="off">
+          <div class="controls-scroll">
+            <p class="hint">Phim nhiều tập: lên dàn ý cả bộ với nhân vật cố định, rồi viết từng tập ra đúng mẫu CANH / THOAI (mỗi cảnh 10 giây) để dán vào Muse Studio — Làm phim 1-click.</p>
+            <div class="field" id="sProjects" hidden>
+              <label class="field-label" for="sProject">Bộ phim của bạn</label>
+              <select class="select" id="sProject"></select>
+              <div class="row"><button type="button" class="btn sm danger" id="sDel">Xoá bộ này</button></div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="sGenre">Thể loại</label>
+              <select class="select" id="sGenre"></select>
+              <div class="hint" id="sGenreHint"></div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="sLook">Kiểu hình ảnh</label>
+              <select class="select" id="sLook"></select>
+              <div class="hint" id="sLookHint"></div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="sIdea">Ý tưởng cốt truyện</label>
+              <textarea class="textarea" id="sIdea" placeholder="Ví dụ: Cô con dâu nghèo bị nhà chồng giàu coi thường, không ai biết cô là con gái chủ tập đoàn. Mỗi tập một lần bị làm khó và một lần lật ngược."></textarea>
+            </div>
+            <div class="field">
+              <label class="field-label" for="sCast">Dàn nhân vật <span class="opt">không bắt buộc</span></label>
+              <textarea class="textarea" id="sCast" placeholder="Mỗi dòng 1 nhân vật, ví dụ:&#10;Chị Hạnh - con dâu 28 tuổi, hiền, áo len vàng&#10;Bà Liên - mẹ chồng 60 tuổi, khó tính"></textarea>
+            </div>
+            <div class="field"><div class="field-label">Số tập</div><div class="seg" id="sEps"></div></div>
+            <div class="field"><div class="field-label">Mỗi tập (mỗi cảnh 10 giây)</div><div class="seg" id="sScenes"></div></div>
+            <details class="paste-box" id="sPasteBox">
+              <summary id="sPasteLabel">Đã nhờ Gemini / ChatGPT viết? Dán kết quả vào đây</summary>
+              <textarea class="textarea" id="sPaste" placeholder="Dán nguyên câu trả lời (khối JSON)"></textarea>
+              <button type="button" class="btn primary" id="sPasteGo">Đọc kết quả</button>
+            </details>
+          </div>
+          <div class="controls-foot">
+            <button type="submit" class="btn-go" id="sGo"><svg><use href="#i-spark"/></svg><span>Lên dàn ý cả bộ</span></button>
+            <div class="kbd" id="sKbd"></div>
+            <div class="alt">Cách khác: <button type="button" class="linkbtn" data-sask="gemini">nhờ Gemini lên dàn ý</button> · <button type="button" class="linkbtn" data-sask="chatgpt">nhờ ChatGPT lên dàn ý</button></div>
+          </div>
+        </form>
+        <div class="stage">
+          <div class="stage-head">
+            <span class="row grow"><b>Kết quả</b><span id="sSummary">chưa có</span></span>
+            <span class="row"><button class="btn sm" id="sAll" type="button" disabled><svg><use href="#i-down"/></svg>Tải cả bộ .txt</button></span>
+          </div>
+          <div class="feed" id="sOut"></div>
+        </div>
+      </div>
+    </section>
+
     <section class="view" id="view-saved" hidden>
       <div class="view-head"><div><h2 class="view-title">Đã lưu</h2><p class="view-desc">Mọi kịch bản bạn đã viết, lưu ngay trên trình duyệt của máy này (tối đa 60 bản gần nhất).</p></div></div>
       <div class="grid-wrap"><div class="saved-list" id="savedList"></div></div>
@@ -149,6 +202,8 @@
 <script type="application/json" id="studioBoot"><%- JSON.stringify(boot).replace(/</g, String.fromCharCode(92) + 'u003c') %></script>
 <script src="/js/studio-scripts.js?v=<%= assetV %>"></script>
 <script src="/js/studio-quick.js?v=<%= assetV %>"></script>
+<script src="/js/studio-series.js?v=<%= assetV %>"></script>
 <script src="/js/studio.js?v=<%= assetV %>"></script>
+<script src="/js/studio-series-ui.js?v=<%= assetV %>"></script>
 </body>
 </html>

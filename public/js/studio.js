@@ -49,9 +49,9 @@ const LS = { get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JS
 
 /* ---------------- cấu hình ---------------- */
 const BOOT = (() => { try{ return JSON.parse($("#studioBoot").textContent); }catch{ return {}; } })();
-const HOUSE = BOOT.house || { enabled:false, features:["video","image"] };
-const FEAT = Array.isArray(HOUSE.features) ? HOUSE.features : ["video","image"];
-const featOn = v => !["video","image"].includes(v) || FEAT.includes(v);
+const HOUSE = BOOT.house || { enabled:false, features:["video","image","series"] };
+const FEAT = Array.isArray(HOUSE.features) ? HOUSE.features : ["video","image","series"];
+const featOn = v => !["video","image","series"].includes(v) || FEAT.includes(v);
 const keys = Object.assign({ g:"" }, LS.get("xks.keys", {}));
 const saveKeys = () => LS.set("xks.keys", keys);
 const useHouse = () => HOUSE.enabled && !keys.g;
@@ -400,6 +400,9 @@ function show(view){
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-view]"); if (b) show(b.dataset.view); });
 
+// Phần Phim dài tập (studio-series-ui.js) dùng lại các tiện ích và cách gọi AI ở trên.
+window.XKS = { $, $$, h, icon, toast, download, slug, fmtDate, tc, copyText, openTab, LS, UErr, copyBtn, autoSize, autoSizeAll, houseWrite, googleWrite, useHouse, aiReady, ASK_URL };
+
 /* ---------------- sáng / tối ---------------- */
 function applyTheme(t){
   document.documentElement.dataset.theme = t;
@@ -417,7 +420,7 @@ document.addEventListener("click", e => { if (e.target.closest("#themeBtn")) app
   if (BOOT.user && BOOT.user.admin && HOUSE.open === false) toast("Xưởng đang ĐÓNG với học viên — chỉ quản trị thấy trang này.", true);
   else if (BOOT.user && BOOT.user.admin && HOUSE.offFeatures && HOUSE.offFeatures.length) toast("Đang tắt với học viên: " + HOUSE.offFeatures.join(", ") + ".");
   let v = "video"; try{ v = localStorage.getItem("xks.view") || "video"; }catch{}
-  if (!["video","image","saved","settings"].includes(v)) v = "video";
-  if (!featOn(v)) v = ["video","image"].find(featOn) || "saved";
+  if (!["video","image","series","saved","settings"].includes(v)) v = "video";
+  if (!featOn(v)) v = ["video","image","series"].find(featOn) || "saved";
   show(v);
 })();

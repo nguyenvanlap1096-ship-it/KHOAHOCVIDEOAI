@@ -6,6 +6,7 @@ const { requireAuth } = require('../middleware/auth');
 const { getSettings } = require('../services/settings');
 const studio = require('../services/studio');
 const scripts = require('../../public/js/studio-scripts');
+const series = require('../../public/js/studio-series');
 
 const page = express.Router();
 const api = express.Router();
@@ -72,11 +73,11 @@ api.post('/script', acceptRefs, async (req, res) => {
   const b = req.body || {};
   let refs;
   try { refs = readRefs(req.files); } catch (err) { return res.status(err.status || 400).json({ error: err.message }); }
-  const kind = b.kind === 'image' ? 'image' : 'video';
+  const kind = ['image', 'series'].includes(b.kind) ? b.kind : 'video';
   const cfg = studio.studioConfig(await getSettings());
   const have = studio.featuresFor(req.user, cfg);
   if (!have.length) return res.status(403).json({ error: 'Xưởng Kịch bản AI đang tạm đóng.' });
-  if (!have.includes(kind)) return res.status(403).json({ error: kind === 'image' ? 'Kịch bản ảnh đang tạm tắt.' : 'Kịch bản video đang tạm tắt.' });
+  if (!have.includes(kind)) return res.status(403).json({ error: kind === 'image' ? 'Kịch bản ảnh đang tạm tắt.' : kind === 'series' ? 'Phim dài tập đang tạm tắt.' : 'Kịch bản video đang tạm tắt.' });
   const q = await studio.quotaFor(req.user, cfg);
   if (!q.allowed) {
     const msg = q.reason === 'paid' ? 'AI viết kịch bản dành cho học viên khoá chuyên sâu. Bạn vẫn dùng được nút "Nhờ Gemini/ChatGPT viết".'
@@ -89,13 +90,17 @@ api.post('/script', acceptRefs, async (req, res) => {
   }
   const idea = String(b.idea || '').trim().slice(0, 3000);
   const hasRef = refs.images.length + refs.videos.length > 0;
-  if (idea.length < 5 && !hasRef) return res.status(400).json({ error: 'Hãy viết ý tưởng (ít nhất vài chữ) hoặc tải ảnh/video tham chiếu.' });
+  // Phim dài tập: bước "bible" lên dàn ý cả bộ từ ý tưởng; bước "episode" viết một tập từ dàn ý học viên gửi lên.
+  let seriesJob = null;
+  if (kind === 'series') {
+    try { seriesJob = readSeries(b, idea); } catch (err) { return res.status(400).json({ error: err.message }); }
+  } else if (idea.length < 5 && !hasRef) return res.status(400).json({ error: 'Hãy viết ý tưởng (ít nhất vài chữ) hoặc tải ảnh/video tham chiếu.' });
   const common = {
     industry: b.industry, purpose: b.purpose, target: b.target, idea,
     ref: hasRef ? { video: refs.videos.length > 0, images: refs.images.length, mode: b.refMode === 'inspire' ? 'inspire' : 'copy' } : null,
     brand: String(b.brand || '').trim().slice(0, 120), style: String(b.style || '').trim().slice(0, 300),
   };
-  const brief = kind === 'image'
+  const brief = seriesJob ? seriesJob.brief : kind === 'image'
     ? scripts.buildImageBrief({ ...common, count: b.count, ratio: b.ratio })
     : scripts.buildBrief({ ...common, voice: b.voice, scenes: b.scenes, dur: b.dur, ratio: ['16:9', '9:16', '1:1'].includes(b.ratio) ? b.ratio : '16:9' });
 
@@ -105,11 +110,11 @@ api.post('/script', acceptRefs, async (req, res) => {
 
   const { insertId } = await db.run(
     'INSERT INTO studio_jobs (user_id, model_key, kind, points, status) VALUES (?, ?, ?, ?, ?)',
-    [req.user.id, String(brief.target.key), kind, 1, 'processing'],
+    [req.user.id, seriesJob ? 'series-' + seriesJob.step : String(brief.target.key), kind, 1, 'processing'],
   );
   try {
     const text = await studio.runText(cfg, brief.system, brief.user, [...refs.videos, ...refs.images]);
-    const result = kind === 'image' ? scripts.parseImageSet(text) : scripts.parseScript(text);
+    const result = seriesJob ? seriesJob.parse(text) : kind === 'image' ? scripts.parseImageSet(text) : scripts.parseScript(text);
     await db.run("UPDATE studio_jobs SET status = 'completed' WHERE id = ?", [insertId]);
     res.json({ result, used: await studio.usedPoints(req.user.id) });
   } catch (err) {
@@ -118,6 +123,21 @@ api.post('/script', acceptRefs, async (req, res) => {
     res.status(err.status && err.status >= 400 && err.status < 600 ? err.status : 502).json({ error: err.message });
   }
 });
+
+function readSeries(b, idea) {
+  const o = { genre: b.genre, look: b.look, episodes: b.episodes, scenes: b.scenes, idea, cast: String(b.cast || '').trim().slice(0, 1500) };
+  if (b.step !== 'episode') {
+    if (idea.length < 5) throw new Error('Hãy viết ý tưởng cốt truyện (ít nhất vài chữ).');
+    return { step: 'bible', brief: series.buildBibleBrief(o), parse: text => series.parseBible(text, o) };
+  }
+  if (!b.bible || typeof b.bible !== 'object' || JSON.stringify(b.bible).length > 60000) throw new Error('Thiếu dàn ý cả bộ. Bấm "Lên dàn ý" trước.');
+  const bible = series.normBible(b.bible, o);
+  const n = Math.trunc(Number(b.n));
+  if (!(n >= 1 && n <= bible.episodes.length)) throw new Error('Số tập không hợp lệ.');
+  let prev = null;
+  if (b.prev && typeof b.prev === 'object' && JSON.stringify(b.prev).length < 40000) { try { prev = series.normEpisode(b.prev, bible, n - 1); } catch { prev = null; } }
+  return { step: 'episode', brief: series.buildEpisodeBrief(o, bible, n, prev), parse: text => series.parseEpisode(text, bible, n) };
+}
 
 api.get('/me', async (req, res) => {
   res.json(await studio.houseInfo(req.user));

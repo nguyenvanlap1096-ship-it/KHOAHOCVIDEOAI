@@ -11,6 +11,7 @@ const DEFAULT_GOOGLE_MODEL = 'gemini-3.5-flash';
 const FEATURES = [
   { key: 'video', label: 'Kịch bản video' },
   { key: 'image', label: 'Kịch bản ảnh' },
+  { key: 'series', label: 'Phim dài tập' },
 ];
 
 function studioConfig(s) {
