@@ -72,10 +72,21 @@ async function connect(){
     $("svcDot").className = "dot bad"; $("svcText").textContent = "Mất kết nối dịch vụ";
     $("connectBox").classList.remove("hidden"); $("app").classList.add("hidden");
     $("keyErr").textContent = /API key|401|unauthori/i.test(e.message) ? "API key không đúng. Dán lại key (phần sau MUSE2API_KEY= trong file .env)." : e.message;
+    webHint();
     retryLater();
     return false;
   }
 }
+// Bản web: Chrome hỏi quyền "truy cập mạng cục bộ" trước khi cho trang web gọi bộ chạy trên máy.
+// Nếu quyền đã bị chặn, hiện cách bật lại + nút mở bản trên máy (cùng tính năng, không cần quyền này).
+async function webHint(){
+  if (!WEB || !$("lnaHint")) return;
+  $("openLocal").href = BASE + "/batch" + (KEY ? "?key=" + encodeURIComponent(KEY) : "");
+  let st = "";
+  try{ st = (await navigator.permissions.query({ name: "local-network-access" })).state; }catch{}
+  $("lnaHint").classList.toggle("hidden", st !== "denied");
+}
+webHint();
 // Đang ở màn hình kết nối: tự thử lại mỗi 5 giây — học viên vừa mở bộ chạy là trang tự vào, không cần bấm gì.
 let retryTimer = null;
 function retryLater(){

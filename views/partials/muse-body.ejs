@@ -13,6 +13,10 @@
   <input type="password" id="keyInput" placeholder="API key">
   <button class="btn primary" id="keyBtn">Kết nối</button>
   <div class="err" id="keyErr"></div>
+  <div class="only-web hidden small" id="lnaHint" style="background:#fff3e0;color:#5a3a00;border-radius:10px;padding:10px 12px">
+    <b>Chrome đang chặn trang này kết nối tới bộ chạy trên máy bạn.</b> Bấm biểu tượng bên trái thanh địa chỉ → <b>Cài đặt trang web</b> → mục <b>Truy cập mạng cục bộ</b> (Local network access) → <b>Cho phép</b> → tải lại trang (F5). Hoặc bấm nút dưới để dùng bản trên máy — cùng giao diện, cùng tính năng.
+  </div>
+  <a class="btn only-web" id="openLocal" href="http://127.0.0.1:18610/batch" target="_blank" rel="noopener">🖥 Mở bản trên máy (dùng khi web không kết nối được)</a>
   <details class="only-web small muted">
     <summary>Nâng cao: địa chỉ bộ chạy</summary>
     <div class="row" style="margin-top:8px"><input type="text" id="baseInput" placeholder="http://127.0.0.1:18610" class="grow"><button class="btn" id="baseSave" type="button">Lưu</button></div>
