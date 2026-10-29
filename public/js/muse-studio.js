@@ -772,11 +772,18 @@ async function init(){
   const keep = () => LS.set("muse_film_form", JSON.stringify(form()));
   ["fIdea","fCast","fStyle","fScenes","fTalk"].forEach(id => $(id).addEventListener("change", keep));
   const ai = CFG.ai || null;
-  $("fAiNote").textContent = ai ? (ai.unlimited ? "AI miễn phí của khoá học viết (quản trị: không giới hạn)." : "AI miễn phí của khoá học viết — còn " + ai.left + " lượt tháng này (dùng chung với Xưởng Kịch bản AI).")
-    : WEB ? "AI của khoá học chưa bật cho bạn → dùng Trình viết nhanh (khung mẫu), hoặc nhờ Gemini/ChatGPT viết bên dưới để có kịch bản chi tiết."
-    : "Bản trên máy: dùng Trình viết nhanh (khung mẫu), hoặc nhờ Gemini/ChatGPT viết bên dưới để có kịch bản chi tiết.";
+  $("fAiNote").textContent = "Viết bằng Chat Muse (tài khoản muse của bạn, khoảng 30–60 giây)." + (ai ? " Muse bận thì tự chuyển sang AI miễn phí của khoá học" + (ai.unlimited ? "" : " (còn " + ai.left + " lượt)") + "." : "") + " Có kịch bản viết sẵn ở ngoài? Mở mục bên dưới và dán vào.";
   let film = (() => { try{ return JSON.parse(LS.get("muse_film_last") || "null"); }catch{ return null; } })();
 
+  // Chat Muse (model muse-spark) qua bộ chạy Muse2API trên máy — dùng tài khoản muse của học viên.
+  async function viaMuse(o){
+    const br = F.buildBrief(o);
+    const d = await api("/v1/chat/completions", { method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ model:"muse-spark", stream:false, messages:[{ role:"system", content:br.system }, { role:"user", content:br.user }] }) });
+    const text = d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
+    if (!text) throw new Error("Chat Muse không trả lời.");
+    return Object.assign(F.parse(text, o), { by:"muse" });
+  }
   async function viaAI(o){
     const r = await fetch("/muse/api/script", { method:"POST", credentials:"same-origin", headers:{ "Content-Type":"application/json", "X-CSRF-Token": CFG.csrf || "" }, body: JSON.stringify(o) });
     let d = {}; try{ d = await r.json(); }catch{}
@@ -787,12 +794,16 @@ async function init(){
   $("fGo").onclick = async () => {
     const o = form(); keep();
     if (o.idea.length < 5){ toast("Hãy viết ý tưởng phim trước (ít nhất vài chữ).", true); $("fIdea").focus(); return; }
-    const b = $("fGo"); b.disabled = true; b.textContent = "AI đang viết…";
+    const b = $("fGo"); b.disabled = true;
+    const t0 = Date.now(), tick = setInterval(() => { b.textContent = "Muse đang viết… " + Math.round((Date.now() - t0) / 1000) + "s"; }, 1000);
     try{
-      if (WEB && ai){ film = await viaAI(o); toast("Đã viết xong kịch bản " + film.scenes.length + " cảnh."); }
-      else { film = F.quick(o); toast("Đã dựng khung kịch bản bằng Trình viết nhanh. Muốn chi tiết hơn: nhờ Gemini/ChatGPT viết.", false); }
+      try{ film = await viaMuse(o); toast("Chat Muse đã viết xong kịch bản " + film.scenes.length + " cảnh."); }
+      catch(e1){
+        if (WEB && ai){ b.textContent = "AI khoá học đang viết…"; film = Object.assign(await viaAI(o), { by:"ai" }); toast("Muse bận (" + e1.message + ") — AI của khoá học đã viết xong."); }
+        else throw e1;
+      }
     }catch(e){ film = F.quick(o); toast((e.message || "AI đang bận.") + " Đã dùng Trình viết nhanh để bạn có ngay khung kịch bản.", true); }
-    finally{ b.disabled = false; b.textContent = "✨ Viết kịch bản"; }
+    finally{ clearInterval(tick); b.disabled = false; b.textContent = "✨ Viết kịch bản"; }
     LS.set("muse_film_last", JSON.stringify(film)); render();
   };
   document.querySelectorAll("[data-fask]").forEach(btn => btn.onclick = async () => {
@@ -804,6 +815,16 @@ async function init(){
     toast(ok ? "Đã sao chép lệnh. Dán vào " + (btn.dataset.fask === "gemini" ? "Gemini" : "ChatGPT") + ", gửi đi, rồi sao chép câu trả lời dán vào ô bên dưới." : "Không tự sao chép được — thử lại bằng Chrome.", !ok);
   });
   $("fPasteGo").onclick = () => {
+    const txt = $("fPaste").value;
+    // Kịch bản CANH/THOAI lấy ở ngoài (vd Xưởng Kịch bản → Phim dài tập): đưa thẳng vào Hàng loạt nối cảnh.
+    if (/^\s*CANH\s*:/im.test(txt) && !/^\s*\{/.test(txt.trim())){
+      $("batchPrompts").value = txt.trim(); $("batchPrompts").dispatchEvent(new Event("input"));
+      $("chainMode").checked = true; $("chainMode").dispatchEvent(new Event("change"));
+      document.querySelector('#kindSeg [data-kind=video]').click(); $("fPaste").value = "";
+      $("batchCard").scrollIntoView({ behavior:"smooth", block:"start" });
+      toast("Đã đưa kịch bản CANH/THOAI vào Hàng loạt và bật Nối cảnh liền mạch. Nhớ điền 🎙 Giọng nhân vật rồi bấm ▶ Chạy hàng loạt.");
+      return;
+    }
     try{ film = F.parse($("fPaste").value, form()); $("fPaste").value = ""; LS.set("muse_film_last", JSON.stringify(film)); render(); toast("Đã đọc kịch bản " + film.scenes.length + " cảnh."); }
     catch(e){ toast(e.message, true); }
   };
@@ -813,7 +834,7 @@ async function init(){
     if (!film) return;
     const sheet = F.castSheet(film), voice = F.voiceNote(film);
     const box = document.createElement("div"); box.className = "batch";
-    box.innerHTML = `<div class="row"><b>🎬 ${esc(film.title || "Phim")}</b>${film.quick ? '<span class="chip wait">Trình viết nhanh</span>' : '<span class="chip done">AI viết</span>'}<span class="grow"></span><span class="small muted">${film.scenes.length} cảnh · ${film.scenes.length * 10} giây</span></div>
+    box.innerHTML = `<div class="row"><b>🎬 ${esc(film.title || "Phim")}</b>${film.quick ? '<span class="chip wait">Trình viết nhanh</span>' : film.by === "muse" ? '<span class="chip done">Chat Muse viết</span>' : film.by === "ai" ? '<span class="chip done">AI khoá học viết</span>' : '<span class="chip done">Dán từ ngoài</span>'}<span class="grow"></span><span class="small muted">${film.scenes.length} cảnh · ${film.scenes.length * 10} giây</span></div>
       ${film.logline_vi ? `<div class="small muted" style="margin-top:6px">${esc(film.logline_vi)}</div>` : ""}
       <div class="small" style="margin-top:10px"><b>Nhân vật & giọng (giữ nguyên mọi cảnh):</b></div>
       ${film.characters.map(c => `<div class="small" style="margin-top:4px">👤 <b>${esc(c.name)}</b> — ${esc(c.look_en)}<br><span class="muted">🎙 ${esc(c.voice_en)}</span></div>`).join("")}
