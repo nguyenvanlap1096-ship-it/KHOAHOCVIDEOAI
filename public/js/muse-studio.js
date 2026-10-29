@@ -249,7 +249,7 @@ function withVoice(p){
   const low = String(p).toLowerCase();
   const named = all.filter(l => { const nm = l.split(":")[0].trim().toLowerCase(); return nm && low.includes(nm); });
   const v = named.length ? named : all.length === 1 ? all : [];
-  return v.length ? p + " Voice casting — every character keeps exactly the same voice in every scene, never change it: " + v.join("; ") + "." : p;
+  return v.length ? p + " Voices, identical in every scene: " + v.join("; ") + "." : p;
 }
 function commonBody(){
   const mode = $("modeSel").value;
@@ -632,7 +632,7 @@ async function runChain(prompts, resume){
     if (urls.length){ mark(i, "running", ' <span class="small muted">đang lấy khung cuối của cảnh trước…</span>'); frame = await lastFrame(urls[urls.length - 1]); }
     for (; i < prompts.length; i++){
       tabTitle("⏳ Cảnh " + (i + 1) + "/" + prompts.length);
-      const prompt = (frame ? "Continue seamlessly from the first-frame reference image, which is the exact last frame of the previous shot: the same character, same place, same lighting and the same camera position at the very start, then: " : "") + withVoice(prompts[i]) + (note ? " " + note : "");
+      const prompt = (frame ? "Continue seamlessly from the first-frame image (the exact last frame of the previous shot), same place, light and camera. " : "") + withVoice(prompts[i]) + (note ? " " + note : "");
       let url = null;
       for (let attempt = 1; attempt <= 3 && !url; attempt++){
         mark(i, "running", attempt > 1 ? ` <span class="small muted">thử lại lần ${attempt}</span>` : "");

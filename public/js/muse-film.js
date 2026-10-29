@@ -69,7 +69,7 @@ QUY TẮC BẮT BUỘC:
   // chỉ gắn nhân vật có mặt trong cảnh. Ngân sách tính cả lời thoại (giọng do Studio gắn thêm sau).
   const words = (t, n) => { const w = s(t).split(" "); return w.length > n ? w.slice(0, n).join(" ").replace(/[,;:]$/, "") + "…" : s(t); };
   const end = t => s(t).replace(/[.…]?$/, ".");
-  const BUDGET = 950;
+  const BUDGET = 900;
   function inScene(film, c) {
     const txt = [c.start_en, c.action_en, c.end_en, ...c.dialogue.map(d => d.speaker)].join(" ").toLowerCase();
     const hit = film.characters.filter(x => txt.includes(x.name.toLowerCase()));
@@ -78,8 +78,8 @@ QUY TẮC BẮT BUỘC:
   function scenePrompt(film, c, total) {
     const styleShort = s(film.style_en).split(",").slice(0, 3).join(",");
     const lines = c.dialogue.map(d => d.speaker + ": " + d.text_vi).join(" ");
-    // các mức rút gọn: [ngoại hình, bối cảnh, khung đầu, phong cách đủ?, âm thanh]
-    const levels = [[34, 30, 28, true, 16], [28, 22, 22, false, 12], [22, 16, 16, false, 10], [16, 12, 12, false, 0], [12, 0, 10, false, 0]];
+    // các mức rút gọn: [ngoại hình, bối cảnh, khung đầu, phong cách đủ?, âm thanh] — ngoại hình giữ lâu nhất (nét nhận diện).
+    const levels = [[34, 24, 24, true, 14], [30, 16, 18, false, 10], [28, 10, 14, false, 0], [26, 0, 10, false, 0], [20, 0, 0, false, 0]];
     let out = "";
     for (const [lk, st, op, fullStyle, snd] of levels) {
       const cast = inScene(film, c).map(x => x.name + " (" + words(x.look_en, lk) + ")").join("; ");
@@ -88,7 +88,7 @@ QUY TẮC BẮT BUỘC:
         st && film.setting_en && "Setting: " + end(words(film.setting_en, st)),
         "Characters, same look in every scene: " + end(cast),
         "Scene " + c.n + "/" + total + ", one continuous 10-second shot, no cuts.",
-        c.start_en && "Opens on: " + end(words(c.start_en, op)),
+        c.n === 1 && op && c.start_en && "Opens on: " + end(words(c.start_en, op)),
         "Action: " + end(c.action_en),
         c.mood_en && "Mood: " + end(words(c.mood_en, 10)),
         c.end_en && "Ends exactly on: " + end(words(c.end_en, 30)),
