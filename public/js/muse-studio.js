@@ -210,6 +210,28 @@ function getSeqId(){
   return seqId;
 }
 $("newSeqBtn").onclick = () => { LS.del("studio_seq_" + ($("accountSel").value || "auto")); seqId = null; toast("Đã bắt đầu chuỗi mới — cảnh tiếp theo sẽ mở hội thoại mới"); };
+/* ---------- giọng nhân vật: mô tả cố định gắn vào mọi cảnh để muse.ai không đổi giọng giữa các cảnh ---------- */
+const VOICES = [
+  ["Bé trai tinh nghịch", "a bright, high-pitched, playful 7-year-old boy's voice, slightly squeaky, fast and cheerful"],
+  ["Bé gái dễ thương", "a sweet, high, clear 6-year-old girl's voice, soft and giggly"],
+  ["Nam thanh niên", "a warm, clear 25-year-old Vietnamese man's voice, medium pitch, friendly"],
+  ["Nữ thanh niên", "a gentle, bright 23-year-old Vietnamese woman's voice, medium-high pitch, warm"],
+  ["Ông cụ", "a deep, slow, slightly raspy 70-year-old man's voice, kind and calm"],
+  ["Bà cụ", "a soft, slow, slightly shaky 70-year-old woman's voice, loving"],
+  ["Người kể chuyện", "a calm, deep, warm storyteller voice, slow and expressive"],
+];
+VOICES.forEach(([label, desc]) => {
+  const b = document.createElement("button"); b.type = "button"; b.className = "btn"; b.style.cssText = "padding:5px 10px;font-size:12.5px"; b.textContent = "＋ " + label;
+  b.onclick = () => { const ta = $("voiceNote"); ta.value = (ta.value.trim() ? ta.value.trim() + "\n" : "") + "Tên nhân vật: " + desc; ta.dispatchEvent(new Event("input")); ta.focus(); };
+  $("voicePresets").append(b);
+});
+$("voiceNote").value = LS.get("muse_voice") || "";
+const syncVoice = () => { LS.set("muse_voice", $("voiceNote").value); $("voiceOn").classList.toggle("hidden", !$("voiceNote").value.trim()); };
+$("voiceNote").addEventListener("input", syncVoice); syncVoice();
+function withVoice(p){
+  const v = $("voiceNote").value.split("\n").map(s => s.trim()).filter(s => s && !/^Tên nhân vật:/i.test(s));
+  return v.length ? p + " Voice casting — every character keeps exactly the same voice in every scene, never change it: " + v.join("; ") + "." : p;
+}
 function commonBody(){
   const mode = $("modeSel").value;
   return { account_id: $("accountSel").value || null, size: $("sizeSel").value, generation_mode: mode,
@@ -294,7 +316,7 @@ async function loadServerTasks(){
 async function generate(){
   const prompt = $("prompt").value.trim();
   if (!prompt){ toast("Hãy nhập mô tả trước", true); $("prompt").focus(); return; }
-  const body = { prompt, ...commonBody(), sequence_id: $("modeSel").value === "coherent" ? getSeqId() : null };
+  const body = { prompt: withVoice(prompt), ...commonBody(), sequence_id: $("modeSel").value === "coherent" ? getSeqId() : null };
   if (kind === "video") body.duration = Number($("durSel").value);
   const b = $("genBtn"); b.disabled = true; b.textContent = "Đang gửi…";
   try{
@@ -503,7 +525,7 @@ async function runChain(prompts){
   const urls = []; let frame = null;
   try{
     for (let i = 0; i < prompts.length; i++){
-      const prompt = (frame ? "Continue seamlessly from the first-frame reference image, which is the exact last frame of the previous shot: the same character, same place, same lighting and the same camera position at the very start, then: " : "") + prompts[i] + (note ? " " + note : "");
+      const prompt = (frame ? "Continue seamlessly from the first-frame reference image, which is the exact last frame of the previous shot: the same character, same place, same lighting and the same camera position at the very start, then: " : "") + withVoice(prompts[i]) + (note ? " " + note : "");
       let url = null;
       for (let attempt = 1; attempt <= 3 && !url; attempt++){
         mark(i, "running", attempt > 1 ? ` <span class="small muted">thử lại lần ${attempt}</span>` : "");
@@ -534,12 +556,12 @@ async function startBatch(){
   const prompts = batchParts();
   if (!prompts.length){ toast("Chưa có prompt nào trong danh sách", true); return; }
   if ($("chainMode").checked) return runChain(prompts);
-  const body = { prompts, kind, duration: Number($("durSel").value), concurrency: Number($("concSel").value), ...commonBody() };
+  const body = { prompts: prompts.map(withVoice), kind, duration: Number($("durSel").value), concurrency: Number($("concSel").value), ...commonBody() };
   // Lõi Muse2API 1.6.8: lô "Chuỗi đồng bộ" trả lại cùng một video cũ cho các cảnh sau (đã thử thật 28/10/2026).
   // Nên lô luôn chạy Độc lập; ghi chú nhân vật được ghép vào từng cảnh để vẫn giữ nhân vật (cùng ảnh tham chiếu).
   if (body.generation_mode === "coherent"){
     const note = String(body.continuity_notes || "").trim();
-    if (note) body.prompts = prompts.map(p => p + " " + note);
+    if (note) body.prompts = body.prompts.map(p => p + " " + note);
     body.generation_mode = "independent"; body.continuity_notes = "";
     toast("Hàng loạt chạy chế độ Độc lập (chế độ Chuỗi đồng bộ của Muse2API bị lặp video khi chạy lô). Ghi chú nhân vật đã được ghép vào từng cảnh.");
   }

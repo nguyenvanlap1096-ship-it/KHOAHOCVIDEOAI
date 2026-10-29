@@ -90,6 +90,12 @@
         <textarea id="continuity" rows="2" placeholder="Ghi chú giữ nhất quán (nhân vật, trang phục, bối cảnh) cho cả chuỗi"></textarea>
         <div class="row" style="margin-top:6px"><span class="small muted grow">Các cảnh tạo liên tiếp sẽ dùng chung một hội thoại để giữ nhân vật.</span><button class="btn" id="newSeqBtn">Bắt đầu chuỗi mới</button></div>
       </div>
+      <details id="voiceBox">
+        <summary>🎙 Giọng nhân vật — giữ giọng giống nhau ở mọi cảnh <span id="voiceOn" class="chip done hidden">đang dùng</span></summary>
+        <div class="small muted" style="margin-top:8px">Mỗi dòng một nhân vật: <b>Tên: mô tả giọng</b>. Studio gắn y hệt mô tả này vào mọi cảnh (tạo lẻ, hàng loạt, nối cảnh) để muse.ai giữ đúng giọng. Bấm giọng mẫu để chèn nhanh rồi sửa tên.</div>
+        <div class="row" style="margin-top:8px" id="voicePresets"></div>
+        <textarea id="voiceNote" rows="2" style="margin-top:8px" placeholder="Ví dụ:&#10;Sóc Nâu: a bright, high-pitched, playful 7-year-old boy's voice, slightly squeaky, fast and cheerful"></textarea>
+      </details>
       <details>
         <summary>Ảnh / tài liệu tham chiếu (tối đa 8 ảnh + 8 tài liệu, mỗi tệp 5 MB)</summary>
         <div class="row" style="margin-top:10px"><label class="btn">＋ Thêm tệp<input type="file" id="refInput" multiple accept="image/*,.pdf,.txt,.doc,.docx" hidden></label><button class="btn" id="refClear">Xoá hết</button></div>
