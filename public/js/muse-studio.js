@@ -214,6 +214,9 @@ function refsPayload(){
 
 /* ---------- ô tạo ---------- */
 for (let s = 1; s <= 10; s++){ const o = document.createElement("option"); o.value = s; o.textContent = s + " giây"; if (s === 10) o.selected = true; $("durSel").append(o); }
+// muse.ai tạo tối đa 10 giây/lần: video dài hơn được chia thành các đoạn nối liền (khung cuối → khung đầu) rồi tự ghép.
+[[15, "15 giây (tự nối 2 đoạn)"], [20, "20 giây (tự nối 2 đoạn)"], [30, "30 giây (tự nối 3 đoạn)"]].forEach(([v, l]) => { const o = document.createElement("option"); o.value = v; o.textContent = l; $("durSel").append(o); });
+const segDurs = d => { const out = []; for (let left = d; left > 0; left -= 10) out.push(Math.min(10, left)); return out; }; // 15 → [10, 5], 30 → [10, 10, 10]
 $("kindSeg").querySelectorAll("button").forEach(b => b.onclick = () => {
   kind = b.dataset.kind;
   $("kindSeg").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
@@ -346,6 +349,7 @@ async function generate(){
       && !confirm("Đang gắn ảnh NHÂN VẬT cũ vào lần tạo này.\n\nOK = vẫn dùng nhân vật đó (ví dụ vẽ nhân vật cũ ở cảnh mới).\nHuỷ = BỎ nhân vật cũ rồi tạo ảnh mới.")){
     refs = refs.filter(r => r.isDoc || r.role !== "character"); renderRefs(); toast("Đã bỏ nhân vật cũ.");
   }
+  if (kind === "video" && Number($("durSel").value) > 10) return longVideo(prompt, Number($("durSel").value));
   const body = { prompt: kind === "video" ? withVoice(prompt) : prompt, ...commonBody(), sequence_id: $("modeSel").value === "coherent" ? getSeqId() : null };
   if (kind === "video") body.duration = Number($("durSel").value);
   const b = $("genBtn"); b.disabled = true; b.textContent = "Đang gửi…";
@@ -617,7 +621,7 @@ const TITLE0 = document.title;
 const tabTitle = s => { document.title = s ? s + " · " + TITLE0 : TITLE0; };
 document.addEventListener("visibilitychange", () => { if (!document.hidden && !chainBusy && /^(✅|⚠)/.test(document.title)) setTimeout(() => tabTitle(""), 4000); });
 // resume: { urls } — các cảnh đã xong của lần chạy trước; chạy tiếp từ cảnh kế tiếp, không làm lại từ đầu.
-async function runChain(prompts, resume){
+async function runChain(prompts, resume, opt = {}){
   if (chainBusy){ toast("Đang làm một phim nối cảnh khác — đợi xong đã.", true); return; }
   if (kind !== "video"){ toast("Nối cảnh liền mạch chỉ dùng cho Video.", true); return; }
   chainBusy = true; $("batchBtn").disabled = true;
@@ -626,7 +630,7 @@ async function runChain(prompts, resume){
   const note = $("modeSel").value === "coherent" ? String($("continuity").value || "").trim() : "";
   const urls = resume ? resume.urls.slice() : [];
   const rows = prompts.map((p, i) => `<span class="muted">#${i + 1}</span><span class="p" title="${esc(p)}">${esc(p)}</span>${chip(i < urls.length ? "completed" : "queued")}`);
-  const head = "<b>🎞 Phim nối cảnh — giữ tab này mở trên màn hình cho tới khi xong</b>";
+  const head = "<b>" + (opt.label || "🎞 Phim nối cảnh") + " — giữ tab này mở trên màn hình cho tới khi xong</b>";
   const mark = (i, st, extra) => { rows[i] = rows[i].replace(/<span class="chip[^]*$/, chip(st)) + (extra || ""); chainSay([head, ...rows]); };
   chainSay([head, ...rows]);
   let frame = null, i = urls.length;
@@ -639,7 +643,7 @@ async function runChain(prompts, resume){
       for (let attempt = 1; attempt <= 3 && !url; attempt++){
         mark(i, "running", attempt > 1 ? ` <span class="small muted">thử lại lần ${attempt}</span>` : "");
         try{
-          const body = { prompt, ...commonBody(), generation_mode: "independent", continuity_notes: "", sequence_id: null, duration: Number($("durSel").value),
+          const body = { prompt, ...commonBody(), generation_mode: "independent", continuity_notes: "", sequence_id: null, duration: opt.durs ? opt.durs[i] : Math.min(10, Number($("durSel").value)),
             reference_images: frame ? [...baseImgs, frame] : baseImgs, reference_roles: frame ? [...baseRoles, "first_frame"] : baseRoles, reference_files: base.reference_files };
           const d = await api("/v1/videos", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) });
           url = await waitTask(d.id || d.task_id, prompts[i]);
@@ -651,7 +655,7 @@ async function runChain(prompts, resume){
     loadMedia();
     tabTitle("🎬 Đang ghép phim");
     toast("Đã tạo xong " + urls.length + " cảnh nối liền. Đang ghép thành phim…");
-    await makeFilm(urls, "phim-noi-canh", { fade: false, trim: 0.15 });
+    await makeFilm(urls, opt.name || "phim-noi-canh", { fade: false, trim: 0.15 });
     tabTitle("✅ Phim xong");
   }catch(e){
     tabTitle("⚠ Phim dừng ở cảnh " + (urls.length + 1));
@@ -662,9 +666,19 @@ async function runChain(prompts, resume){
     $("chainBox").classList.add("chain-stop");
     $("chainBox").scrollIntoView({ behavior:"smooth", block:"center" });
     toast("⚠ Phim nối cảnh dừng ở cảnh " + (urls.length + 1) + ". Bấm “Chạy tiếp” để làm tiếp, không phải làm lại từ đầu.", true);
-    $("chainResume").onclick = () => { $("chainBox").classList.remove("chain-stop"); runChain(prompts, { urls }); };
+    $("chainResume").onclick = () => { $("chainBox").classList.remove("chain-stop"); runChain(prompts, { urls }, opt); };
     const pb = $("chainPartial"); if (pb) pb.onclick = () => makeFilm(urls, "phim-noi-canh", { fade: false, trim: 0.15 });
   }finally{ chainBusy = false; $("batchBtn").disabled = false; }
+}
+// Video dài (15/20/30 giây) từ 1 mô tả: chia đoạn nối liền, cùng nhân vật + giọng, tự ghép thành 1 video.
+function longVideo(prompt, total){
+  const durs = segDurs(total), n = durs.length;
+  const parts = durs.map((d, i) => prompt + " This is part " + (i + 1) + " of " + n + " of ONE continuous " + total + "-second shot (" + d + " seconds): " +
+    (i === 0 ? "show the beginning of the action and end mid-motion, ready to continue." : i < n - 1 ? "continue the same action naturally, the middle of the moment, end mid-motion." : "continue the same action and bring it to a natural, satisfying ending."));
+  lastGen = { prompt, kind: "video" };
+  toast("Video " + total + " giây = " + n + " đoạn nối liền (muse tạo tối đa 10 giây/lần). Studio tự nối và ghép thành 1 video.");
+  $("batchCard").scrollIntoView({ behavior:"smooth", block:"start" });
+  return runChain(parts, null, { durs, name: "video-" + total + "s", label: "🎬 Video " + total + " giây (" + n + " đoạn nối liền)" });
 }
 $("chainMode").checked = LS.get("muse_chain") === "1";
 $("chainMode").onchange = () => LS.set("muse_chain", $("chainMode").checked ? "1" : "0");
@@ -672,8 +686,9 @@ $("chainMode").onchange = () => LS.set("muse_chain", $("chainMode").checked ? "1
 async function startBatch(){
   const prompts = batchParts();
   if (!prompts.length){ toast("Chưa có prompt nào trong danh sách", true); return; }
+  if (kind === "video" && Number($("durSel").value) > 10) toast("Hàng loạt: mỗi cảnh tối đa 10 giây (giới hạn của muse). Phim dài hơn = nhiều cảnh nối cảnh liền mạch.", true);
   if ($("chainMode").checked) return runChain(prompts);
-  const body = { prompts: kind === "video" ? prompts.map(withVoice) : prompts, kind, duration: Number($("durSel").value), concurrency: Number($("concSel").value), ...commonBody() };
+  const body = { prompts: kind === "video" ? prompts.map(withVoice) : prompts, kind, duration: Math.min(10, Number($("durSel").value)), concurrency: Number($("concSel").value), ...commonBody() };
   // Lõi Muse2API 1.6.8: lô "Chuỗi đồng bộ" trả lại cùng một video cũ cho các cảnh sau (đã thử thật 28/10/2026).
   // Nên lô luôn chạy Độc lập; ghi chú nhân vật được ghép vào từng cảnh để vẫn giữ nhân vật (cùng ảnh tham chiếu).
   if (body.generation_mode === "coherent"){
