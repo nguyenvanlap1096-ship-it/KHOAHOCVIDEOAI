@@ -101,3 +101,4 @@ details summary:hover{color:var(--acc)}
 .refbadge{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px;padding:8px 10px;border-radius:12px;background:var(--acc-soft);border:1px solid color-mix(in srgb,var(--acc) 35%,var(--line));font-size:13px}
 .refbadge-imgs{display:flex;gap:4px}.refbadge-imgs img{width:34px;height:34px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
 .refbadge .btn{padding:5px 10px;font-size:12.5px}
+.chain-stop{border-color:var(--bad)!important;background:color-mix(in srgb,var(--bad) 7%,var(--panel))!important}
