@@ -13,7 +13,7 @@ const read = p => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
 // Bản trên máy là 1 file HTML: Muse2API phục vụ nó ở /batch nên mọi thứ phải nằm gọn trong file.
 function localHtml() {
-  const js = read('public/js/muse-studio.js');
+  const js = read('public/js/muse-film.js') + '\n' + read('public/js/muse-studio.js');
   if (js.includes('</script')) throw new Error('muse-studio.js chứa </script — không nhúng được');
   return `<!doctype html>
 <html lang="vi" data-theme="light">

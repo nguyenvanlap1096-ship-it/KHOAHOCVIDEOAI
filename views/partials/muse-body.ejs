@@ -37,6 +37,7 @@
     <div class="card">
       <div class="brand"><div class="logo">✦</div><div><b>Muse Studio</b><small>Tạo video &amp; ảnh bằng Muse</small></div></div>
       <nav class="nav">
+        <button data-tab="script">✍ Viết kịch bản phim</button>
         <button data-tab="create" class="on">✦ Tạo mới</button>
         <button data-tab="batch">▤ Hàng loạt</button>
         <button data-tab="library">▦ Thư viện</button>
@@ -70,6 +71,25 @@
   </aside>
 
   <main class="main">
+    <section class="card" id="scriptCard">
+      <div class="head"><h2>✍ Viết kịch bản phim</h2><span class="chip done">Bước 1</span><span class="grow"></span><span class="hint">Nhập ý tưởng → AI viết thành 1 bộ phim nối cảnh liền mạch, nhân vật & giọng đồng bộ</span></div>
+      <textarea id="fIdea" rows="3" placeholder="Ý tưởng phim. Ví dụ: Chú sóc tinh nghịch lấy trộm hạt dẻ của bác nhím, bị phát hiện, cuối cùng biết xin lỗi và chia sẻ cho cả khu rừng."></textarea>
+      <textarea id="fCast" rows="2" style="margin-top:10px" placeholder="Nhân vật (không bắt buộc), mỗi dòng 1 nhân vật. Ví dụ:&#10;Sóc Nâu - sóc đỏ nhỏ, tinh nghịch, đuôi xù chóp trắng&#10;Bác Nhím - nhím già hiền lành, đeo kính"></textarea>
+      <div class="ctrls">
+        <select id="fStyle"></select>
+        <select id="fScenes"><option value="3">3 cảnh · 30 giây</option><option value="4" selected>4 cảnh · 40 giây</option><option value="5">5 cảnh · 50 giây</option><option value="6">6 cảnh · 60 giây</option><option value="8">8 cảnh · 80 giây</option><option value="12">12 cảnh · 2 phút</option></select>
+        <select id="fTalk"><option value="talk">Có lời thoại tiếng Việt</option><option value="none">Không lời, chỉ âm thanh</option></select>
+        <span class="grow"></span>
+        <button class="btn primary big" id="fGo" type="button">✨ Viết kịch bản</button>
+      </div>
+      <div class="small muted" id="fAiNote" style="margin-top:8px"></div>
+      <details style="margin-top:6px"><summary>Cách khác: nhờ Gemini / ChatGPT bản miễn phí viết</summary>
+        <div class="row" style="margin-top:8px"><button class="btn" type="button" data-fask="gemini">Sao chép lệnh & mở Gemini</button><button class="btn" type="button" data-fask="chatgpt">Sao chép lệnh & mở ChatGPT</button></div>
+        <textarea id="fPaste" rows="3" style="margin-top:8px" placeholder="Dán nguyên câu trả lời (khối JSON) vào đây rồi bấm Đọc kết quả"></textarea>
+        <button class="btn" id="fPasteGo" type="button" style="margin-top:8px">Đọc kết quả</button>
+      </details>
+      <div id="fOut"></div>
+    </section>
     <section class="card">
       <div class="head"><h2>✦ Tạo video / ảnh</h2><span class="grow"></span><span class="hint">Mỗi lần tạo 1 cảnh — muốn nhiều cảnh liên tiếp, dùng Hàng loạt bên dưới</span><button class="btn" id="newProject" type="button" title="Xoá nhân vật, giọng, ghi chú và kịch bản của dự án trước">🆕 Dự án mới</button></div>
       <textarea id="prompt" rows="3" placeholder="Mô tả cảnh muốn tạo… Ví dụ: Một chú mèo cam đuổi theo cuộn len đỏ trong khu vườn đầy hoa, nắng vàng, máy quay chậm rãi"></textarea>

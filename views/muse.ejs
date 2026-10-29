@@ -10,6 +10,7 @@
 <body>
 <%- include('partials/muse-body') %>
 <script type="application/json" id="museCfg"><%- JSON.stringify(cfg).replace(/</g, String.fromCharCode(92) + 'u003c') %></script>
+<script src="/js/muse-film.js?v=<%= assetV %>"></script>
 <script src="/js/muse-studio.js?v=<%= assetV %>"></script>
 </body>
 </html>

@@ -5,6 +5,10 @@ const express = require('express');
 const config = require('../config');
 const { requireAuth } = require('../middleware/auth');
 const { museAccess } = require('../services/muse');
+const db = require('../db');
+const { getSettings } = require('../services/settings');
+const studio = require('../services/studio');
+const film = require('../../public/js/muse-film');
 
 const router = express.Router();
 const RUNNER = 'http://127.0.0.1:* http://localhost:*';
@@ -37,9 +41,39 @@ async function guard(req, res, next) {
   });
 }
 
-router.get('/', requireAuth, guard, (req, res) => {
+router.get('/', requireAuth, guard, async (req, res) => {
   res.setHeader('Content-Security-Policy', MUSE_CSP);
-  res.render('muse', { cfg: { web: true, base: 'http://127.0.0.1:18610' } });
+  // ai: AI viết kịch bản của khoá học (key Google gói miễn phí trên máy chủ, cùng lượt với Xưởng Kịch bản AI).
+  const q = await studio.quotaFor(req.user, studio.studioConfig(await getSettings()));
+  const ai = q.allowed ? { unlimited: Boolean(q.unlimited), left: Math.max(0, q.quota - q.used) } : null;
+  res.render('muse', { cfg: { web: true, base: 'http://127.0.0.1:18610', csrf: res.locals.csrf, ai } });
+});
+
+// Viết kịch bản phim liền mạch bằng AI của khoá học. Không có AI / hết lượt → trình duyệt dùng Trình viết nhanh.
+router.post('/api/script', requireAuth, async (req, res) => {
+  if (!(await museAccess(req.user)).allowed) return res.status(403).json({ error: 'Tài khoản chưa được mở Muse Studio.' });
+  const cfg = studio.studioConfig(await getSettings());
+  const q = await studio.quotaFor(req.user, cfg);
+  if (!q.allowed) return res.status(403).json({ error: 'AI viết kịch bản của khoá học chưa bật cho bạn.', noAi: true });
+  if (!q.unlimited && q.used + 1 > q.quota) return res.status(402).json({ error: `Bạn đã dùng hết ${q.quota} lượt AI tháng này.`, noAi: true });
+  const b = req.body || {};
+  const o = {
+    idea: String(b.idea || '').trim().slice(0, 3000), cast: String(b.cast || '').trim().slice(0, 1500),
+    scenes: b.scenes, style: b.style, ratio: b.ratio, dialogue: b.dialogue === 'none' ? 'none' : 'talk',
+  };
+  if (o.idea.length < 5) return res.status(400).json({ error: 'Hãy viết ý tưởng phim (ít nhất vài chữ).' });
+  const brief = film.buildBrief(o);
+  const { insertId } = await db.run('INSERT INTO studio_jobs (user_id, model_key, kind, points, status) VALUES (?, ?, ?, ?, ?)',
+    [req.user.id, 'muse-film', 'musefilm', 1, 'processing']);
+  try {
+    const result = film.parse(await studio.runText(cfg, brief.system, brief.user), o);
+    await db.run("UPDATE studio_jobs SET status = 'completed' WHERE id = ?", [insertId]);
+    res.json({ result, used: await studio.usedPoints(req.user.id) });
+  } catch (err) {
+    if (err.detail) console.warn('[muse] script', err.detail);
+    await db.run("UPDATE studio_jobs SET status = 'failed', error = ? WHERE id = ?", [String(err.message).slice(0, 480), insertId]);
+    res.status(err.status && err.status >= 400 && err.status < 600 ? err.status : 502).json({ error: err.message });
+  }
 });
 
 router.get('/huong-dan', requireAuth, guard, (req, res) => {

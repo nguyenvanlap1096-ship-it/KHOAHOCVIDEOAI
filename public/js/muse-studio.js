@@ -743,7 +743,7 @@ async function copyKey(){
 document.querySelectorAll("[data-copykey]").forEach(b => b.onclick = copyKey);
 
 /* ---------- menu trái: cuộn tới từng phần ---------- */
-const TAB_CARD = { create: "prompt", batch: "batchCard", library: "libCard" };
+const TAB_CARD = { script: "scriptCard", create: "prompt", batch: "batchCard", library: "libCard" };
 document.querySelectorAll(".nav button[data-tab]").forEach(b => b.onclick = () => {
   document.querySelectorAll(".nav button[data-tab]").forEach(x => x.classList.toggle("on", x === b));
   $(TAB_CARD[b.dataset.tab]).scrollIntoView({ behavior:"smooth", block:"start" });
@@ -758,3 +758,89 @@ async function init(){
   window.addEventListener("focus", refreshStatus); // quay lại từ trang thêm tài khoản thì tự cập nhật
 }
 (async () => { if (await connect()) init(); })();
+
+/* ---------- ✍ viết kịch bản phim liền mạch (public/js/muse-film.js) ----------
+   AI của khoá học (bản web) → Trình viết nhanh khi không có AI; hoặc nhờ Gemini/ChatGPT rồi dán kết quả.
+   Kết quả: hồ sơ nhân vật (ngoại hình + giọng), các cảnh nối khung cuối → khung đầu, đưa thẳng vào Hàng loạt nối cảnh. */
+(function filmWriter(){
+  const F = window.MuseFilm; if (!F) return;
+  F.STYLES.forEach(st => { const o = document.createElement("option"); o.value = st.key; o.textContent = st.label; $("fStyle").append(o); });
+  const saved = (() => { try{ return JSON.parse(LS.get("muse_film_form") || "{}"); }catch{ return {}; } })();
+  for (const [id, k] of [["fIdea","idea"],["fCast","cast"],["fStyle","style"],["fScenes","scenes"],["fTalk","dialogue"]]) if (saved[k]) $(id).value = saved[k];
+  const form = () => ({ idea: $("fIdea").value.trim(), cast: $("fCast").value.trim(), style: $("fStyle").value, scenes: Number($("fScenes").value), dialogue: $("fTalk").value,
+    ratio: $("sizeSel").value === "1024x1024" ? "1:1" : /^7|^10/.test($("sizeSel").value) ? "9:16" : "16:9" });
+  const keep = () => LS.set("muse_film_form", JSON.stringify(form()));
+  ["fIdea","fCast","fStyle","fScenes","fTalk"].forEach(id => $(id).addEventListener("change", keep));
+  const ai = CFG.ai || null;
+  $("fAiNote").textContent = ai ? (ai.unlimited ? "AI miễn phí của khoá học viết (quản trị: không giới hạn)." : "AI miễn phí của khoá học viết — còn " + ai.left + " lượt tháng này (dùng chung với Xưởng Kịch bản AI).")
+    : WEB ? "AI của khoá học chưa bật cho bạn → dùng Trình viết nhanh (khung mẫu), hoặc nhờ Gemini/ChatGPT viết bên dưới để có kịch bản chi tiết."
+    : "Bản trên máy: dùng Trình viết nhanh (khung mẫu), hoặc nhờ Gemini/ChatGPT viết bên dưới để có kịch bản chi tiết.";
+  let film = (() => { try{ return JSON.parse(LS.get("muse_film_last") || "null"); }catch{ return null; } })();
+
+  async function viaAI(o){
+    const r = await fetch("/muse/api/script", { method:"POST", credentials:"same-origin", headers:{ "Content-Type":"application/json", "X-CSRF-Token": CFG.csrf || "" }, body: JSON.stringify(o) });
+    let d = {}; try{ d = await r.json(); }catch{}
+    if (!r.ok) throw Object.assign(new Error(d.error || "AI đang bận (mã " + r.status + ")."), { noAi: d.noAi });
+    if (ai && !ai.unlimited && typeof d.used === "number") ai.left = Math.max(0, ai.left - 1);
+    return d.result;
+  }
+  $("fGo").onclick = async () => {
+    const o = form(); keep();
+    if (o.idea.length < 5){ toast("Hãy viết ý tưởng phim trước (ít nhất vài chữ).", true); $("fIdea").focus(); return; }
+    const b = $("fGo"); b.disabled = true; b.textContent = "AI đang viết…";
+    try{
+      if (WEB && ai){ film = await viaAI(o); toast("Đã viết xong kịch bản " + film.scenes.length + " cảnh."); }
+      else { film = F.quick(o); toast("Đã dựng khung kịch bản bằng Trình viết nhanh. Muốn chi tiết hơn: nhờ Gemini/ChatGPT viết.", false); }
+    }catch(e){ film = F.quick(o); toast((e.message || "AI đang bận.") + " Đã dùng Trình viết nhanh để bạn có ngay khung kịch bản.", true); }
+    finally{ b.disabled = false; b.textContent = "✨ Viết kịch bản"; }
+    LS.set("muse_film_last", JSON.stringify(film)); render();
+  };
+  document.querySelectorAll("[data-fask]").forEach(btn => btn.onclick = async () => {
+    const o = form(); keep();
+    if (o.idea.length < 5){ toast("Hãy viết ý tưởng phim trước.", true); $("fIdea").focus(); return; }
+    const br = F.buildBrief(o), text = br.system + "\n\n=====\n\n" + br.user;
+    let ok = false; try{ await navigator.clipboard.writeText(text); ok = true; }catch{}
+    const w = window.open(btn.dataset.fask === "gemini" ? "https://gemini.google.com/app" : "https://chatgpt.com/", "_blank"); try{ if (w) w.opener = null; }catch{}
+    toast(ok ? "Đã sao chép lệnh. Dán vào " + (btn.dataset.fask === "gemini" ? "Gemini" : "ChatGPT") + ", gửi đi, rồi sao chép câu trả lời dán vào ô bên dưới." : "Không tự sao chép được — thử lại bằng Chrome.", !ok);
+  });
+  $("fPasteGo").onclick = () => {
+    try{ film = F.parse($("fPaste").value, form()); $("fPaste").value = ""; LS.set("muse_film_last", JSON.stringify(film)); render(); toast("Đã đọc kịch bản " + film.scenes.length + " cảnh."); }
+    catch(e){ toast(e.message, true); }
+  };
+
+  function render(){
+    const out = $("fOut"); out.innerHTML = "";
+    if (!film) return;
+    const sheet = F.castSheet(film), voice = F.voiceNote(film);
+    const box = document.createElement("div"); box.className = "batch";
+    box.innerHTML = `<div class="row"><b>🎬 ${esc(film.title || "Phim")}</b>${film.quick ? '<span class="chip wait">Trình viết nhanh</span>' : '<span class="chip done">AI viết</span>'}<span class="grow"></span><span class="small muted">${film.scenes.length} cảnh · ${film.scenes.length * 10} giây</span></div>
+      ${film.logline_vi ? `<div class="small muted" style="margin-top:6px">${esc(film.logline_vi)}</div>` : ""}
+      <div class="small" style="margin-top:10px"><b>Nhân vật & giọng (giữ nguyên mọi cảnh):</b></div>
+      ${film.characters.map(c => `<div class="small" style="margin-top:4px">👤 <b>${esc(c.name)}</b> — ${esc(c.look_en)}<br><span class="muted">🎙 ${esc(c.voice_en)}</span></div>`).join("")}
+      <div class="small" style="margin-top:10px"><b>Các cảnh (mỗi cảnh mở đầu đúng chỗ cảnh trước kết thúc):</b></div>
+      <div class="bitems" style="max-height:none">${film.scenes.map(c => `<div class="bitem" style="align-items:flex-start"><span class="muted">#${c.n}</span><span style="flex:1">${esc(c.summary_vi || c.action_en)}${c.dialogue.length ? `<br><span class="muted">💬 ${c.dialogue.map(d => esc(d.speaker) + ": “" + esc(d.text_vi) + "”").join(" · ")}</span>` : ""}</span></div>`).join("")}</div>
+      <div class="row" style="margin-top:12px">
+        ${sheet ? '<button class="btn" type="button" id="fSheet">🖼 Tạo ảnh nhân vật (bước 2)</button>' : ""}
+        <button class="btn primary" type="button" id="fUse">➡ Đưa vào Hàng loạt nối cảnh (bước 3)</button>
+        <button class="btn" type="button" id="fCopy">📋 Sao chép kịch bản</button>
+      </div>
+      <div class="small muted" style="margin-top:8px">Thứ tự gợi ý: tạo ảnh nhân vật → bấm 👤 Dùng làm nhân vật → Đưa vào Hàng loạt → ▶ Chạy hàng loạt. Studio tự nối cảnh, giữ giọng và ghép phim.</div>`;
+    out.append(box);
+    if (sheet) $("fSheet").onclick = () => {
+      document.querySelector('#kindSeg [data-kind=image]').click(); $("sizeSel").value = "1024x1024"; $("prompt").value = sheet;
+      if (refs.some(r => !r.isDoc && r.role === "character")) toast("Lưu ý: đang gắn ảnh nhân vật cũ — bấm 🆕 Dự án mới trước nếu đây là phim mới.", true);
+      $("prompt").scrollIntoView({ behavior:"smooth", block:"center" }); toast("Đã điền prompt ảnh nhân vật — bấm ✦ Tạo ngay, ảnh ưng thì bấm 👤 Dùng làm nhân vật.");
+    };
+    $("fUse").onclick = () => {
+      $("batchPrompts").value = F.toCanhThoai(film); $("batchPrompts").dispatchEvent(new Event("input"));
+      if (voice){ $("voiceNote").value = voice; $("voiceNote").dispatchEvent(new Event("input")); }
+      $("chainMode").checked = true; $("chainMode").dispatchEvent(new Event("change"));
+      document.querySelector('#kindSeg [data-kind=video]').click();
+      if (film.scenes.length) $("durSel").value = "10";
+      $("batchCard").scrollIntoView({ behavior:"smooth", block:"start" });
+      toast("Đã đưa " + film.scenes.length + " cảnh vào Hàng loạt, bật Nối cảnh liền mạch và điền giọng nhân vật. Bấm ▶ Chạy hàng loạt.");
+    };
+    $("fCopy").onclick = async () => { let ok = false; try{ await navigator.clipboard.writeText(F.toCanhThoai(film)); ok = true; }catch{} toast(ok ? "Đã sao chép kịch bản CANH/THOAI." : "Không tự sao chép được.", !ok); };
+  }
+  render();
+})();
