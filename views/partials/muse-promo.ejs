@@ -1,0 +1,13 @@
+<%# Khung giới thiệu Muse Studio — chỉ hiện với người được mở Muse Studio (quản trị luôn thấy). %>
+<% if (locals.museOpen) { %>
+<a class="studio-promo muse-promo" href="/muse">
+  <span class="studio-promo-ico" aria-hidden="true"><svg class="i"><use href="#i-video"/></svg></span>
+  <span class="studio-promo-body">
+    <span class="studio-promo-kicker">Muse Studio · Tạo video AI bằng tài khoản muse của bạn</span>
+    <strong>Tạo video &amp; phim ngắn liền mạch — giữ nhân vật, giữ giọng, tự ghép phim</strong>
+    <small>Tạo lẻ hoặc hàng loạt, nối cảnh liền mạch như quay một mạch, ghép thành phim MP4 tải về ngay.</small>
+    <span class="studio-promo-tags"><span>Video 9:16 &amp; 16:9</span><span>Giữ nhân vật</span><span>Nối cảnh liền mạch</span><span>Giọng nhân vật</span><span>Ghép phim</span><span>📘 Có hướng dẫn từng bước</span></span>
+  </span>
+  <span class="btn studio-promo-btn">Mở Muse Studio<svg class="i i-sm"><use href="#i-arrow-right"/></svg></span>
+</a>
+<% } %>

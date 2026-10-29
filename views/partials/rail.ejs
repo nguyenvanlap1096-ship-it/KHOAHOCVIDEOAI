@@ -6,7 +6,7 @@
     { href: '/my', label: 'Khóa học của tôi', icon: 'i-book-open', active: path === '/my' },
   ];
   if (locals.studioOpen) railLinks.splice(1, 0, { href: '/studio', label: 'Xưởng Kịch bản AI', icon: 'i-wand', active: false, cls: 'rail-studio' });
-  if (locals.museOpen) railLinks.splice(locals.studioOpen ? 2 : 1, 0, { href: '/muse', label: 'Muse Studio · tạo video AI', icon: 'i-video', active: false });
+  if (locals.museOpen) railLinks.splice(1, 0, { href: '/muse', label: 'Muse Studio · tạo video AI', icon: 'i-video', active: false });
   if (user && user.role === 'admin') {
     railLinks.push({ href: '/admin', label: 'Quản trị', icon: 'i-shield', active: path.startsWith('/admin') });
   }

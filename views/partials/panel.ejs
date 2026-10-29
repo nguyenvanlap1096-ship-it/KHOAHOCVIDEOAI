@@ -6,8 +6,8 @@
     <input type="search" id="panelSearch" name="q" placeholder="Tìm khóa học..." value="<%= locals.q || '' %>">
   </form>
 
+  <% if (locals.museOpen) { %><a class="nav-item nav-studio nav-muse" href="/muse" title="Muse Studio — tạo video AI"><svg class="i"><use href="#i-video"/></svg><span class="t">Muse Studio</span><span class="chip">Video AI</span></a><% } %>
   <% if (locals.studioOpen) { %><a class="nav-item nav-studio" href="/studio"><svg class="i"><use href="#i-wand"/></svg><span class="t">Xưởng Kịch bản AI</span></a><% } %>
-  <% if (locals.museOpen) { %><a class="nav-item nav-studio" href="/muse"><svg class="i"><use href="#i-video"/></svg><span class="t">Muse Studio · tạo video AI</span></a><% } %>
   <a class="nav-item" href="/" <%- path === '/' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-grid"/></svg><span class="t">Tất cả khóa học</span></a>
   <a class="nav-item" href="/videos" <%- path === '/videos' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-video"/></svg><span class="t">Video mới cập nhật</span></a>
   <a class="nav-item" href="/prompts" <%- path.startsWith('/prompts') ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-sparkles"/></svg><span class="t">Prompt theo ngành nghề</span></a>

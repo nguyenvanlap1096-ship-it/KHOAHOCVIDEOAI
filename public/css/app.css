@@ -697,6 +697,10 @@ a.stat:hover { border-color: var(--primary); }
 .nav-studio { color: var(--text); font-weight: 600; background: color-mix(in srgb, #E8890C 12%, transparent); margin-bottom: 6px; }
 .nav-studio .i { color: #E8890C; }
 .nav-studio .chip { background: #E8890C; color: #fff; }
+.nav-muse { background: color-mix(in srgb, #6D5BF0 13%, transparent); }
+.nav-muse .i { color: #6D5BF0; }
+.nav-muse .chip { background: #6D5BF0; margin-left: auto; }
+.muse-promo { --sp: #6D5BF0; }
 .rail-btn.rail-studio { color: #E8890C; }
 @media (max-width: 640px) {
   .studio-promo { flex-wrap: wrap; padding: 16px; }
