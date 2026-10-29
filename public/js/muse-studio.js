@@ -250,7 +250,7 @@ $("voiceNote").addEventListener("input", syncVoice); syncVoice();
 // Chỉ gắn giọng của nhân vật có trong cảnh (tên xuất hiện trong prompt) — prompt gọn, muse không từ chối vì quá dài.
 // Thoại nhiều nhân vật trong một cảnh: từng câu ghi rõ ai nói, nét nhận diện và giọng NGAY TẠI CÂU ĐÓ, đúng thứ tự,
 // và chỉ người đang nói mấp máy miệng — để muse không gán nhầm lời thoại cho nhân vật khác.
-const clip = (t, n) => { const w = String(t || "").trim().split(/\s+/); return w.length > n ? w.slice(0, n).join(" ").replace(/[,;:]$/, "") : w.join(" "); };
+const clip = (t, n) => { const w = String(t || "").trim().split(/\s+/); return w.length > n ? w.slice(0, n).join(" ").replace(/[,;:]$/, "").replace(/s+(with|and|a|an|the|of|in)$/i, "").replace(/s+(with|and|a|an|the|of|in)$/i, "") : w.join(" "); };
 function voiceOf(name){
   const line = $("voiceNote").value.split("\n").map(x => x.trim()).find(l => l.split(":")[0].trim().toLowerCase() === name.toLowerCase());
   return line ? clip(line.slice(line.indexOf(":") + 1), 12) : "";
@@ -260,8 +260,10 @@ function tagOf(name){
 }
 function dialogueText(says){
   if (!says.length) return "";
+  const seen = new Set();
   const lines = says.map((d, i) => {
-    const info = [tagOf(d.who), voiceOf(d.who) && "voice: " + voiceOf(d.who)].filter(Boolean).join("; ");
+    const first = !seen.has(d.who.toLowerCase()); seen.add(d.who.toLowerCase());
+    const info = !first ? "" : [tagOf(d.who), voiceOf(d.who) && "voice: " + voiceOf(d.who)].filter(Boolean).join("; ");
     return (i + 1) + ") " + d.who + (info ? " (" + info + ")" : "") + (i ? " replies" : " says") + ' in Vietnamese: "' + d.text + '"';
   });
   const many = new Set(says.map(d => d.who)).size > 1;
