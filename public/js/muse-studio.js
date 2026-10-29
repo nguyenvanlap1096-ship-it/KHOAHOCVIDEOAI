@@ -243,8 +243,12 @@ VOICES.forEach(([label, desc]) => {
 $("voiceNote").value = LS.get("muse_voice") || "";
 const syncVoice = () => { LS.set("muse_voice", $("voiceNote").value); $("voiceOn").classList.toggle("hidden", !$("voiceNote").value.trim()); };
 $("voiceNote").addEventListener("input", syncVoice); syncVoice();
+// Chỉ gắn giọng của nhân vật có trong cảnh (tên xuất hiện trong prompt) — prompt gọn, muse không từ chối vì quá dài.
 function withVoice(p){
-  const v = $("voiceNote").value.split("\n").map(s => s.trim()).filter(s => s && !/^Tên nhân vật:/i.test(s));
+  const all = $("voiceNote").value.split("\n").map(s => s.trim()).filter(s => s && !/^Tên nhân vật:/i.test(s));
+  const low = String(p).toLowerCase();
+  const named = all.filter(l => { const nm = l.split(":")[0].trim().toLowerCase(); return nm && low.includes(nm); });
+  const v = named.length ? named : all.length === 1 ? all : [];
   return v.length ? p + " Voice casting — every character keeps exactly the same voice in every scene, never change it: " + v.join("; ") + "." : p;
 }
 function commonBody(){

@@ -22,17 +22,17 @@
     const system = `Bạn là đạo diễn kiêm biên kịch phim ngắn làm bằng AI tạo video (muse.ai). Mỗi lần AI chỉ tạo được 1 cảnh dài 10 giây, rồi các cảnh được NỐI LIỀN: khung hình cuối của cảnh trước được dùng làm khung mở đầu của cảnh sau. Nhiệm vụ: viết ${n} cảnh sao cho ghép lại thành MỘT bộ phim liền mạch như quay một mạch, có ý nghĩa, người xem không nhận ra là ghép.
 
 QUY TẮC BẮT BUỘC:
-1. HỒ SƠ NHÂN VẬT CỐ ĐỊNH (tối đa 3 nhân vật chính): look_en tiếng Anh 30–50 từ: loài/tuổi/giới tính, dáng người, khuôn mặt, mắt, tóc/lông, MÀU SẮC cụ thể, trang phục đặc trưng, 1 món đồ nhận diện. voice_en tiếng Anh: giới tính, tuổi giọng, cao độ (high/medium/low), âm sắc, tốc độ nói, cảm xúc chủ đạo, "speaks Vietnamese". Không bao giờ đổi ngoại hình hay giọng giữa các cảnh.
-2. BỐI CẢNH & ÁNH SÁNG LIÊN TỤC: setting_en tả 1 không gian chính (có thể đi dần sang chỗ kế bên nhưng phải hợp lý), thời gian trôi tự nhiên (sáng → trưa → chiều), ánh sáng đổi dần, không nhảy cóc.
-3. NỐI CẢNH: start_en của cảnh k PHẢI mô tả lại CHÍNH XÁC end_en của cảnh k-1 (cùng tư thế, vị trí, hướng nhìn, cỡ cảnh, góc máy). end_en tả thật cụ thể khung hình cuối cùng (ai ở đâu, tư thế gì, máy quay ở đâu) để cảnh sau nối vào. Cảnh 1 có start_en là khung mở đầu phim.
-4. MỖI CẢNH 10 GIÂY = 1 CÚ MÁY LIỀN, KHÔNG CẮT: action_en tả hành động theo nhịp đầu–giữa–cuối và chuyển động máy (dolly, tracking, pan, crane…) 50–90 từ tiếng Anh, chỉ gọi nhân vật bằng TÊN.
+1. HỒ SƠ NHÂN VẬT CỐ ĐỊNH (tối đa 3 nhân vật chính): look_en tiếng Anh 22–32 từ, súc tích, chỉ nét nhận diện: loài/tuổi/giới tính, dáng người, khuôn mặt, mắt, tóc/lông, MÀU SẮC cụ thể, trang phục đặc trưng, 1 món đồ nhận diện. voice_en tiếng Anh tối đa 16 từ: giới tính, tuổi giọng, cao độ (high/medium/low), âm sắc, tốc độ nói, "speaks Vietnamese". Không bao giờ đổi ngoại hình hay giọng giữa các cảnh.
+2. BỐI CẢNH & ÁNH SÁNG LIÊN TỤC: setting_en tối đa 25 từ, tả 1 không gian chính (có thể đi dần sang chỗ kế bên nhưng phải hợp lý), thời gian trôi tự nhiên (sáng → trưa → chiều), ánh sáng đổi dần, không nhảy cóc.
+3. NỐI CẢNH: start_en của cảnh k PHẢI mô tả lại CHÍNH XÁC end_en của cảnh k-1 (cùng tư thế, vị trí, hướng nhìn, cỡ cảnh, góc máy). end_en tối đa 28 từ, tả thật cụ thể khung hình cuối cùng (ai ở đâu, tư thế gì, biểu cảm, máy quay ở đâu) để cảnh sau nối vào; start_en tối đa 28 từ. Cảnh 1 có start_en là khung mở đầu phim.
+4. MỖI CẢNH 10 GIÂY = 1 CÚ MÁY LIỀN, KHÔNG CẮT: action_en 45–70 từ tiếng Anh: hành động theo nhịp đầu–giữa–cuối, CẢM XÚC hiện trên mặt và cử chỉ (run rẩy, mắt rưng rưng, mỉm cười…), một chuyển động máy (dolly, tracking, pan, crane…), chỉ gọi nhân vật bằng TÊN. mood_en tối đa 8 từ: cảm xúc chủ đạo và sự chuyển biến (vd "lonely and scared, turning hopeful").
 5. CÂU CHUYỆN CÓ Ý NGHĨA: cảnh đầu giới thiệu nhân vật + mong muốn; giữa là trở ngại/xung đột tăng dần; cao trào; cảnh cuối giải quyết và để lại cảm xúc hoặc bài học. Mỗi cảnh phải đẩy câu chuyện tiến lên, không lặp lại.
-6. ÂM THANH ĐỒNG BỘ: music_en 1 câu mô tả nhạc nền chung cả phim (nhạc cụ, nhịp, cảm xúc); mỗi cảnh sound_en gồm âm thanh nền liên tục + tiếng động cụ thể, giữ cùng chất âm.
+6. ÂM THANH ĐỒNG BỘ: music_en tối đa 12 từ, nhạc nền chung cả phim (nhạc cụ, cảm xúc); mỗi cảnh sound_en tối đa 12 từ: âm thanh nền liên tục + 1 tiếng động cụ thể.
 7. ${talk ? `LỜI THOẠI: tiếng Việt tự nhiên, mỗi cảnh 1–2 câu, TỔNG KHÔNG QUÁ 18 TỪ (vừa 10 giây), người nói là tên trong hồ sơ hoặc "Người kể chuyện"; lời thoại nối tiếp nhau thành mạch truyện.` : "KHÔNG CÓ LỜI THOẠI: dialogue để mảng rỗng, kể chuyện bằng hình ảnh và âm thanh."}
 8. Phong cách hình ảnh giữ nguyên cả phim. Khung hình ${ratio}. Không chữ, không phụ đề, không logo/watermark. Không nội dung nhạy cảm.
 
 ĐẦU RA: CHỈ MỘT KHỐI JSON hợp lệ, không markdown, không giải thích:
-{"title":"tên phim tiếng Việt","logline_vi":"tóm tắt 1–2 câu và ý nghĩa","style_en":"…","setting_en":"…","music_en":"…","characters":[{"name":"tên tiếng Việt","look_en":"…","voice_en":"…"}],"scenes":[{"n":1,"summary_vi":"cảnh này kể gì (tiếng Việt)","start_en":"…","action_en":"…","end_en":"…","sound_en":"…","dialogue":[{"speaker":"tên","text_vi":"…"}]}]}`;
+{"title":"tên phim tiếng Việt","logline_vi":"tóm tắt 1–2 câu và ý nghĩa","style_en":"…","setting_en":"…","music_en":"…","characters":[{"name":"tên tiếng Việt","look_en":"…","voice_en":"…"}],"scenes":[{"n":1,"summary_vi":"cảnh này kể gì (tiếng Việt)","start_en":"…","action_en":"…","end_en":"…","mood_en":"…","sound_en":"…","dialogue":[{"speaker":"tên","text_vi":"…"}]}]}`;
     const user = [
       `Ý TƯỞNG PHIM: ${s(o.idea)}`,
       o.cast ? `NHÂN VẬT NGƯỜI DÙNG MUỐN (giữ đúng tên/đặc điểm, bổ sung phần thiếu): ${s(o.cast)}` : "",
@@ -55,7 +55,7 @@ QUY TẮC BẮT BUỘC:
     const st = find(STYLES, o && o.style);
     const characters = (Array.isArray(j.characters) ? j.characters : []).map(c => ({ name: s(c.name).slice(0, 40), look_en: s(c.look_en || c.look), voice_en: s(c.voice_en || c.voice) })).filter(c => c.name).slice(0, 4);
     const scenes = (Array.isArray(j.scenes) ? j.scenes : []).map((c, i) => ({
-      n: i + 1, summary_vi: s(c.summary_vi || c.summary), start_en: s(c.start_en), action_en: s(c.action_en || c.action), end_en: s(c.end_en), sound_en: s(c.sound_en || c.sound),
+      n: i + 1, summary_vi: s(c.summary_vi || c.summary), start_en: s(c.start_en), action_en: s(c.action_en || c.action), end_en: s(c.end_en), mood_en: s(c.mood_en || c.mood), sound_en: s(c.sound_en || c.sound),
       dialogue: (Array.isArray(c.dialogue) ? c.dialogue : []).map(d => ({ speaker: s(d.speaker) || "Người kể chuyện", text_vi: s(d.text_vi || d.text) })).filter(d => d.text_vi),
     })).filter(c => c.action_en);
     if (!scenes.length) throw new Error("AI chưa viết được cảnh nào. Thử viết rõ ý tưởng hơn.");
@@ -63,20 +63,41 @@ QUY TẮC BẮT BUỘC:
   }
   function parse(text, o) { return normalize(parseJson(text), o); }
 
-  // Prompt tiếng Anh đầy đủ cho từng cảnh (dán vào Hàng loạt dạng CANH/THOAI).
+  // Prompt tiếng Anh cho từng cảnh — GỌN mà đủ hồn. muse.ai từ chối prompt quá dài (thử thật: >2.800 ký tự bị từ chối,
+  // ≤1.300 đều tạo được), nên ghép theo thứ tự ưu tiên rồi tự co cho vừa ngân sách:
+  // giữ trọn hành động + cảm xúc + khung kết (làm nên độ liền mạch), rút gọn phong cách/bối cảnh/ngoại hình/khung đầu,
+  // chỉ gắn nhân vật có mặt trong cảnh. Ngân sách tính cả lời thoại (giọng do Studio gắn thêm sau).
+  const words = (t, n) => { const w = s(t).split(" "); return w.length > n ? w.slice(0, n).join(" ").replace(/[,;:]$/, "") + "…" : s(t); };
+  const end = t => s(t).replace(/[.…]?$/, ".");
+  const BUDGET = 950;
+  function inScene(film, c) {
+    const txt = [c.start_en, c.action_en, c.end_en, ...c.dialogue.map(d => d.speaker)].join(" ").toLowerCase();
+    const hit = film.characters.filter(x => txt.includes(x.name.toLowerCase()));
+    return hit.length ? hit : film.characters.slice(0, 1);
+  }
   function scenePrompt(film, c, total) {
-    const cast = film.characters.map(x => `${x.name}: ${x.look_en}`).join("; ");
-    return s([
-      film.style_en.replace(/\.?$/, "."),
-      film.setting_en && "Setting: " + film.setting_en.replace(/\.?$/, "."),
-      cast && "Characters (keep exactly this look in every scene): " + cast + ".",
-      `Scene ${c.n} of ${total}, one continuous 10-second shot, no cuts.`,
-      c.start_en && "Opening frame: " + c.start_en.replace(/\.?$/, "."),
-      "Action: " + c.action_en.replace(/\.?$/, "."),
-      c.end_en && "The shot ends exactly on: " + c.end_en.replace(/\.?$/, "."),
-      (film.music_en || c.sound_en) && "Sound: " + [film.music_en && "music " + film.music_en, c.sound_en].filter(Boolean).join("; ").replace(/\.?$/, "."),
-      "No text, no subtitles, no watermark.",
-    ].filter(Boolean).join(" "));
+    const styleShort = s(film.style_en).split(",").slice(0, 3).join(",");
+    const lines = c.dialogue.map(d => d.speaker + ": " + d.text_vi).join(" ");
+    // các mức rút gọn: [ngoại hình, bối cảnh, khung đầu, phong cách đủ?, âm thanh]
+    const levels = [[34, 30, 28, true, 16], [28, 22, 22, false, 12], [22, 16, 16, false, 10], [16, 12, 12, false, 0], [12, 0, 10, false, 0]];
+    let out = "";
+    for (const [lk, st, op, fullStyle, snd] of levels) {
+      const cast = inScene(film, c).map(x => x.name + " (" + words(x.look_en, lk) + ")").join("; ");
+      out = s([
+        end(fullStyle ? words(film.style_en, 22) : styleShort),
+        st && film.setting_en && "Setting: " + end(words(film.setting_en, st)),
+        "Characters, same look in every scene: " + end(cast),
+        "Scene " + c.n + "/" + total + ", one continuous 10-second shot, no cuts.",
+        c.start_en && "Opens on: " + end(words(c.start_en, op)),
+        "Action: " + end(c.action_en),
+        c.mood_en && "Mood: " + end(words(c.mood_en, 10)),
+        c.end_en && "Ends exactly on: " + end(words(c.end_en, 30)),
+        snd && (c.sound_en || film.music_en) && "Sound: " + end(words([c.sound_en, film.music_en && "music " + film.music_en].filter(Boolean).join("; "), snd)),
+        "No text, no subtitles, no watermark.",
+      ].filter(Boolean).join(" "));
+      if (out.length + lines.length <= BUDGET) break;
+    }
+    return out;
   }
   function toCanhThoai(film) {
     return film.scenes.map(c => ["CANH: " + scenePrompt(film, c, film.scenes.length), ...c.dialogue.map(d => "THOAI: " + d.speaker + ": " + d.text_vi)].join("\n")).join("\n\n");
