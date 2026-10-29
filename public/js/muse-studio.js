@@ -391,12 +391,16 @@ async function makeFilm(urls, name){
     const stopped = new Promise(r => { rec.onstop = r; });
     rec.start(1000);
     let before = 0;
+    // Chuyển cảnh mờ dần: đầu mỗi cảnh, khung cuối của cảnh trước mờ dần trên cảnh mới (không làm phim dài thêm).
+    const FADE = 0.6, prev = document.createElement("canvas"); prev.width = W; prev.height = H;
     for (let i = 0; i < clips.length; i++){
       const v = clips[i], src = ac.createMediaElementSource(v); src.connect(dest);
       const s = Math.min(W / v.videoWidth, H / v.videoHeight), dw = v.videoWidth * s, dh = v.videoHeight * s;
+      if (i > 0){ const pg = prev.getContext("2d"); pg.clearRect(0, 0, W, H); pg.drawImage(cv, 0, 0); }
       let raf = 0;
       const draw = () => {
         g.fillRect(0, 0, W, H); g.drawImage(v, (W - dw) / 2, (H - dh) / 2, dw, dh);
+        if (i > 0 && v.currentTime < FADE){ g.globalAlpha = 1 - v.currentTime / FADE; g.drawImage(prev, 0, 0); g.globalAlpha = 1; }
         filmSay("Đang ghép cảnh " + (i + 1) + "/" + clips.length + " — giữ nguyên tab này, đừng chuyển tab hay thu nhỏ trình duyệt", (before + v.currentTime) / total * 100);
         raf = requestAnimationFrame(draw);
       };
