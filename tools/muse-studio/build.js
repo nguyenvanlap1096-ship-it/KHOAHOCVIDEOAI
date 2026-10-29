@@ -56,6 +56,7 @@ function stage(files) {
 
 const html = localHtml();
 const restore = fs.readFileSync(path.join(__dirname, 'KHOI_PHUC_GIAO_DIEN_CU.bat'));
+const helper = fs.readFileSync(path.join(__dirname, 'muse-helper.ps1'));
 const webReadme = [
   'MUSE STUDIO - BO CAI CHO MAY WINDOWS', '',
   '1. Bam doi MO_MUSE_STUDIO.bat (lan dau tu tai bo chay ~164 MB).',
@@ -66,7 +67,7 @@ const webReadme = [
   'Khong gui file .env, thu muc data hay API key cho bat ky ai.', '',
 ].join('\r\n');
 
-const webDir = stage({ 'MO_MUSE_STUDIO.bat': launcher(`${SITE}/muse`), 'studio.html': html, 'KHOI_PHUC_GIAO_DIEN_CU.bat': restore, 'DOC_TRUOC.txt': webReadme });
+const webDir = stage({ 'MO_MUSE_STUDIO.bat': launcher(`${SITE}/muse`), 'studio.html': html, 'KHOI_PHUC_GIAO_DIEN_CU.bat': restore, 'muse-helper.ps1': helper, 'DOC_TRUOC.txt': webReadme });
 const webZip = path.join(ROOT, 'assets', 'muse', 'Muse-Studio-Cai-Dat.zip');
 zip(webDir, webZip);
 console.log('Đã tạo', path.relative(ROOT, webZip), fs.statSync(webZip).size, 'byte');
@@ -74,7 +75,7 @@ console.log('Đã tạo', path.relative(ROOT, webZip), fs.statSync(webZip).size,
 const offlineDir = process.argv[2];
 if (offlineDir) {
   const dir = stage({
-    'MO_MUSE_STUDIO.bat': launcher(''), 'studio.html': html, 'KHOI_PHUC_GIAO_DIEN_CU.bat': restore,
+    'MO_MUSE_STUDIO.bat': launcher(''), 'studio.html': html, 'KHOI_PHUC_GIAO_DIEN_CU.bat': restore, 'muse-helper.ps1': helper,
     'HUONG_DAN_HOC_VIEN.html': fs.readFileSync(path.join(__dirname, 'HUONG_DAN_HOC_VIEN.html')),
   });
   const out = path.join(offlineDir, 'Muse-Studio-Hoc-Vien.zip');

@@ -414,6 +414,8 @@ function filmSay(text, pct){ $("filmStatus").textContent = text; if (pct != null
 // vì khung đầu cảnh sau chính là khung cuối cảnh trước (nếu giữ cả hai, hình sẽ khựng một nhịp).
 async function makeFilm(urls, name, opt = {}){
   const useFade = opt.fade !== false, trim = Math.max(0, Number(opt.trim) || 0);
+  const names = urls.map(mediaName);
+  if (!filmBusy && names.every(Boolean) && await helperUp()) return helperFilm(names, name, useFade, trim);
   if (filmBusy){ toast("Đang ghép một phim khác — đợi xong đã.", true); return; }
   if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){ toast("Trình duyệt này không ghép phim được. Dùng Chrome hoặc Edge bản mới.", true); return; }
   const mime = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm"].find(m => MediaRecorder.isTypeSupported(m));
@@ -477,6 +479,28 @@ async function makeFilm(urls, name, opt = {}){
     try{ ac.close(); }catch{}
   }finally{ filmBusy = false; }
 }
+// Ghép bằng ffmpeg trên máy (bộ ghép chạy ngầm): vài giây, không phụ thuộc tab, phim lưu sẵn ở C:\muse2api-test\phim.
+async function helperFilm(names, name, fade, trim){
+  filmBusy = true;
+  const card = $("filmCard"); card.classList.remove("hidden"); $("filmResult").classList.add("hidden"); $("filmProg").classList.remove("hidden");
+  if (!document.hidden) card.scrollIntoView({ behavior:"smooth", block:"center" });
+  if (filmUrl){ URL.revokeObjectURL(filmUrl); filmUrl = null; }
+  filmSay("Đang ghép " + names.length + " cảnh bằng ffmpeg trên máy bạn (vài giây, ẩn tab vẫn chạy)…", 40);
+  try{
+    const d = await helperJson(await fetch(HELPER + "/ghep", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ names, trim, fade, name }) }));
+    filmSay("Đang tải phim vào trang…", 90);
+    const blob = await (await fetch(d.url)).blob();
+    filmUrl = URL.createObjectURL(blob);
+    $("filmProg").classList.add("hidden"); $("filmResult").classList.remove("hidden");
+    const fv = $("filmVideo"); fv.src = filmUrl; fv.style.aspectRatio = d.width + "/" + d.height;
+    const a = $("filmDl"); a.href = filmUrl; a.download = d.name;
+    $("filmInfo").textContent = names.length + " cảnh · " + Math.round(d.seconds) + " giây · " + d.width + "×" + d.height + " · " + fmtBytes(d.bytes) + " · MP4 · đã lưu sẵn: " + d.file;
+    toast("🎬 Đã ghép xong phim " + Math.round(d.seconds) + " giây — đã lưu ở " + d.file);
+  }catch(e){
+    filmSay("Ghép phim lỗi: " + e.message, 0); toast("Ghép phim lỗi: " + e.message, true);
+    throw e;
+  }finally{ filmBusy = false; }
+}
 $("filmClose").onclick = () => { $("filmCard").classList.add("hidden"); $("filmVideo").pause(); };
 
 /* ---------- hàng loạt ---------- */
@@ -510,7 +534,26 @@ function syncConc(){ const locked = !!$("accountSel").value || $("modeSel").valu
 /* ---------- phim nối cảnh liền mạch ----------
    Tạo lần lượt từng cảnh; cảnh sau nhận khung hình cuối của cảnh trước làm "Khung đầu" (first_frame),
    cùng ảnh nhân vật. Xong thì tự ghép thành phim, nối cắt liền và bỏ khung trùng ở chỗ nối. */
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+// Hẹn giờ chạy nền (worker): tab bị ẩn vẫn theo dõi tiến độ đều đặn. Không tạo được worker thì dùng setTimeout.
+const bgTimer = (() => {
+  try{
+    const src = WEB ? "/js/muse-timer.js" : URL.createObjectURL(new Blob(["onmessage=e=>{setTimeout(()=>postMessage(e.data),e.data.ms)}"], { type:"text/javascript" }));
+    const w = new Worker(src), waits = new Map(); let n = 0;
+    w.onmessage = e => { const r = waits.get(e.data.id); if (r){ waits.delete(e.data.id); r(); } };
+    return ms => new Promise(r => { const id = ++n; waits.set(id, r); w.postMessage({ id, ms }); });
+  }catch{ return null; }
+})();
+const sleep = ms => bgTimer ? bgTimer(ms) : new Promise(r => setTimeout(r, ms));
+
+/* ---------- bộ ghép phim chạy ngầm trên máy (muse-helper.ps1, ffmpeg) ----------
+   File bấm 1 lần tự bật nó ở http://localhost:18622. Có nó thì ghép phim và lấy khung cuối bằng ffmpeg:
+   nhanh, nét, và chạy bình thường kể cả khi tab bị ẩn. Không có thì dùng cách cũ trong trình duyệt. */
+const HELPER = "http://localhost:18622";
+async function helperUp(){
+  try{ const r = await fetch(HELPER + "/health", { signal: AbortSignal.timeout(2500) }); return r.ok && !!(await r.json()).ffmpeg; }catch{ return false; }
+}
+const mediaName = u => { const m = /\/v1\/media\/([A-Za-z0-9_.-]+\.mp4)(?:$|[?#])/.exec(String(u || "")); return m ? m[1] : null; };
+async function helperJson(r){ let d = {}; try{ d = await r.json(); }catch{} if (!r.ok) throw new Error(d.error || "Bộ ghép phim báo lỗi (" + r.status + ")"); return d; }
 // Lấy khung hình cuối của một cảnh. Tab bị ẩn/thu nhỏ thì Chrome có thể không tải video "chạy ngầm",
 // nên: gắn video (ẩn) vào trang, thử lại tối đa 3 lần, từ lần 2 tải cả file về rồi đọc tại chỗ (không phụ thuộc mạng/tab).
 function grabFrame(src, ms){
@@ -532,6 +575,13 @@ function grabFrame(src, ms){
   });
 }
 async function lastFrame(url){
+  const name = mediaName(url);
+  if (name && await helperUp()){
+    try{
+      const blob = await (await fetch(HELPER + "/frame?name=" + encodeURIComponent(name))).blob();
+      if (blob.type === "image/jpeg" && blob.size > 1000) return await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+    }catch{ /* thử cách trong trình duyệt */ }
+  }
   let err;
   for (let attempt = 1; attempt <= 3; attempt++){
     let blobUrl = null;

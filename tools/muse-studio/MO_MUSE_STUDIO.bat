@@ -50,6 +50,7 @@ if exist "%~dp0studio.html" (
     if not exist "%ROOT%\studio-moi" mkdir "%ROOT%\studio-moi"
     copy /y "%~dp0studio.html" "%ROOT%\studio-moi\studio.html" >nul
     copy /y "%~f0" "%ROOT%\studio-moi\MO_MUSE_STUDIO.bat" >nul
+    if exist "%~dp0muse-helper.ps1" copy /y "%~dp0muse-helper.ps1" "%ROOT%\studio-moi\muse-helper.ps1" >nul
   )
   rem Giải nén sẵn tiện ích lấy cookie muse.ai (dùng để thêm tài khoản) ra C:\muse2api-test\muse2api-extension.
   if not exist "%ROOT%\muse2api-extension\manifest.json" if exist "%APPDIR%\muse2api-extension.zip" tar -xf "%APPDIR%\muse2api-extension.zip" -C "%ROOT%" >nul 2>nul
@@ -71,6 +72,7 @@ for /l %%i in (1,1,60) do (
 )
 goto err_start
 :ready
+call :helper
 
 rem ---------- 4. Lấy key trong .env và mở Studio ----------
 rem Muse2API có thể tự tạo key ở lần chạy đầu: đọc lại .env sau khi đã chạy.
@@ -87,6 +89,15 @@ if defined MUSE_DRYRUN (echo   [thử] !URL!) else start "" "!URL!"
 echo   Đã mở Muse Studio trên trình duyệt. Cửa sổ này tự đóng sau 5 giây.
 echo   Lần đầu: nếu Studio báo chưa có tài khoản muse, bấm nút "Thêm tài khoản muse" trên Studio.
 timeout /t 5 >nul
+exit /b 0
+
+:helper
+rem Bo ghep phim chay ngam (ffmpeg): ghep phim va lay khung cuoi ke ca khi an tab trinh duyet. Da chay thi bo qua.
+if defined MUSE_NOLAUNCH exit /b 0
+curl -s -m 2 -o nul http://localhost:18622/health >nul 2>nul && exit /b 0
+set "HP=%ROOT%\studio-moi\muse-helper.ps1"
+if exist "%~dp0muse-helper.ps1" set "HP=%~dp0muse-helper.ps1"
+if exist "!HP!" start "Muse Studio - bo ghep phim" /min powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "!HP!" -Root "%ROOT%"
 exit /b 0
 
 :readenv
