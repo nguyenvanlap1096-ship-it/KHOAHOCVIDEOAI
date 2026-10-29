@@ -59,7 +59,7 @@ QUY TẮC BẮT BUỘC:
       dialogue: (Array.isArray(c.dialogue) ? c.dialogue : []).map(d => ({ speaker: s(d.speaker) || "Người kể chuyện", text_vi: s(d.text_vi || d.text) })).filter(d => d.text_vi),
     })).filter(c => c.action_en);
     if (!scenes.length) throw new Error("AI chưa viết được cảnh nào. Thử viết rõ ý tưởng hơn.");
-    return { title: s(j.title), logline_vi: s(j.logline_vi), style_en: s(j.style_en) || st.en, setting_en: s(j.setting_en), music_en: s(j.music_en), characters, scenes };
+    return { ratio: (o && o.ratio) || "16:9", title: s(j.title), logline_vi: s(j.logline_vi), style_en: s(j.style_en) || st.en, setting_en: s(j.setting_en), music_en: s(j.music_en), characters, scenes };
   }
   function parse(text, o) { return normalize(parseJson(text), o); }
 
@@ -78,10 +78,11 @@ QUY TẮC BẮT BUỘC:
   function scenePrompt(film, c, total) {
     const styleShort = s(film.style_en).split(",").slice(0, 3).join(",");
     const lines = c.dialogue.map(d => d.speaker + ": " + d.text_vi).join(" ");
-    // các mức rút gọn: [ngoại hình, bối cảnh, khung đầu, phong cách đủ?, âm thanh] — ngoại hình giữ lâu nhất (nét nhận diện).
-    const levels = [[34, 24, 24, true, 14], [30, 16, 18, false, 10], [28, 10, 14, false, 0], [26, 0, 10, false, 0], [20, 0, 0, false, 0]];
+    // các mức rút gọn: [ngoại hình, bối cảnh, khung đầu, phong cách đủ?, âm thanh, hành động, khung kết]
+    // ngoại hình và hành động giữ lâu nhất; hành động vẫn đủ nhịp đầu–giữa–cuối + cảm xúc ở mức thấp nhất.
+    const levels = [[34, 24, 24, true, 14, 90, 30], [30, 16, 18, false, 10, 90, 30], [28, 10, 14, false, 0, 80, 28], [24, 0, 10, false, 0, 70, 24], [18, 0, 0, false, 0, 62, 22], [14, 0, 0, false, 0, 55, 20]];
     let out = "";
-    for (const [lk, st, op, fullStyle, snd] of levels) {
+    for (const [lk, st, op, fullStyle, snd, act, en] of levels) {
       const cast = inScene(film, c).map(x => x.name + " (" + words(x.look_en, lk) + ")").join("; ");
       out = s([
         end(fullStyle ? words(film.style_en, 22) : styleShort),
@@ -89,9 +90,9 @@ QUY TẮC BẮT BUỘC:
         "Characters, same look in every scene: " + end(cast),
         "Scene " + c.n + "/" + total + ", one continuous 10-second shot, no cuts.",
         c.n === 1 && op && c.start_en && "Opens on: " + end(words(c.start_en, op)),
-        "Action: " + end(c.action_en),
+        "Action: " + end(words(c.action_en, act)),
         c.mood_en && "Mood: " + end(words(c.mood_en, 10)),
-        c.end_en && "Ends exactly on: " + end(words(c.end_en, 30)),
+        c.end_en && "Ends exactly on: " + end(words(c.end_en, en)),
         snd && (c.sound_en || film.music_en) && "Sound: " + end(words([c.sound_en, film.music_en && "music " + film.music_en].filter(Boolean).join("; "), snd)),
         "No text, no subtitles, no watermark.",
       ].filter(Boolean).join(" "));
@@ -129,7 +130,7 @@ QUY TẮC BẮT BUỘC:
       const b = pick(i), prevEnd = i ? `${hero} ${pick(i - 1)[2]}` : `A wide establishing shot of the setting with ${hero} in the distance`;
       scenes.push({ n: i + 1, summary_vi: `${hero}: ${b[0]}.`, start_en: prevEnd, action_en: `${hero} ${b[1]}.`, end_en: `${hero} ${b[2]}`, sound_en: "the same gentle ambience continues, soft footsteps", dialogue: o.dialogue === "none" ? [] : [{ speaker: hero, text_vi: b[3] }] });
     }
-    return { title: idea.slice(0, 60), logline_vi: idea, style_en: st.en, setting_en: "one consistent location that matches the story, natural light changing gradually", music_en: "one soft cinematic theme played throughout", characters, scenes, quick: true };
+    return { ratio: o.ratio || "16:9", title: idea.slice(0, 60), logline_vi: idea, style_en: st.en, setting_en: "one consistent location that matches the story, natural light changing gradually", music_en: "one soft cinematic theme played throughout", characters, scenes, quick: true };
   }
 
   const api = { STYLES, buildBrief, parse, normalize, scenePrompt, toCanhThoai, voiceNote, castSheet, quick };

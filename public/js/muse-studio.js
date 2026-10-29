@@ -29,6 +29,7 @@ const ST = { queued:["wait","Đang chờ"], processing:["run","Đang tạo"], ru
 const ACTIVE = ["queued","processing","running","submitting"];
 // Muse2API báo lỗi bằng tiếng Trung: dịch các lỗi hay gặp, lỗi lạ giữ nguyên.
 const ERR_VI = [
+  [/未生成媒体|仅返回文本/, "muse.ai không tạo video mà chỉ trả lời bằng chữ — thường do mô tả quá dài hoặc quá nhiều yêu cầu trong 10 giây. Rút gọn mô tả (hoặc bấm ✨ Viết kịch bản lại) rồi tạo lại."],
   [/没有可用账号|无可用账号|导入\s*cookie/i, "Chưa có tài khoản muse.ai nào dùng được — thêm tài khoản (khung tím phía trên) rồi tạo lại."],
   [/超时|timeout|timed out/i, "Hết thời gian chờ muse.ai tạo xong (muse.ai đang nghẽn) — bấm Tạo lại."],
   [/额度|配额|quota|limit/i, "Tài khoản đã hết hạn mức — đợi reset hoặc dùng tài khoản khác."],
@@ -862,7 +863,9 @@ async function init(){
       if (voice){ $("voiceNote").value = voice; $("voiceNote").dispatchEvent(new Event("input")); }
       $("chainMode").checked = true; $("chainMode").dispatchEvent(new Event("change"));
       document.querySelector('#kindSeg [data-kind=video]').click();
-      if (film.scenes.length) $("durSel").value = "10";
+      $("durSel").value = "10";
+      // về đúng khung hình của phim (bước tạo ảnh nhân vật đã đổi sang 1:1)
+      $("sizeSel").value = film.ratio === "9:16" ? "720x1280" : film.ratio === "1:1" ? "1024x1024" : "1280x720";
       $("batchCard").scrollIntoView({ behavior:"smooth", block:"start" });
       toast("Đã đưa " + film.scenes.length + " cảnh vào Hàng loạt, bật Nối cảnh liền mạch và điền giọng nhân vật. Bấm ▶ Chạy hàng loạt.");
     };
