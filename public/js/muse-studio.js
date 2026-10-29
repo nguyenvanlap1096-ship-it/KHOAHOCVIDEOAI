@@ -364,7 +364,10 @@ function loadClip(url){
   });
 }
 function filmSay(text, pct){ $("filmStatus").textContent = text; if (pct != null) $("filmBar").style.width = Math.min(100, pct) + "%"; }
-async function makeFilm(urls, name){
+// opt.fade: mờ dần ở chỗ nối (mặc định có). opt.trim: bỏ vài khung đầu của cảnh sau — dùng cho phim nối cảnh,
+// vì khung đầu cảnh sau chính là khung cuối cảnh trước (nếu giữ cả hai, hình sẽ khựng một nhịp).
+async function makeFilm(urls, name, opt = {}){
+  const useFade = opt.fade !== false, trim = Math.max(0, Number(opt.trim) || 0);
   if (filmBusy){ toast("Đang ghép một phim khác — đợi xong đã.", true); return; }
   if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){ toast("Trình duyệt này không ghép phim được. Dùng Chrome hoặc Edge bản mới.", true); return; }
   const mime = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm"].find(m => MediaRecorder.isTypeSupported(m));
@@ -378,7 +381,8 @@ async function makeFilm(urls, name){
   try{
     const clips = [];
     for (let i = 0; i < urls.length; i++){ filmSay("Đang tải cảnh " + (i + 1) + "/" + urls.length + "…", 0); clips.push(await loadClip(urls[i])); }
-    const total = clips.reduce((s, v) => s + (isFinite(v.duration) ? v.duration : 10), 0);
+    const lenOf = (v, i) => (isFinite(v.duration) ? v.duration : 10) - (i > 0 ? trim : 0);
+    const total = clips.reduce((s, v, i) => s + lenOf(v, i), 0);
     // Khung phim theo cảnh đầu: dọc → 720×1280, ngang → 1280×720, vuông → 1024×1024; cảnh khác cỡ được thu vừa khung.
     const r0 = clips[0].videoWidth / clips[0].videoHeight;
     const [W, H] = r0 < 0.8 ? [720, 1280] : r0 > 1.25 ? [1280, 720] : [1024, 1024];
@@ -397,17 +401,20 @@ async function makeFilm(urls, name){
       const v = clips[i], src = ac.createMediaElementSource(v); src.connect(dest);
       const s = Math.min(W / v.videoWidth, H / v.videoHeight), dw = v.videoWidth * s, dh = v.videoHeight * s;
       if (i > 0){ const pg = prev.getContext("2d"); pg.clearRect(0, 0, W, H); pg.drawImage(cv, 0, 0); }
+      const start = i > 0 ? trim : 0;
+      if (start){ v.currentTime = start; await new Promise(r => v.addEventListener("seeked", r, { once:true })); }
       let raf = 0;
       const draw = () => {
         g.fillRect(0, 0, W, H); g.drawImage(v, (W - dw) / 2, (H - dh) / 2, dw, dh);
-        if (i > 0 && v.currentTime < FADE){ g.globalAlpha = 1 - v.currentTime / FADE; g.drawImage(prev, 0, 0); g.globalAlpha = 1; }
-        filmSay("Đang ghép cảnh " + (i + 1) + "/" + clips.length + " — giữ nguyên tab này, đừng chuyển tab hay thu nhỏ trình duyệt", (before + v.currentTime) / total * 100);
+        const t = v.currentTime - start;
+        if (useFade && i > 0 && t < FADE){ g.globalAlpha = 1 - t / FADE; g.drawImage(prev, 0, 0); g.globalAlpha = 1; }
+        filmSay("Đang ghép cảnh " + (i + 1) + "/" + clips.length + " — giữ nguyên tab này, đừng chuyển tab hay thu nhỏ trình duyệt", (before + t) / total * 100);
         raf = requestAnimationFrame(draw);
       };
       const ended = new Promise(r => v.addEventListener("ended", r, { once:true }));
       await v.play(); draw(); await ended;
       cancelAnimationFrame(raf); src.disconnect();
-      before += isFinite(v.duration) ? v.duration : 10;
+      before += lenOf(v, i);
     }
     rec.stop(); await stopped; stream.getTracks().forEach(t => t.stop()); ac.close();
     const blob = new Blob(chunks, { type: mime.split(";")[0] });
@@ -454,9 +461,79 @@ $("batchFile").onchange = async e => {
   e.target.value = "";
 };
 function syncConc(){ const locked = !!$("accountSel").value || $("modeSel").value === "coherent"; if (locked) $("concSel").value = "1"; $("concSel").disabled = locked; }
+/* ---------- phim nối cảnh liền mạch ----------
+   Tạo lần lượt từng cảnh; cảnh sau nhận khung hình cuối của cảnh trước làm "Khung đầu" (first_frame),
+   cùng ảnh nhân vật. Xong thì tự ghép thành phim, nối cắt liền và bỏ khung trùng ở chỗ nối. */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function lastFrame(url){
+  return new Promise((res, rej) => {
+    const v = document.createElement("video"); v.muted = true; v.preload = "auto"; if (WEB) v.crossOrigin = "anonymous"; v.src = url;
+    const to = setTimeout(() => rej(new Error("Hết thời gian lấy khung cuối của cảnh")), 60000);
+    v.addEventListener("loadedmetadata", () => { v.currentTime = Math.max(0, v.duration - 0.05); }, { once:true });
+    v.addEventListener("seeked", () => {
+      clearTimeout(to);
+      const c = document.createElement("canvas"); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext("2d").drawImage(v, 0, 0);
+      try{ res(c.toDataURL("image/jpeg", 0.92)); }catch(e){ rej(new Error("Không đọc được khung cuối của cảnh")); }
+    }, { once:true });
+    v.addEventListener("error", () => { clearTimeout(to); rej(new Error("Không đọc được cảnh để lấy khung cuối")); }, { once:true });
+  });
+}
+async function waitTask(id, prompt){
+  for (;;){
+    await sleep(4000);
+    let d; try{ d = await api("/v1/videos/" + id); }catch{ continue; }
+    tasks.set(id, { id, kind:"video", prompt, status:d.status, progress:d.progress, error:d.error || null, elapsed:d.elapsed, url:taskUrl(d), result:d.result, created_at:d.created_at || Date.now() / 1000 });
+    renderQueue();
+    if (d.status === "completed") return taskUrl(d);
+    if (["failed", "cancelled", "interrupted"].includes(d.status)) throw new Error(viErr(d.error) || "Tạo cảnh thất bại");
+  }
+}
+let chainBusy = false;
+function chainSay(lines){ const b = $("chainBox"); b.classList.remove("hidden"); b.innerHTML = lines.map(l => `<div class="bitem">${l}</div>`).join(""); }
+async function runChain(prompts){
+  if (chainBusy){ toast("Đang làm một phim nối cảnh khác — đợi xong đã.", true); return; }
+  if (kind !== "video"){ toast("Nối cảnh liền mạch chỉ dùng cho Video.", true); return; }
+  chainBusy = true; $("batchBtn").disabled = true;
+  const base = refsPayload();
+  const baseImgs = base.reference_images.slice(0, 7), baseRoles = base.reference_roles.slice(0, 7).map(r => r === "first_frame" ? "reference" : r);
+  const note = $("modeSel").value === "coherent" ? String($("continuity").value || "").trim() : "";
+  const rows = prompts.map((p, i) => `<span class="muted">#${i + 1}</span><span class="p" title="${esc(p)}">${esc(p)}</span>${chip("queued")}`);
+  const mark = (i, st, extra) => { rows[i] = rows[i].replace(/<span class="chip[^]*$/, chip(st)) + (extra || ""); chainSay(["<b>🎞 Phim nối cảnh — đừng đóng hay tải lại trang cho tới khi xong</b>", ...rows]); };
+  mark(0, "queued");
+  const urls = []; let frame = null;
+  try{
+    for (let i = 0; i < prompts.length; i++){
+      const prompt = (frame ? "Continue seamlessly from the first-frame reference image, which is the exact last frame of the previous shot: the same character, same place, same lighting and the same camera position at the very start, then: " : "") + prompts[i] + (note ? " " + note : "");
+      let url = null;
+      for (let attempt = 1; attempt <= 3 && !url; attempt++){
+        mark(i, "running", attempt > 1 ? ` <span class="small muted">thử lại lần ${attempt}</span>` : "");
+        try{
+          const body = { prompt, ...commonBody(), generation_mode: "independent", continuity_notes: "", sequence_id: null, duration: Number($("durSel").value),
+            reference_images: frame ? [...baseImgs, frame] : baseImgs, reference_roles: frame ? [...baseRoles, "first_frame"] : baseRoles, reference_files: base.reference_files };
+          const d = await api("/v1/videos", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) });
+          url = await waitTask(d.id || d.task_id, prompts[i]);
+        }catch(e){ if (attempt === 3) throw new Error("Cảnh " + (i + 1) + ": " + e.message); }
+      }
+      urls.push(url); mark(i, "completed");
+      if (i + 1 < prompts.length){ frame = await lastFrame(url); mark(i + 1, "queued"); }
+    }
+    loadMedia();
+    toast("Đã tạo xong " + urls.length + " cảnh nối liền. Đang ghép thành phim…");
+    await makeFilm(urls, "phim-noi-canh", { fade: false, trim: 0.15 });
+  }catch(e){
+    toast("Phim nối cảnh dừng lại: " + e.message, true);
+    if (urls.length >= 2) rows.push(`<button class="btn" type="button" id="chainPartial">🎬 Ghép ${urls.length} cảnh đã xong</button>`);
+    chainSay(["<b>🎞 Phim nối cảnh dừng lại</b> — " + esc(e.message), ...rows]);
+    const pb = $("chainPartial"); if (pb) pb.onclick = () => makeFilm(urls, "phim-noi-canh", { fade: false, trim: 0.15 });
+  }finally{ chainBusy = false; $("batchBtn").disabled = false; }
+}
+$("chainMode").checked = LS.get("muse_chain") === "1";
+$("chainMode").onchange = () => LS.set("muse_chain", $("chainMode").checked ? "1" : "0");
+
 async function startBatch(){
   const prompts = batchParts();
   if (!prompts.length){ toast("Chưa có prompt nào trong danh sách", true); return; }
+  if ($("chainMode").checked) return runChain(prompts);
   const body = { prompts, kind, duration: Number($("durSel").value), concurrency: Number($("concSel").value), ...commonBody() };
   // Lõi Muse2API 1.6.8: lô "Chuỗi đồng bộ" trả lại cùng một video cũ cho các cảnh sau (đã thử thật 28/10/2026).
   // Nên lô luôn chạy Độc lập; ghi chú nhân vật được ghép vào từng cảnh để vẫn giữ nhân vật (cùng ảnh tham chiếu).
