@@ -275,6 +275,13 @@ function playMedia(url, k, prompt, filename){
   const ch = $("charBtn"); ch.classList.toggle("hidden", k !== "image"); ch.dataset.url = url; ch.dataset.name = filename || "nhan-vat";
   $("stageCard").scrollIntoView({ behavior:"smooth", block:"center" });
 }
+// Phim ghép xong phát ngay ở khung xem chính (khung đen phía trên); khung "Ghép phim" bên dưới chỉ để báo tiến độ.
+function showFilm(url, fname, info){
+  lastGen = null;
+  playMedia(url, "video", "🎬 " + info, fname);
+  const b = document.querySelector("#stage .badge"); if (b) b.textContent = "✓ Phim đã ghép xong";
+  $("filmCard").classList.add("hidden");
+}
 // Ảnh vừa tạo → thêm thẳng vào ảnh tham chiếu với vai trò Nhân vật (dùng cho tạo lẻ và hàng loạt).
 $("charBtn").onclick = async () => {
   const b = $("charBtn"), url = b.dataset.url;
@@ -479,10 +486,7 @@ async function makeFilm(urls, name, opt = {}){
     filmUrl = URL.createObjectURL(blob);
     const d0 = new Date(), p2 = n => String(n).padStart(2, "0"); // giờ máy (giờ Việt Nam), không dùng giờ quốc tế
     const fname = name + "-" + d0.getFullYear() + p2(d0.getMonth() + 1) + p2(d0.getDate()) + "-" + p2(d0.getHours()) + p2(d0.getMinutes()) + "." + ext;
-    $("filmProg").classList.add("hidden"); $("filmResult").classList.remove("hidden");
-    const fv = $("filmVideo"); fv.src = filmUrl; fv.style.aspectRatio = W + "/" + H;
-    const a = $("filmDl"); a.href = filmUrl; a.download = fname;
-    $("filmInfo").textContent = clips.length + " cảnh · " + Math.round(total) + " giây · " + W + "×" + H + " · " + fmtBytes(blob.size) + " · " + ext.toUpperCase();
+    showFilm(filmUrl, fname, clips.length + " cảnh · " + Math.round(total) + " giây · " + W + "×" + H + " · " + fmtBytes(blob.size) + " · " + ext.toUpperCase());
     toast("🎬 Đã ghép xong phim " + Math.round(total) + " giây. Bấm ⬇ Tải phim về máy để lưu.");
   }catch(e){
     filmSay("Ghép phim lỗi: " + e.message, 0); toast("Ghép phim lỗi: " + e.message, true);
@@ -501,10 +505,7 @@ async function helperFilm(names, name, fade, trim){
     filmSay("Đang tải phim vào trang…", 90);
     const blob = await (await fetch(d.url)).blob();
     filmUrl = URL.createObjectURL(blob);
-    $("filmProg").classList.add("hidden"); $("filmResult").classList.remove("hidden");
-    const fv = $("filmVideo"); fv.src = filmUrl; fv.style.aspectRatio = d.width + "/" + d.height;
-    const a = $("filmDl"); a.href = filmUrl; a.download = d.name;
-    $("filmInfo").textContent = names.length + " cảnh · " + Math.round(d.seconds) + " giây · " + d.width + "×" + d.height + " · " + fmtBytes(d.bytes) + " · MP4 · đã lưu sẵn: " + d.file;
+    showFilm(filmUrl, d.name, names.length + " cảnh · " + Math.round(d.seconds) + " giây · " + d.width + "×" + d.height + " · " + fmtBytes(d.bytes) + " · đã lưu sẵn: " + d.file);
     toast("🎬 Đã ghép xong phim " + Math.round(d.seconds) + " giây — đã lưu ở " + d.file);
   }catch(e){
     filmSay("Ghép phim lỗi: " + e.message, 0); toast("Ghép phim lỗi: " + e.message, true);
