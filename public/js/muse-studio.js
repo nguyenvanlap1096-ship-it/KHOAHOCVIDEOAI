@@ -248,7 +248,8 @@ function withVoice(p){
   const all = $("voiceNote").value.split("\n").map(s => s.trim()).filter(s => s && !/^Tên nhân vật:/i.test(s));
   const low = String(p).toLowerCase();
   const named = all.filter(l => { const nm = l.split(":")[0].trim().toLowerCase(); return nm && low.includes(nm); });
-  const v = named.length ? named : all.length === 1 ? all : [];
+  const short = l => { const w = l.split(/\s+/); return w.length > 20 ? w.slice(0, 20).join(" ") + "…" : l; }; // tên + ~16 từ mô tả giọng
+  const v = (named.length ? named : all.length === 1 ? all : []).map(short);
   return v.length ? p + " Voices, identical in every scene: " + v.join("; ") + "." : p;
 }
 function commonBody(){

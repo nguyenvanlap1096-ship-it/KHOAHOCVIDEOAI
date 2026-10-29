@@ -95,7 +95,8 @@ QUY TẮC BẮT BUỘC:
         snd && (c.sound_en || film.music_en) && "Sound: " + end(words([c.sound_en, film.music_en && "music " + film.music_en].filter(Boolean).join("; "), snd)),
         "No text, no subtitles, no watermark.",
       ].filter(Boolean).join(" "));
-      if (out.length + lines.length <= BUDGET) break;
+      // từ cảnh 2 Studio thêm câu nối cảnh (~120 ký tự) và ảnh khung cuối đã mang sẵn ngoại hình → chừa chỗ.
+      if (out.length + lines.length <= BUDGET - (c.n > 1 ? 150 : 0)) break;
     }
     return out;
   }
