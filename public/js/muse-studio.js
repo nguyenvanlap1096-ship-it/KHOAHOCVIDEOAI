@@ -248,7 +248,34 @@ $("voiceNote").value = LS.get("muse_voice") || "";
 const syncVoice = () => { LS.set("muse_voice", $("voiceNote").value); $("voiceOn").classList.toggle("hidden", !$("voiceNote").value.trim()); };
 $("voiceNote").addEventListener("input", syncVoice); syncVoice();
 // Chỉ gắn giọng của nhân vật có trong cảnh (tên xuất hiện trong prompt) — prompt gọn, muse không từ chối vì quá dài.
+// Thoại nhiều nhân vật trong một cảnh: từng câu ghi rõ ai nói, nét nhận diện và giọng NGAY TẠI CÂU ĐÓ, đúng thứ tự,
+// và chỉ người đang nói mấp máy miệng — để muse không gán nhầm lời thoại cho nhân vật khác.
+const clip = (t, n) => { const w = String(t || "").trim().split(/\s+/); return w.length > n ? w.slice(0, n).join(" ").replace(/[,;:]$/, "") : w.join(" "); };
+function voiceOf(name){
+  const line = $("voiceNote").value.split("\n").map(x => x.trim()).find(l => l.split(":")[0].trim().toLowerCase() === name.toLowerCase());
+  return line ? clip(line.slice(line.indexOf(":") + 1), 12) : "";
+}
+function tagOf(name){
+  try{ const f = JSON.parse(LS.get("muse_film_last") || "null"); const c = f && f.characters.find(x => x.name.toLowerCase() === name.toLowerCase()); return c ? clip(c.look_en.replace(/^(a|an|the)\s+/i, ""), 9) : ""; }catch{ return ""; }
+}
+function dialogueText(says){
+  if (!says.length) return "";
+  const lines = says.map((d, i) => {
+    const info = [tagOf(d.who), voiceOf(d.who) && "voice: " + voiceOf(d.who)].filter(Boolean).join("; ");
+    return (i + 1) + ") " + d.who + (info ? " (" + info + ")" : "") + (i ? " replies" : " says") + ' in Vietnamese: "' + d.text + '"';
+  });
+  const many = new Set(says.map(d => d.who)).size > 1;
+  return " Dialogue in this exact order" + (many ? ", only the character who is speaking moves their mouth while the others listen silently and react" : "") + ": " + lines.join(" ") + ".";
+}
+// Chú thích ảnh tham chiếu: "ảnh 1 là X, ảnh 2 là Y" — tránh muse lẫn nhân vật khi có nhiều ảnh.
+function refLegend(){
+  const imgs = refs.filter(r => !r.isDoc);
+  const named = imgs.map((r, i) => r.charName ? "image " + (i + 1) + " is " + r.charName : "").filter(Boolean);
+  return named.length ? "Reference images: " + named.join(", ") + "; keep each character exactly as in their image. " : "";
+}
 function withVoice(p){
+  p = refLegend() + p;
+  if (/\(.*voice: /.test(p)) return p; // giọng đã gắn ngay tại từng câu thoại
   const all = $("voiceNote").value.split("\n").map(s => s.trim()).filter(s => s && !/^Tên nhân vật:/i.test(s));
   const low = String(p).toLowerCase();
   const named = all.filter(l => { const nm = l.split(":")[0].trim().toLowerCase(); return nm && low.includes(nm); });
@@ -525,9 +552,9 @@ function batchParts(){
     for (const ln of block.split("\n")){
       const t = ln.trim();
       if (/^CANH\s*:/i.test(t)) shot = t.replace(/^CANH\s*:\s*/i, "");
-      else if (/^THOAI\s*:/i.test(t)){ const rest = t.replace(/^THOAI\s*:\s*/i, ""), i = rest.indexOf(":"); if (i > 0) says.push(`${rest.slice(0, i).trim()} says in Vietnamese: "${rest.slice(i + 1).trim()}"`); }
+      else if (/^THOAI\s*:/i.test(t)){ const rest = t.replace(/^THOAI\s*:\s*/i, ""), i = rest.indexOf(":"); if (i > 0) says.push({ who: rest.slice(0, i).trim(), text: rest.slice(i + 1).trim() }); }
     }
-    if (shot) out.push(shot + (says.length ? " Dialogue: " + says.join(" Then ") : ""));
+    if (shot) out.push(shot + dialogueText(says));
   }
   return out.slice(0, 500);
 }
@@ -869,11 +896,7 @@ async function init(){
       </div>
       <div class="small muted" style="margin-top:8px">Thứ tự gợi ý: tạo ảnh nhân vật → bấm 👤 Dùng làm nhân vật → Đưa vào Hàng loạt → ▶ Chạy hàng loạt. Studio tự nối cảnh, giữ giọng và ghép phim.</div>`;
     out.append(box);
-    if (sheet) $("fSheet").onclick = () => {
-      document.querySelector('#kindSeg [data-kind=image]').click(); $("sizeSel").value = "1024x1024"; $("prompt").value = sheet;
-      if (refs.some(r => !r.isDoc && r.role === "character")) toast("Lưu ý: đang gắn ảnh nhân vật cũ — bấm 🆕 Dự án mới trước nếu đây là phim mới.", true);
-      $("prompt").scrollIntoView({ behavior:"smooth", block:"center" }); toast("Đã điền prompt ảnh nhân vật — bấm ✦ Tạo ngay, ảnh ưng thì bấm 👤 Dùng làm nhân vật.");
-    };
+    if (sheet) $("fSheet").onclick = () => makeCastRefs(film);
     $("fUse").onclick = () => {
       $("batchPrompts").value = F.toCanhThoai(film); $("batchPrompts").dispatchEvent(new Event("input"));
       if (voice){ $("voiceNote").value = voice; $("voiceNote").dispatchEvent(new Event("input")); }
@@ -886,6 +909,44 @@ async function init(){
       toast("Đã đưa " + film.scenes.length + " cảnh vào Hàng loạt, bật Nối cảnh liền mạch và điền giọng nhân vật. Bấm ▶ Chạy hàng loạt.");
     };
     $("fCopy").onclick = async () => { let ok = false; try{ await navigator.clipboard.writeText(F.toCanhThoai(film)); ok = true; }catch{} toast(ok ? "Đã sao chép kịch bản CANH/THOAI." : "Không tự sao chép được.", !ok); };
+  }
+  // Mỗi nhân vật 1 ảnh tham chiếu nhiều góc (chính diện, 3/4, nghiêng, sau lưng, cận mặt), tạo lần lượt rồi tự gắn
+  // vào tham chiếu kèm tên — thay hết ảnh nhân vật cũ để không lẫn dự án trước.
+  let castBusy = false;
+  async function makeCastRefs(film){
+    if (castBusy){ toast("Đang tạo ảnh nhân vật — đợi xong đã.", true); return; }
+    const chars = film.characters.slice(0, 6);
+    if (refs.some(r => !r.isDoc && r.role === "character") && !confirm("Thay các ảnh nhân vật đang gắn bằng ảnh nhân vật của phim này?")) return;
+    castBusy = true; $("fSheet").disabled = true;
+    refs = refs.filter(r => r.isDoc || r.role !== "character"); renderRefs();
+    const say = t => { $("fSheet").textContent = t; };
+    try{
+      for (let i = 0; i < chars.length; i++){
+        const ch = chars[i]; let url = null;
+        for (let attempt = 1; attempt <= 2 && !url; attempt++){
+          say("🖼 Đang tạo ảnh " + ch.name + " (" + (i + 1) + "/" + chars.length + ")…");
+          try{
+            const body = { prompt: F.turnaround(film, ch), ...commonBody(), generation_mode:"independent", continuity_notes:"", sequence_id:null, size:"1280x720", reference_images:[], reference_roles:[], reference_files:[] };
+            const d = await api("/v1/images/tasks", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) });
+            const id = d.id || d.task_id;
+            for (;;){
+              await sleep(4000);
+              let x; try{ x = await api("/v1/images/tasks/" + id); }catch{ continue; }
+              tasks.set(id, { id, kind:"image", prompt:"Ảnh nhân vật " + ch.name, status:x.status, progress:x.progress, error:x.error || null, elapsed:x.elapsed, url:taskUrl(x), result:x.result, created_at:x.created_at || Date.now() / 1000 }); renderQueue();
+              if (x.status === "completed"){ url = taskUrl(x); break; }
+              if (["failed", "cancelled", "interrupted"].includes(x.status)) throw new Error(viErr(x.error) || "Tạo ảnh thất bại");
+            }
+          }catch(e){ if (attempt === 2) throw new Error(ch.name + ": " + e.message); }
+        }
+        const blob = await (await fetch(url)).blob();
+        const data = fixImageDataUrl(await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); }));
+        refs.push({ data, role:"character", name: ch.name + ".webp", charName: ch.name, isDoc:false }); renderRefs();
+        playMedia(url, "image", "Ảnh tham chiếu nhân vật: " + ch.name, ch.name);
+      }
+      $("refBox").open = true;
+      toast("Đã tạo và gắn " + chars.length + " ảnh nhân vật (mỗi nhân vật 1 ảnh nhiều góc). Bấm ➡ Đưa vào Hàng loạt nối cảnh.");
+    }catch(e){ toast("Tạo ảnh nhân vật dừng: " + e.message, true); }
+    finally{ castBusy = false; $("fSheet").disabled = false; $("fSheet").textContent = "🖼 Tạo ảnh nhân vật (bước 2)"; }
   }
   render();
 })();

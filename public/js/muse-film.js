@@ -28,11 +28,13 @@ QUY TẮC BẮT BUỘC:
 4. MỖI CẢNH 10 GIÂY = 1 CÚ MÁY LIỀN, KHÔNG CẮT: action_en 45–70 từ tiếng Anh: hành động theo nhịp đầu–giữa–cuối, CẢM XÚC hiện trên mặt và cử chỉ (run rẩy, mắt rưng rưng, mỉm cười…), một chuyển động máy (dolly, tracking, pan, crane…), chỉ gọi nhân vật bằng TÊN. mood_en tối đa 8 từ: cảm xúc chủ đạo và sự chuyển biến (vd "lonely and scared, turning hopeful").
 5. CÂU CHUYỆN CÓ Ý NGHĨA: cảnh đầu giới thiệu nhân vật + mong muốn; giữa là trở ngại/xung đột tăng dần; cao trào; cảnh cuối giải quyết và để lại cảm xúc hoặc bài học. Mỗi cảnh phải đẩy câu chuyện tiến lên, không lặp lại.
 6. ÂM THANH ĐỒNG BỘ: music_en tối đa 12 từ, nhạc nền chung cả phim (nhạc cụ, cảm xúc); mỗi cảnh sound_en tối đa 12 từ: âm thanh nền liên tục + 1 tiếng động cụ thể.
-7. ${talk ? `LỜI THOẠI: tiếng Việt tự nhiên, mỗi cảnh 1–2 câu, TỔNG KHÔNG QUÁ 18 TỪ (vừa 10 giây), người nói là tên trong hồ sơ hoặc "Người kể chuyện"; lời thoại nối tiếp nhau thành mạch truyện.` : "KHÔNG CÓ LỜI THOẠI: dialogue để mảng rỗng, kể chuyện bằng hình ảnh và âm thanh."}
-8. Phong cách hình ảnh giữ nguyên cả phim. Khung hình ${ratio}. Không chữ, không phụ đề, không logo/watermark. Không nội dung nhạy cảm.
+7. ${talk ? `LỜI THOẠI: tiếng Việt tự nhiên, mỗi cảnh 1–3 câu, TỔNG KHÔNG QUÁ 22 TỪ (vừa 10 giây). Nhiều nhân vật CÓ THỂ nói trong cùng một cảnh (đối đáp qua lại); mỗi câu chỉ MỘT người nói, ghi đúng tên người nói (tên trong hồ sơ hoặc "Người kể chuyện"), người nói phải CÓ MẶT trong cảnh đó; thứ tự câu khớp với diễn biến hành động; lời thoại nối tiếp nhau thành mạch truyện, đúng tính cách từng nhân vật.` : "KHÔNG CÓ LỜI THOẠI: dialogue để mảng rỗng, kể chuyện bằng hình ảnh và âm thanh."}
+8. VIẾT CÓ HỒN NHƯ ĐẠO DIỄN: mỗi hành động gắn với một cảm xúc cụ thể thể hiện trên khuôn mặt và cơ thể (ánh mắt, tai cụp, vai run, nụ cười run run…); thêm 1 chi tiết giác quan đắt giá (giọt mưa đọng trên ria, hơi thở mờ trong gió lạnh, lá khô xào xạc); ánh sáng phản chiếu tâm trạng; chuyển động máy có lý do cảm xúc (tiến sát khi xúc động, lùi xa khi cô đơn). Dùng từ gợi hình, cụ thể; tránh từ chung chung (beautiful, nice, amazing). Gọn nhưng giàu cảm xúc.
+9. AN TOÀN ĐỂ MUSE KHÔNG TỪ CHỐI: không tả trẻ nhỏ hay con non (sơ sinh, vài tháng tuổi) một mình gặp nguy hiểm, bị bỏ rơi, sợ hãi tột độ, bị thương hay ngã đau; xung đột nhẹ nhàng, hợp mọi lứa tuổi; không bạo lực, không máu me.
+10. Phong cách hình ảnh giữ nguyên cả phim. Khung hình ${ratio}. Không chữ, không phụ đề, không logo/watermark. Không nội dung nhạy cảm.
 
 ĐẦU RA: CHỈ MỘT KHỐI JSON hợp lệ, không markdown, không giải thích:
-{"title":"tên phim tiếng Việt","logline_vi":"tóm tắt 1–2 câu và ý nghĩa","style_en":"…","setting_en":"…","music_en":"…","characters":[{"name":"tên tiếng Việt","look_en":"…","voice_en":"…"}],"scenes":[{"n":1,"summary_vi":"cảnh này kể gì (tiếng Việt)","start_en":"…","action_en":"…","end_en":"…","mood_en":"…","sound_en":"…","dialogue":[{"speaker":"tên","text_vi":"…"}]}]}`;
+{"title":"tên phim tiếng Việt","logline_vi":"tóm tắt 1–2 câu và ý nghĩa","style_en":"…","setting_en":"…","music_en":"…","characters":[{"name":"tên tiếng Việt","look_en":"…","voice_en":"…"}],"scenes":[{"n":1,"summary_vi":"cảnh này kể gì (tiếng Việt)","start_en":"…","action_en":"…","end_en":"…","mood_en":"…","sound_en":"…","dialogue":[{"speaker":"tên","text_vi":"…"},{"speaker":"tên khác (nếu đối đáp)","text_vi":"…"}]}]}`;
     const user = [
       `Ý TƯỞNG PHIM: ${s(o.idea)}`,
       o.cast ? `NHÂN VẬT NGƯỜI DÙNG MUỐN (giữ đúng tên/đặc điểm, bổ sung phần thiếu): ${s(o.cast)}` : "",
@@ -69,7 +71,7 @@ QUY TẮC BẮT BUỘC:
   // chỉ gắn nhân vật có mặt trong cảnh. Ngân sách tính cả lời thoại (giọng do Studio gắn thêm sau).
   const words = (t, n) => { const w = s(t).split(" "); return w.length > n ? w.slice(0, n).join(" ").replace(/[,;:]$/, "") + "…" : s(t); };
   const end = t => s(t).replace(/[.…]?$/, ".");
-  const BUDGET = 900;
+  const BUDGET = 820; // Studio còn gắn thêm: chú thích ảnh tham chiếu, nhận diện + giọng ngay tại từng câu thoại
   function inScene(film, c) {
     const txt = [c.start_en, c.action_en, c.end_en, ...c.dialogue.map(d => d.speaker)].join(" ").toLowerCase();
     const hit = film.characters.filter(x => txt.includes(x.name.toLowerCase()));
@@ -112,6 +114,11 @@ QUY TẮC BẮT BUỘC:
       cs.map((c, i) => (cs.length > 1 ? (i + 1) + ") " : "") + c.name + ": " + c.look_en).join("; ") + ". No text, no labels.";
   }
 
+  // Ảnh tham chiếu nhiều góc cho MỘT nhân vật (mỗi nhân vật 1 ảnh) — để muse giữ đúng nhân vật ở mọi cảnh.
+  function turnaround(film, ch) {
+    return s(`Character turnaround reference sheet of ONE single character: ${ch.name}, ${ch.look_en}. The same character shown five times side by side on one sheet: front view, three-quarter view, side profile, back view, all full body in a neutral standing pose, plus one close-up of the face with a gentle neutral expression. ${s(film.style_en).split(",").slice(0, 3).join(",")}. Plain light-grey background, even soft studio lighting, identical proportions, colors and outfit in every view, sharp clean details. Only this one character, no other characters, no text, no labels.`);
+  }
+
   // Trình viết nhanh (không cần AI): khung 4 nhịp mở – thắt – cao trào – mở nút, nối khung cuối → khung đầu.
   function quick(o) {
     const st = find(STYLES, o.style), n = clampN(o.scenes, 2, 12, 4), idea = s(o.idea) || "một ngày phiêu lưu";
@@ -133,7 +140,7 @@ QUY TẮC BẮT BUỘC:
     return { ratio: o.ratio || "16:9", title: idea.slice(0, 60), logline_vi: idea, style_en: st.en, setting_en: "one consistent location that matches the story, natural light changing gradually", music_en: "one soft cinematic theme played throughout", characters, scenes, quick: true };
   }
 
-  const api = { STYLES, buildBrief, parse, normalize, scenePrompt, toCanhThoai, voiceNote, castSheet, quick };
+  const api = { STYLES, buildBrief, parse, normalize, scenePrompt, toCanhThoai, voiceNote, castSheet, turnaround, quick };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.MuseFilm = api;
 })(typeof window !== "undefined" ? window : globalThis);
