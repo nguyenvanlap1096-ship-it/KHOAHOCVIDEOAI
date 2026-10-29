@@ -180,8 +180,23 @@ function renderRefs(){
       rm.textContent = "Bỏ ảnh"; d.querySelector(".meta").append(sel, rm); w.append(d);
     }
   });
-  saveRefs();
+  saveRefs(); syncRefBadge();
 }
+// Thanh báo ảnh tham chiếu đang gắn — để không vô tình mang nhân vật của dự án cũ sang dự án mới.
+function syncRefBadge(){
+  const imgs = refs.filter(r => !r.isDoc), chars = imgs.filter(r => r.role === "character").length, docs = refs.length - imgs.length;
+  $("refBadge").classList.toggle("hidden", !refs.length);
+  $("refBadgeImgs").innerHTML = imgs.slice(0, 4).map(r => `<img src="${r.data}" alt="">`).join("");
+  $("refBadgeText").textContent = "Đang gắn " + [imgs.length ? imgs.length + " ảnh tham chiếu" + (chars ? " (" + chars + " nhân vật)" : "") : "", docs ? docs + " tài liệu" : ""].filter(Boolean).join(" + ") + " vào mọi lần tạo.";
+}
+$("refBadgeClear").onclick = () => { refs = []; renderRefs(); toast("Đã bỏ ảnh tham chiếu."); };
+$("newProject").onclick = () => {
+  if (!confirm("Bắt đầu dự án mới?\n\nSẽ bỏ: ảnh nhân vật/tham chiếu, giọng nhân vật, ghi chú chuỗi, kịch bản hàng loạt và mô tả đang gõ.\nVideo đã tạo trong Thư viện vẫn giữ nguyên.")) return;
+  refs = []; renderRefs();
+  for (const id of ["voiceNote", "continuity", "batchPrompts", "prompt"]){ $(id).value = ""; $(id).dispatchEvent(new Event("input")); }
+  LS.del("studio_seq_" + ($("accountSel").value || "auto")); seqId = null; lastGen = null;
+  toast("Đã bắt đầu dự án mới — không còn nhân vật hay giọng của dự án trước.");
+};
 function saveRefs(){ try{ localStorage.setItem("studio_refs_v1", JSON.stringify(refs)); }catch{ /* ảnh lớn vượt bộ nhớ trình duyệt: chỉ giữ trong phiên */ } }
 // Muse2API chỉ nhận data URL image/png|jpeg|webp. Ảnh lấy từ thư viện của chính Muse2API được trả về là
 // application/octet-stream, nên đọc vài byte đầu để ghi lại đúng định dạng.
@@ -254,15 +269,19 @@ function playMedia(url, k, prompt, filename){
 // Ảnh vừa tạo → thêm thẳng vào ảnh tham chiếu với vai trò Nhân vật (dùng cho tạo lẻ và hàng loạt).
 $("charBtn").onclick = async () => {
   const b = $("charBtn"), url = b.dataset.url;
-  if (refs.filter(r => !r.isDoc).length >= 8){ toast("Đã đủ 8 ảnh tham chiếu. Bỏ bớt ảnh rồi thử lại.", true); return; }
+  // Mỗi lần chỉ 1 nhân vật chính từ nút này: ảnh mới THAY nhân vật cũ, không cộng dồn.
+  const replaced = refs.some(r => !r.isDoc && r.role === "character");
+  if (refs.filter(r => !r.isDoc && r.role !== "character").length >= 8){ toast("Đã đủ 8 ảnh tham chiếu. Bỏ bớt ảnh rồi thử lại.", true); return; }
   b.disabled = true;
   try{
     const blob = await (await fetch(url)).blob();
     if (blob.size > 5 * 1024 * 1024) throw new Error("Ảnh lớn hơn 5 MB");
     const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
+    refs = refs.filter(r => r.isDoc || r.role !== "character");
     refs.push({ data, role: "character", name: b.dataset.name, isDoc: false });
     renderRefs();
-    document.querySelector("details").open = true;
+    $("refBox").open = true;
+    if (replaced) toast("Đã thay nhân vật cũ bằng ảnh này.");
     toast("Đã thêm ảnh làm Nhân vật. Mọi video tạo lẻ và hàng loạt từ giờ sẽ giữ nhân vật này (bấm Xoá hết để bỏ).");
   }catch(e){ toast("Không thêm được ảnh: " + e.message, true); }
   finally{ b.disabled = false; }
@@ -316,6 +335,11 @@ async function loadServerTasks(){
 async function generate(){
   const prompt = $("prompt").value.trim();
   if (!prompt){ toast("Hãy nhập mô tả trước", true); $("prompt").focus(); return; }
+  // Tạo ẢNH (thường là nhân vật mới) mà vẫn đang gắn ảnh nhân vật cũ → hỏi trước để không lẫn nhân vật.
+  if (kind === "image" && refs.some(r => !r.isDoc && r.role === "character")
+      && !confirm("Đang gắn ảnh NHÂN VẬT cũ vào lần tạo này.\n\nOK = vẫn dùng nhân vật đó (ví dụ vẽ nhân vật cũ ở cảnh mới).\nHuỷ = BỎ nhân vật cũ rồi tạo ảnh mới.")){
+    refs = refs.filter(r => r.isDoc || r.role !== "character"); renderRefs(); toast("Đã bỏ nhân vật cũ.");
+  }
   const body = { prompt: withVoice(prompt), ...commonBody(), sequence_id: $("modeSel").value === "coherent" ? getSeqId() : null };
   if (kind === "video") body.duration = Number($("durSel").value);
   const b = $("genBtn"); b.disabled = true; b.textContent = "Đang gửi…";

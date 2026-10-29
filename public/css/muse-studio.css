@@ -98,3 +98,6 @@ details summary:hover{color:var(--acc)}
 .noacc .txt{flex:1;min-width:240px}.noacc b{display:block;font-size:15.5px;margin-bottom:2px}
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:10px;border:2px solid var(--panel)}
 @media (max-width:1150px){.app{grid-template-columns:1fr;padding:14px}.side,.queue-col{position:static;max-height:none}}
+.refbadge{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px;padding:8px 10px;border-radius:12px;background:var(--acc-soft);border:1px solid color-mix(in srgb,var(--acc) 35%,var(--line));font-size:13px}
+.refbadge-imgs{display:flex;gap:4px}.refbadge-imgs img{width:34px;height:34px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.refbadge .btn{padding:5px 10px;font-size:12.5px}
