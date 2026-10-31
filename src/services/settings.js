@@ -5,6 +5,7 @@ const DEFAULTS = {
   site_name: '',
   site_tagline: 'Học trực tuyến',
   site_logo: '',
+  hero_image: '',
   hero_title: 'Làm chủ Video AI từ A–Z',
   hero_text: 'Học từng bước từ cơ bản đến nâng cao: lên ý tưởng, viết prompt, tạo hình ảnh, dựng video và hoàn thiện sản phẩm bằng AI.',
   zalo_phone: '',
@@ -80,6 +81,7 @@ function siteInfo(s, fallbackName) {
     heroTitle: s.hero_title || DEFAULTS.hero_title,
     heroText: s.hero_text || DEFAULTS.hero_text,
     logo: s.site_logo ? `/uploads/images/${s.site_logo}` : '/img/logo.svg',
+    heroImage: s.hero_image ? `/uploads/images/${s.hero_image}` : '',
   };
 }
 

@@ -1130,6 +1130,26 @@ mark { background: color-mix(in srgb, #FBBF24 35%, transparent); color: inherit;
 .page-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); flex-wrap: wrap; }
 .page-nav-info { font-size: 13px; color: var(--text-muted); text-align: center; flex: 1; min-width: 200px; }
 
+/* Ảnh nền banner trang chủ: chữ + ô tìm kiếm nằm gọn nửa trái trên nền phủ gần như đặc,
+   ảnh chỉ hiện rõ ở nửa phải → chữ giữ nguyên màu và độ rõ như khi không có ảnh (cả sáng / tối). */
+.hero.has-image {
+  grid-template-columns: 1fr;
+  background:
+    linear-gradient(90deg, var(--surface) 0%, color-mix(in srgb, var(--surface) 94%, transparent) 50%, color-mix(in srgb, var(--surface) 35%, transparent) 72%, transparent 100%),
+    var(--hero-img) center right / cover no-repeat,
+    var(--surface);
+}
+.hero.has-image > div, .hero.has-image > .hero-search { max-width: min(560px, 56%); }
+@media (max-width: 900px) {
+  .hero.has-image {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface) 93%, transparent) 0%, color-mix(in srgb, var(--surface) 86%, transparent) 100%),
+      var(--hero-img) center / cover no-repeat,
+      var(--surface);
+  }
+  .hero.has-image > div, .hero.has-image > .hero-search { max-width: none; }
+}
+
 /* Nút chuyển sáng / tối */
 .theme-toggle .i-moon, :root[data-theme="dark"] .theme-toggle .i-sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .i-moon { display: inline; }

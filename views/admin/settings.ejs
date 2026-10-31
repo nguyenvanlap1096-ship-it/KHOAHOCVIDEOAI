@@ -35,6 +35,10 @@
       name: 'site_logo', label: 'Logo (vuông)', current: values.site_logo, ratio: '1/1', error: errors.site_logo,
       hint: `Ảnh vuông, nền trong suốt càng tốt (PNG/WebP), ví dụ 256×256. Dùng làm logo và biểu tượng tab trình duyệt. Tối đa ${maxImageMb} MB.`,
     }) %>
+    <%- include('../partials/image-field', {
+      name: 'hero_image', label: 'Ảnh nền banner trang chủ', current: values.hero_image, ratio: '16/5', error: errors.hero_image,
+      hint: `Ảnh ngang, khoảng 1600×500. Ảnh làm nền phía sau khung "${values.hero_title || 'Làm chủ Video AI từ A–Z'}": bên trái được phủ mờ nên chữ luôn dễ đọc, chủ thể chính nên đặt ở nửa bên phải. Tối đa ${maxImageMb} MB.`,
+    }) %>
 
     <h2 class="form-section">Lưu trữ video</h2>
     <div class="storage-box <%= storage.persistent ? 'is-safe' : 'is-risk' %>">

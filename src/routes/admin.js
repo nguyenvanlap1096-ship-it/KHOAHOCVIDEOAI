@@ -549,7 +549,7 @@ router.get('/settings', async (req, res) => {
   res.render('admin/settings', { title: 'Cài đặt', values: await getSettings(), defaultSiteName: config.siteName, banks: BANKS, storage: storageInfo(), errors: {}, maxImageMb: MAX_IMAGE_MB, ...nav('settings') });
 });
 
-router.post('/settings', acceptFiles(['zalo_qr', 'site_logo']), async (req, res) => {
+router.post('/settings', acceptFiles(['zalo_qr', 'site_logo', 'hero_image']), async (req, res) => {
   const current = await getSettings();
   const b = req.body || {};
   const values = {
@@ -583,15 +583,17 @@ router.post('/settings', acceptFiles(['zalo_qr', 'site_logo']), async (req, res)
   }
   values.zalo_qr = resolveImage(req, 'zalo_qr', current.zalo_qr, errors) || '';
   values.site_logo = resolveImage(req, 'site_logo', current.site_logo, errors) || '';
+  values.hero_image = resolveImage(req, 'hero_image', current.hero_image, errors) || '';
   if (hasErrors(errors)) {
     discardUploads(req);
     return res.status(400).render('admin/settings', {
-      title: 'Cài đặt', defaultSiteName: config.siteName, banks: BANKS, storage: storageInfo(), values: { ...values, zalo_qr: current.zalo_qr, site_logo: current.site_logo }, errors, maxImageMb: MAX_IMAGE_MB, ...nav('settings'),
+      title: 'Cài đặt', defaultSiteName: config.siteName, banks: BANKS, storage: storageInfo(), values: { ...values, zalo_qr: current.zalo_qr, site_logo: current.site_logo, hero_image: current.hero_image }, errors, maxImageMb: MAX_IMAGE_MB, ...nav('settings'),
     });
   }
   await setSettings(values);
   cleanupReplaced(current.zalo_qr, values.zalo_qr);
   cleanupReplaced(current.site_logo, values.site_logo);
+  cleanupReplaced(current.hero_image, values.hero_image);
   req.flash('success', 'Đã lưu cài đặt.');
   res.redirect('/admin/settings');
 });

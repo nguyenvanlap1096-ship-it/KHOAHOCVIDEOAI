@@ -1,7 +1,7 @@
 <%- include('partials/top', { crumbs: [{ label: 'Khóa học', href: '/' }, { label: 'Khám phá' }] }) %>
 <% const showShelf = premium.courses.length > 0 || premium.bundle.enabled || (user && user.role === 'admin'); %>
 <div class="page home-page <%= showShelf ? 'has-shelf' : '' %>">
-  <section class="hero">
+  <section class="hero<%= hero.image ? ' has-image' : '' %>"<% if (hero.image) { %> style="--hero-img:url('<%= hero.image %>')"<% } %>>
     <div>
       <% if (user) { %><span class="eyebrow">Chào <%= user.name %>, hôm nay học gì?</span><% } %>
       <h1><%= hero.title %></h1>
