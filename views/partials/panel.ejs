@@ -23,7 +23,7 @@
       <a class="nav-item" href="/admin/orders" <%- locals.adminNav === 'orders' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-receipt"/></svg><span class="t">Đơn hàng</span><% if (pendingOrders) { %><span class="chip chip-alert"><%= pendingOrders %></span><% } %></a>
       <a class="nav-item" href="/admin/studio" <%- locals.adminNav === 'studio' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-wand"/></svg><span class="t">Xưởng Kịch bản AI</span></a>
       <a class="nav-item" href="/admin/muse" <%- locals.adminNav === 'muse' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-video"/></svg><span class="t">Muse Studio</span></a>
-      <a class="nav-item" href="/admin/users" <%- locals.adminNav === 'users' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-users"/></svg><span class="t">Người dùng</span></a>
+      <a class="nav-item" href="/admin/users" <%- locals.adminNav === 'users' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-users"/></svg><span class="t">Người dùng</span><% if (locals.pendingUsers) { %><span class="chip chip-alert" title="Tài khoản chờ duyệt"><%= pendingUsers %></span><% } %></a>
       <a class="nav-item" href="/admin/settings" <%- locals.adminNav === 'settings' ? 'aria-current="true"' : '' %>><svg class="i"><use href="#i-settings"/></svg><span class="t">Cài đặt &amp; Zalo</span></a>
     </div>
   <% } %>

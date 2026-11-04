@@ -161,6 +161,25 @@ function fmtSize(bytes) {
   return b > 1048576 ? `${(b / 1048576).toFixed(1).replace('.', ',')} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
 }
 
+// Học viên đăng ký bằng số điện thoại: lưu dưới dạng email nội bộ "sdt.<số>@hocvien.local"
+// (cột email bắt buộc & duy nhất) – giao diện luôn hiện số điện thoại thay cho email này.
+const PHONE_EMAIL_RE = /^sdt\.(\d{9,12})@hocvien\.local$/;
+
+// "+84 901 234 567" / "84901234567" / "0901.234.567" → "0901234567"; không hợp lệ → "".
+function normalizePhone(input) {
+  let d = String(input || '').replace(/\D/g, '');
+  if (d.startsWith('84') && d.length >= 11) d = '0' + d.slice(2);
+  return /^0\d{9}$/.test(d) ? d : '';
+}
+
+const phoneEmail = phone => `sdt.${phone}@hocvien.local`;
+
+// Thông tin liên hệ để hiển thị: số điện thoại (nếu đăng ký bằng SĐT) hoặc email.
+function contactOf(email) {
+  const m = PHONE_EMAIL_RE.exec(String(email || ''));
+  return m ? m[1].replace(/^(\d{4})(\d{3})(\d+)$/, '$1 $2 $3') : String(email || '');
+}
+
 function daysSince(dateStr) {
   const t = Date.parse(String(dateStr || '').replace(' ', 'T') + (/[zZ+]/.test(String(dateStr)) ? '' : 'Z'));
   return Number.isFinite(t) ? (Date.now() - t) / 86400000 : Infinity;
@@ -177,5 +196,5 @@ module.exports = {
   LEVELS, fmtDuration, fmtTotal, parseDuration, slugify, youtubeId,
   initials, lines, paragraphs, parseResources, coursePercent, fmtDateTime,
   VIDEO_RATIOS, nearestRatio, ratioParts, coverLabel, imageUrl, lessonThumb, escapeHtml, highlightPrompt, freshness,
-  promptBlocks, fmtSize,
+  promptBlocks, fmtSize, normalizePhone, phoneEmail, contactOf,
 };

@@ -3,7 +3,7 @@
   const field = (name, label, type, autocomplete, hint) => ({ name, label, type, autocomplete, hint });
   const fields = [
     field('name', 'Họ và tên', 'text', 'name'),
-    field('email', 'Email', 'email', 'email'),
+    field('phone', 'Số điện thoại (Zalo)', 'tel', 'tel', 'Dùng số này để đăng nhập. Quản trị viên sẽ liên hệ số này để xác nhận.'),
     field('password', 'Mật khẩu', 'password', 'new-password', 'Ít nhất 8 ký tự.'),
     field('password_confirm', 'Nhập lại mật khẩu', 'password', 'new-password'),
   ];
@@ -12,7 +12,7 @@
   <div class="auth-card card">
     <img class="brand-logo" src="<%= siteLogo %>" alt="" width="44" height="44">
     <h1>Tạo tài khoản</h1>
-    <p class="muted">Miễn phí. Lưu tiến độ học và tiếp tục trên mọi thiết bị.</p>
+    <p class="muted">Đăng ký bằng số điện thoại. Tài khoản được kích hoạt sau khi quản trị viên xác nhận bạn là học viên của khóa học.</p>
 
     <form method="post" action="/register" class="form" novalidate>
       <input type="hidden" name="_csrf" value="<%= csrf %>">
@@ -21,7 +21,7 @@
         <div class="field <%= err ? 'has-error' : '' %>">
           <label for="<%= f.name %>"><%= f.label %></label>
           <% if (f.type === 'password') { %><div class="password-wrap"><% } %>
-          <input id="<%= f.name %>" name="<%= f.name %>" type="<%= f.type %>" autocomplete="<%= f.autocomplete %>" required
+          <input id="<%= f.name %>" name="<%= f.name %>" type="<%= f.type %>" autocomplete="<%= f.autocomplete %>" required <%- f.type === 'tel' ? 'inputmode="tel" placeholder="09xx xxx xxx"' : '' %>
                  <% if (f.type !== 'password') { %>value="<%= values[f.name] || '' %>"<% } %>
                  <% if (err || f.hint) { %>aria-describedby="<%= f.name %>-msg"<% } %> <%- err ? 'aria-invalid="true"' : '' %>
                  <%- (i === 0 && !Object.keys(errors).length) || (err && Object.keys(errors)[0] === f.name) ? 'autofocus' : '' %>>
@@ -29,7 +29,7 @@
           <% if (err) { %><p class="field-error" id="<%= f.name %>-msg"><%= err %></p><% } else if (f.hint) { %><p class="field-hint" id="<%= f.name %>-msg"><%= f.hint %></p><% } %>
         </div>
       <% }) %>
-      <button class="btn btn-primary btn-lg btn-block" type="submit" data-loading-text="Đang tạo tài khoản...">Tạo tài khoản</button>
+      <button class="btn btn-primary btn-lg btn-block" type="submit" data-loading-text="Đang gửi đăng ký...">Đăng ký</button>
     </form>
     <p class="auth-alt">Đã có tài khoản? <a href="/login<%= next !== '/' ? '?next=' + encodeURIComponent(next) : '' %>">Đăng nhập</a></p>
   </div>

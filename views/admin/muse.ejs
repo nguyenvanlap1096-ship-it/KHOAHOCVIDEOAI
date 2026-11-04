@@ -61,10 +61,10 @@
       <tbody>
         <% if (!students.length) { %><tr><td colspan="6" class="muted">Chưa có học viên nào.</td></tr><% } %>
         <% students.forEach(s => { const isOn = Number(s.muse_enabled) === 1; %>
-          <tr data-filter-row data-text="<%= (s.name + ' ' + s.email).toLowerCase() %>">
+          <tr data-filter-row data-text="<%= (s.name + ' ' + h.contactOf(s.email)).toLowerCase() %>">
             <td><input type="checkbox" name="ids" value="<%= s.id %>" form="museBulk" data-check-item aria-label="Chọn <%= s.name %>"></td>
             <td><span class="cell-user"><span class="avatar avatar-sm"><%= h.initials(s.name) %></span><%= s.name %></span></td>
-            <td><%= s.email %></td>
+            <td><%= h.contactOf(s.email) %></td>
             <td><%= Number(s.paid) ? '✓ Có' : '—' %></td>
             <td><%= String(s.created_at).slice(0, 10) %></td>
             <td>

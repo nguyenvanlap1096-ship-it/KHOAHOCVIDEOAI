@@ -43,7 +43,7 @@
           <% orders.forEach(o => { %>
             <tr>
               <td><strong class="mono-code"><%= o.transfer_code %></strong></td>
-              <td><span class="d-block"><%= o.user_name %></span><small class="muted"><%= o.user_email %></small></td>
+              <td><span class="d-block"><%= o.user_name %></span><small class="muted"><%= h.contactOf(o.user_email) %></small></td>
               <td><%= o.item_title %><% if (o.item_type === 'bundle') { %> <span class="badge badge-premium">Trọn bộ</span><% } %></td>
               <td><strong><%= fmtVnd(o.amount) %></strong></td>
               <td>

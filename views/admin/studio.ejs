@@ -92,7 +92,7 @@
       <div class="table-wrap card" style="margin-top:12px">
         <table class="table">
           <thead><tr><th>Học viên</th><th>Email</th><th class="ta-right">Lượt / tháng</th></tr></thead>
-          <tbody><% custom.forEach(u => { %><tr><td><%= u.name %></td><td><%= u.email %></td><td class="ta-right"><%= u.studio_quota %></td></tr><% }) %></tbody>
+          <tbody><% custom.forEach(u => { %><tr><td><%= u.name %></td><td><%= h.contactOf(u.email) %></td><td class="ta-right"><%= u.studio_quota %></td></tr><% }) %></tbody>
         </table>
       </div>
     <% } %>
@@ -109,7 +109,7 @@
           <tbody>
             <% perUser.forEach(u => { %>
               <tr>
-                <td><%= u.name %></td><td><%= u.email %></td><td class="ta-right"><%= u.used %></td>
+                <td><%= u.name %></td><td><%= h.contactOf(u.email) %></td><td class="ta-right"><%= u.used %></td>
                 <td class="ta-right"><%= u.role === 'admin' ? 'Không giới hạn' : (u.studio_quota != null ? u.studio_quota + ' (riêng)' : cfg.points) %></td>
               </tr>
             <% }) %>

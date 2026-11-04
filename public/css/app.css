@@ -1150,6 +1150,27 @@ mark { background: color-mix(in srgb, #FBBF24 35%, transparent); color: inherit;
   .hero.has-image > div, .hero.has-image > .hero-search { max-width: none; }
 }
 
+/* Trang "Đã gửi đăng ký – chờ duyệt" */
+.pending-card { text-align: center; }
+.pending-card p { margin: 0 0 10px; line-height: 1.6; }
+.pending-ico { display: inline-grid; place-items: center; width: 56px; height: 56px; margin-bottom: 8px; border-radius: 50%; background: var(--warn-soft); color: var(--warn); }
+.pending-ico .i { width: 28px; height: 28px; }
+.pending-zalo { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 18px 0 6px; padding: 16px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
+.pending-zalo img { border-radius: 10px; background: #fff; padding: 6px; }
+
+/* Quản trị: tài khoản chờ duyệt */
+.pending-users { padding: 18px 20px; margin-bottom: 24px; }
+.pending-users.has-pending { border-color: var(--warn); box-shadow: 0 0 0 3px var(--warn-soft); }
+.pending-users-head { display: flex; gap: 14px; align-items: flex-start; }
+.pending-users-head h2 { margin: 0 0 4px; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.pending-users-head p { margin: 0; font-size: 13px; line-height: 1.55; }
+.pending-users-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--warn-soft); color: var(--warn); flex-shrink: 0; }
+.pending-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+.pending-list li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); flex-wrap: wrap; }
+.pending-who { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 2px; }
+.pending-phone { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pending-empty { margin: 12px 0 0; font-size: 14px; }
+
 /* Nút chuyển sáng / tối */
 .theme-toggle .i-moon, :root[data-theme="dark"] .theme-toggle .i-sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .i-moon { display: inline; }

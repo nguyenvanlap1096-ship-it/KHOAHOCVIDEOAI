@@ -3,8 +3,9 @@ const db = require('../db');
 async function loadUser(req, res, next) {
   req.user = null;
   if (req.session.userId) {
-    const user = await db.get('SELECT id, name, email, role, muse_enabled FROM users WHERE id = ?', [req.session.userId]);
-    if (user) req.user = user;
+    const user = await db.get('SELECT id, name, email, role, muse_enabled, status FROM users WHERE id = ?', [req.session.userId]);
+    // Tài khoản chưa được duyệt (hoặc đã bị xóa) thì coi như chưa đăng nhập.
+    if (user && user.status === 'active') req.user = user;
     else delete req.session.userId;
   }
   res.locals.user = req.user;

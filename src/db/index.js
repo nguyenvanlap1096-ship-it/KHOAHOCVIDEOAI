@@ -77,6 +77,8 @@ async function columnExists(table, column) {
 // Bổ sung cột mới cho cơ sở dữ liệu tạo từ phiên bản cũ (CREATE TABLE IF NOT EXISTS không tự thêm cột).
 // SQLite không cho ADD COLUMN với DEFAULT CURRENT_TIMESTAMP nên điền giá trị sau khi thêm.
 const MIGRATIONS = [
+  // Trạng thái tài khoản: 'pending' = học viên mới đăng ký chờ admin duyệt; tài khoản cũ mặc định 'active'.
+  { table: 'users', column: 'status', mysql: "VARCHAR(20) NOT NULL DEFAULT 'active'", sqlite: "TEXT NOT NULL DEFAULT 'active'" },
   { table: 'courses', column: 'cover_image', mysql: 'VARCHAR(100)', sqlite: 'TEXT' },
   { table: 'lessons', column: 'thumbnail', mysql: 'VARCHAR(100)', sqlite: 'TEXT' },
   { table: 'lessons', column: 'video_ratio', mysql: 'VARCHAR(8)', sqlite: 'TEXT' },

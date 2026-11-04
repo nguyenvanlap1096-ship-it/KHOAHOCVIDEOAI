@@ -48,7 +48,7 @@
           <svg class="i i-sun"><use href="#i-sun"/></svg><svg class="i i-moon"><use href="#i-moon"/></svg>
         </button>
         <% if (user) { %>
-          <a class="user-chip" href="/my" title="<%= user.email %>">
+          <a class="user-chip" href="/my" title="<%= h.contactOf(user.email) %>">
             <span class="avatar"><%= h.initials(user.name) %></span>
             <span class="user-name"><%= user.name %></span>
           </a>

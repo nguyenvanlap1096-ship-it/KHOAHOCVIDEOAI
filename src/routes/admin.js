@@ -731,12 +731,26 @@ router.post('/muse/bulk', async (req, res) => {
 /* ---------- Người dùng ---------- */
 router.get('/users', async (req, res) => {
   const users = await db.all(
-    `SELECT u.id, u.name, u.email, u.role, u.created_at, COUNT(p.lesson_id) AS lessons_started
+    `SELECT u.id, u.name, u.email, u.role, u.status, u.created_at, COUNT(p.lesson_id) AS lessons_started
        FROM users u LEFT JOIN progress p ON p.user_id = u.id
-      GROUP BY u.id, u.name, u.email, u.role, u.created_at
+      GROUP BY u.id, u.name, u.email, u.role, u.status, u.created_at
       ORDER BY u.id DESC`,
   );
-  res.render('admin/users', { title: 'Người dùng', users, ...nav('users') });
+  res.render('admin/users', {
+    title: 'Người dùng', pending: users.filter(u => u.status === 'pending'), users: users.filter(u => u.status !== 'pending'), ...nav('users'),
+  });
+});
+
+// Duyệt học viên đăng ký bằng số điện thoại: cho phép đăng nhập và vào học.
+router.post('/users/:id/approve', async (req, res) => {
+  const target = await db.get("SELECT id, name FROM users WHERE id = ? AND status = 'pending'", [Number(req.params.id) || 0]);
+  if (!target) {
+    req.flash('error', 'Không tìm thấy tài khoản chờ duyệt.');
+  } else {
+    await db.run("UPDATE users SET status = 'active' WHERE id = ?", [target.id]);
+    req.flash('success', `Đã duyệt “${target.name}”. Học viên đăng nhập bằng số điện thoại để vào học.`);
+  }
+  res.redirect('/admin/users');
 });
 
 router.post('/users/:id/role', async (req, res) => {
@@ -813,7 +827,7 @@ router.post('/users/:id/delete', async (req, res) => {
     await db.run('DELETE FROM access WHERE user_id = ?', [target.id]);
     await db.run('DELETE FROM orders WHERE user_id = ?', [target.id]);
     await db.run('DELETE FROM users WHERE id = ?', [target.id]);
-    req.flash('success', `Đã xóa học viên “${target.name}”.`);
+    req.flash('success', `Đã xóa tài khoản “${target.name}”.`);
   }
   res.redirect('/admin/users');
 });

@@ -1,14 +1,52 @@
 <%- include('../partials/top', { crumbs: [{ label: 'Quản trị', href: '/admin' }, { label: 'Người dùng' }] }) %>
 <div class="page">
-  <h1 class="page-title">Người dùng <span class="chip"><%= users.length %></span></h1>
+  <h1 class="page-title">Người dùng <span class="chip"><%= users.length + pending.length %></span></h1>
+
+  <section class="pending-users card <%= pending.length ? 'has-pending' : '' %>" aria-labelledby="pendingTitle">
+    <div class="pending-users-head">
+      <span class="pending-users-ico"><svg class="i"><use href="#i-clock"/></svg></span>
+      <div>
+        <h2 id="pendingTitle">Chờ duyệt <span class="chip <%= pending.length ? 'chip-alert' : '' %>"><%= pending.length %></span></h2>
+        <p class="muted">Học viên đăng ký bằng số điện thoại. Kiểm tra đúng học viên của khóa học thì bấm <strong>Duyệt</strong> để cho vào học; không đúng thì bấm <strong>Xóa</strong> – tài khoản bị xóa không đăng nhập được.</p>
+      </div>
+    </div>
+    <% if (pending.length) { %>
+      <ul class="pending-list">
+        <% pending.forEach(u => { %>
+          <li>
+            <span class="avatar avatar-sm"><%= h.initials(u.name) %></span>
+            <span class="pending-who">
+              <strong><%= u.name %></strong>
+              <span class="pending-phone"><svg class="i i-sm"><use href="#i-phone"/></svg><%= h.contactOf(u.email) %></span>
+              <small class="muted">Đăng ký lúc <%= h.fmtDateTime(u.created_at) %></small>
+            </span>
+            <span class="row-actions">
+              <form method="post" action="/admin/users/<%= u.id %>/approve">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <button class="btn btn-sm btn-primary" type="submit" aria-label="Duyệt <%= u.name %>"><svg class="i"><use href="#i-check"/></svg>Duyệt</button>
+              </form>
+              <form method="post" action="/admin/users/<%= u.id %>/delete" data-confirm="Xóa đăng ký của “<%= u.name %>” (<%= h.contactOf(u.email) %>)? Người này sẽ không đăng nhập được.">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <button class="btn btn-sm btn-outline btn-danger" type="submit" aria-label="Xóa đăng ký của <%= u.name %>"><svg class="i"><use href="#i-trash"/></svg>Xóa</button>
+              </form>
+            </span>
+          </li>
+        <% }) %>
+      </ul>
+    <% } else { %>
+      <p class="muted pending-empty">Không có tài khoản nào đang chờ duyệt.</p>
+    <% } %>
+  </section>
+
+  <h2 class="section-title">Đang hoạt động <span class="chip"><%= users.length %></span></h2>
   <div class="table-wrap card">
     <table class="table">
-      <thead><tr><th>Họ tên</th><th>Email</th><th>Bài đã học</th><th>Ngày tham gia</th><th>Vai trò</th><th class="ta-right">Thao tác</th></tr></thead>
+      <thead><tr><th>Họ tên</th><th>SĐT / Email</th><th>Bài đã học</th><th>Ngày tham gia</th><th>Vai trò</th><th class="ta-right">Thao tác</th></tr></thead>
       <tbody>
         <% users.forEach(u => { const self = u.id === user.id; %>
           <tr>
             <td><span class="cell-user"><span class="avatar avatar-sm"><%= h.initials(u.name) %></span><%= u.name %><%= self ? ' (bạn)' : '' %></span></td>
-            <td><%= u.email %></td>
+            <td><%= h.contactOf(u.email) %></td>
             <td><%= u.lessons_started %></td>
             <td><%= String(u.created_at).slice(0, 10) %></td>
             <td>
@@ -26,7 +64,7 @@
             <td>
               <div class="row-actions">
                 <% if (!self && u.role !== 'admin') { %>
-                  <form method="post" action="/admin/users/<%= u.id %>/delete" data-confirm="Xóa học viên “<%= u.name %>” (<%= u.email %>)? Toàn bộ tiến độ học và khóa học đã lưu của người này sẽ bị xóa, không thể hoàn tác.">
+                  <form method="post" action="/admin/users/<%= u.id %>/delete" data-confirm="Xóa học viên “<%= u.name %>” (<%= h.contactOf(u.email) %>)? Toàn bộ tiến độ học và khóa học đã lưu của người này sẽ bị xóa, không thể hoàn tác.">
                     <input type="hidden" name="_csrf" value="<%= csrf %>">
                     <button class="btn btn-sm btn-outline btn-danger" type="submit" aria-label="Xóa học viên <%= u.name %>"><svg class="i"><use href="#i-trash"/></svg>Xóa</button>
                   </form>

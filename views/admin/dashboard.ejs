@@ -49,7 +49,7 @@
           <% recentUsers.forEach(u => { %>
             <tr>
               <td><span class="cell-user"><span class="avatar avatar-sm"><%= h.initials(u.name) %></span><%= u.name %></span></td>
-              <td><%= u.email %></td>
+              <td><%= h.contactOf(u.email) %></td>
               <td><span class="badge <%= u.role === 'admin' ? 'badge-primary' : '' %>"><%= u.role === 'admin' ? 'Quản trị' : 'Học viên' %></span></td>
               <td><%= String(u.created_at).slice(0, 10) %></td>
             </tr>

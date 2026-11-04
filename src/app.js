@@ -105,6 +105,8 @@ module.exports = function createApp() {
     res.locals.museOpen = (await museAccess(req.user, settings)).allowed;
     res.locals.vnd = fmtVnd;
     res.locals.pendingOrders = req.user && req.user.role === 'admin' ? await countPendingOrders() : 0;
+    res.locals.pendingUsers = req.user && req.user.role === 'admin'
+      ? Number((await db.get("SELECT COUNT(*) AS n FROM users WHERE status = 'pending'")).n) : 0;
     next();
   });
   app.use(csrf);
@@ -138,6 +140,7 @@ module.exports = function createApp() {
     res.locals.support ??= null;
     res.locals.vnd ??= fmtVnd;
     res.locals.pendingOrders ??= 0;
+    res.locals.pendingUsers ??= 0;
     const message = status >= 500 ? 'Đã có lỗi xảy ra. Vui lòng thử lại sau.' : err.message;
     if (req.originalUrl.startsWith('/api/')) return res.status(status).json({ error: message });
     res.status(status).render('error', { title: 'Lỗi', status, message });
