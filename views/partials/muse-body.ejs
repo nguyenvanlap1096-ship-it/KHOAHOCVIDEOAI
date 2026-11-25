@@ -37,7 +37,7 @@
     <div class="card">
       <div class="brand"><div class="logo">✦</div><div><b>Muse Studio</b><small>Tạo video &amp; ảnh bằng Muse</small></div></div>
       <nav class="nav">
-        <button data-tab="script">✍ Viết kịch bản phim</button>
+        <button data-tab="script">✍ Viết kịch bản</button>
         <button data-tab="create" class="on">✦ Tạo mới</button>
         <button data-tab="batch">▤ Hàng loạt</button>
         <button data-tab="library">▦ Thư viện</button>
@@ -72,9 +72,14 @@
 
   <main class="main">
     <section class="card" id="scriptCard">
-      <div class="head"><h2>✍ Viết kịch bản phim</h2><span class="chip done">Bước 1</span><span class="grow"></span><span class="hint">Nhập ý tưởng → AI viết thành 1 bộ phim nối cảnh liền mạch, nhân vật & giọng đồng bộ</span></div>
+      <div class="head"><h2>✍ Viết kịch bản</h2><span class="chip done">Bước 1</span><span class="grow"></span><span class="hint">Phim truyện · quảng cáo · affiliate · tuyên truyền — AI viết thành video nối cảnh liền mạch, nhân vật & giọng đồng bộ</span></div>
+      <div class="ctrls" style="margin:0 0 10px"><select id="fGenre" aria-label="Loại video"></select><span class="small muted grow" id="fGenreHint"></span></div>
       <textarea id="fIdea" rows="3" placeholder="Ý tưởng phim. Ví dụ: Chú sóc tinh nghịch lấy trộm hạt dẻ của bác nhím, bị phát hiện, cuối cùng biết xin lỗi và chia sẻ cho cả khu rừng."></textarea>
       <textarea id="fCast" rows="2" style="margin-top:10px" placeholder="Nhân vật (không bắt buộc), mỗi dòng 1 nhân vật. Ví dụ:&#10;Sóc Nâu - sóc đỏ nhỏ, tinh nghịch, đuôi xù chóp trắng&#10;Bác Nhím - nhím già hiền lành, đeo kính"></textarea>
+      <div class="hidden" id="fProdBox" style="margin-top:10px">
+        <textarea id="fProduct" rows="2"></textarea>
+        <div class="row" id="fProdImgRow" style="margin-top:6px"><label class="btn" for="fProdImg">📷 Thêm ảnh sản phẩm thật</label><input type="file" id="fProdImg" accept="image/*" hidden><span class="small muted grow" id="fProdImgNote">Có ảnh thật thì muse giữ đúng hình sản phẩm (màu, bao bì, nhãn) ở mọi cảnh.</span></div>
+      </div>
       <div class="ctrls">
         <select id="fStyle"></select>
         <select id="fScenes"><option value="3">3 cảnh · 30 giây</option><option value="4" selected>4 cảnh · 40 giây</option><option value="5">5 cảnh · 50 giây</option><option value="6">6 cảnh · 60 giây</option><option value="8">8 cảnh · 80 giây</option><option value="12">12 cảnh · 2 phút</option></select>

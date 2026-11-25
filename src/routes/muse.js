@@ -60,6 +60,7 @@ router.post('/api/script', requireAuth, async (req, res) => {
   const o = {
     idea: String(b.idea || '').trim().slice(0, 3000), cast: String(b.cast || '').trim().slice(0, 1500),
     scenes: b.scenes, style: b.style, ratio: b.ratio, dialogue: b.dialogue === 'none' ? 'none' : 'talk',
+    genre: ['film', 'ad', 'affiliate', 'psa'].includes(b.genre) ? b.genre : 'film', product: String(b.product || '').trim().slice(0, 1500),
   };
   if (o.idea.length < 5) return res.status(400).json({ error: 'Hãy viết ý tưởng phim (ít nhất vài chữ).' });
   const brief = film.buildBrief(o);
