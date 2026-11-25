@@ -82,6 +82,56 @@ router.post('/register', limiter, async (req, res) => {
   res.render('auth/pending', { title: 'Chờ duyệt tài khoản', name: values.name, phone, zalo: supportInfo(await getSettings()) });
 });
 
+// Quên mật khẩu: học viên tự đặt mật khẩu mới bằng số điện thoại. Không gửi được SMS / email xác minh,
+// nên mật khẩu mới được lưu tạm (đã mã hóa) và chỉ có hiệu lực sau khi admin xác nhận đúng người qua Zalo.
+router.get('/forgot', (req, res) => {
+  if (req.user) return res.redirect('/my#account');
+  res.render('auth/forgot', { title: 'Quên mật khẩu', values: {}, errors: {} });
+});
+
+router.post('/forgot', limiter, async (req, res) => {
+  const values = { phone: String(req.body.phone || '').trim() };
+  const password = String(req.body.password || '');
+  const errors = {};
+  const phone = normalizePhone(values.phone);
+  if (!phone) errors.phone = 'Số điện thoại không hợp lệ (10 số, ví dụ 0901 234 567).';
+  if (password.length < 8) errors.password = 'Mật khẩu mới cần ít nhất 8 ký tự.';
+  else if (password !== String(req.body.password_confirm || '')) errors.password_confirm = 'Mật khẩu nhập lại không khớp.';
+  if (Object.keys(errors).length) return res.status(400).render('auth/forgot', { title: 'Quên mật khẩu', values, errors });
+  const user = await db.get("SELECT id, reset_open_until FROM users WHERE email = ? AND status = 'active'", [phoneEmail(phone)]);
+  const hash = user ? await bcrypt.hash(password, 12) : null;
+  if (user && Number(user.reset_open_until) > Date.now()) {
+    // Admin đã bấm "Cho tự đặt lại mật khẩu": đổi luôn, dùng được ngay (mỗi lần mở chỉ dùng 1 lần).
+    await db.run('UPDATE users SET password_hash = ?, reset_hash = NULL, reset_at = NULL, reset_open_until = NULL WHERE id = ?', [hash, user.id]);
+    req.flash('success', 'Đã đặt mật khẩu mới. Hãy đăng nhập bằng số điện thoại và mật khẩu mới.');
+    return res.redirect('/login');
+  }
+  if (user) {
+    await db.run('UPDATE users SET reset_hash = ?, reset_at = CURRENT_TIMESTAMP WHERE id = ?', [hash, user.id]);
+  }
+  // Luôn báo giống nhau để người lạ không dò được số nào đã có tài khoản.
+  res.render('auth/forgot-sent', { title: 'Đã gửi yêu cầu', phone, zalo: supportInfo(await getSettings()) });
+});
+
+// Học viên đang đăng nhập tự đổi mật khẩu (cần mật khẩu hiện tại).
+router.post('/account/password', limiter, async (req, res) => {
+  if (!req.user) return res.redirect('/login?next=' + encodeURIComponent('/my#account'));
+  const current = String(req.body.current_password || '');
+  const password = String(req.body.password || '');
+  const row = await db.get('SELECT password_hash FROM users WHERE id = ?', [req.user.id]);
+  let error = '';
+  if (!row || !(await bcrypt.compare(current, row.password_hash))) error = 'Mật khẩu hiện tại không đúng.';
+  else if (password.length < 8) error = 'Mật khẩu mới cần ít nhất 8 ký tự.';
+  else if (password !== String(req.body.password_confirm || '')) error = 'Mật khẩu nhập lại không khớp.';
+  if (error) {
+    req.flash('error', error);
+  } else {
+    await db.run('UPDATE users SET password_hash = ?, reset_hash = NULL, reset_at = NULL, reset_open_until = NULL WHERE id = ?', [await bcrypt.hash(password, 12), req.user.id]);
+    req.flash('success', 'Đã đổi mật khẩu. Lần sau hãy đăng nhập bằng mật khẩu mới.');
+  }
+  res.redirect('/my#account');
+});
+
 router.post('/logout', (req, res, next) => {
   req.session.destroy(err => {
     if (err) return next(err);

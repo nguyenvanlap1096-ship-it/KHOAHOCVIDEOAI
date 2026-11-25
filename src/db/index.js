@@ -78,6 +78,11 @@ async function columnExists(table, column) {
 // SQLite không cho ADD COLUMN với DEFAULT CURRENT_TIMESTAMP nên điền giá trị sau khi thêm.
 const MIGRATIONS = [
   // Trạng thái tài khoản: 'pending' = học viên mới đăng ký chờ admin duyệt; tài khoản cũ mặc định 'active'.
+  // Học viên quên mật khẩu tự đặt mật khẩu mới → lưu tạm (đã mã hóa) chờ admin duyệt mới có hiệu lực.
+  { table: 'users', column: 'reset_hash', mysql: 'VARCHAR(100) NULL', sqlite: 'TEXT' },
+  { table: 'users', column: 'reset_at', mysql: 'TIMESTAMP NULL', sqlite: 'TEXT' },
+  // Admin bấm "Cho tự đặt lại mật khẩu": học viên được tự đặt mật khẩu mới ngay, hạn tới thời điểm này (ms).
+  { table: 'users', column: 'reset_open_until', mysql: 'BIGINT NULL', sqlite: 'INTEGER' },
   { table: 'users', column: 'status', mysql: "VARCHAR(20) NOT NULL DEFAULT 'active'", sqlite: "TEXT NOT NULL DEFAULT 'active'" },
   { table: 'courses', column: 'cover_image', mysql: 'VARCHAR(100)', sqlite: 'TEXT' },
   { table: 'lessons', column: 'thumbnail', mysql: 'VARCHAR(100)', sqlite: 'TEXT' },

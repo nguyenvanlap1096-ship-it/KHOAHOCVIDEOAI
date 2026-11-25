@@ -1,0 +1,35 @@
+<%- include('../partials/top') %>
+<%
+  const fields = [
+    { name: 'phone', label: 'Số điện thoại đã đăng ký', type: 'tel', autocomplete: 'tel' },
+    { name: 'password', label: 'Mật khẩu mới', type: 'password', autocomplete: 'new-password', hint: 'Ít nhất 8 ký tự.' },
+    { name: 'password_confirm', label: 'Nhập lại mật khẩu mới', type: 'password', autocomplete: 'new-password' },
+  ];
+%>
+<div class="auth-wrap">
+  <div class="auth-card card">
+    <img class="brand-logo" src="<%= siteLogo %>" alt="" width="44" height="44">
+    <h1>Quên mật khẩu</h1>
+    <p class="muted">Nhập số điện thoại và mật khẩu mới bạn muốn dùng. Mật khẩu mới có hiệu lực sau khi quản trị viên xác nhận đúng là bạn (thường qua Zalo).</p>
+
+    <form method="post" action="/forgot" class="form" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <% fields.forEach((f, i) => { const err = errors[f.name]; %>
+        <div class="field <%= err ? 'has-error' : '' %>">
+          <label for="<%= f.name %>"><%= f.label %></label>
+          <% if (f.type === 'password') { %><div class="password-wrap"><% } %>
+          <input id="<%= f.name %>" name="<%= f.name %>" type="<%= f.type %>" autocomplete="<%= f.autocomplete %>" required
+                 <%- f.type === 'tel' ? 'inputmode="tel" placeholder="09xx xxx xxx"' : '' %>
+                 <% if (f.type !== 'password') { %>value="<%= values[f.name] || '' %>"<% } %>
+                 <% if (err || f.hint) { %>aria-describedby="<%= f.name %>-msg"<% } %> <%- err ? 'aria-invalid="true"' : '' %>
+                 <%- (i === 0 && !Object.keys(errors).length) || (err && Object.keys(errors)[0] === f.name) ? 'autofocus' : '' %>>
+          <% if (f.type === 'password') { %><button type="button" class="pw-toggle" data-pw-toggle="<%= f.name %>" aria-label="Hiện mật khẩu"><svg class="i"><use href="#i-eye"/></svg></button></div><% } %>
+          <% if (err) { %><p class="field-error" id="<%= f.name %>-msg"><%= err %></p><% } else if (f.hint) { %><p class="field-hint" id="<%= f.name %>-msg"><%= f.hint %></p><% } %>
+        </div>
+      <% }) %>
+      <button class="btn btn-primary btn-lg btn-block" type="submit" data-loading-text="Đang gửi...">Gửi yêu cầu đổi mật khẩu</button>
+    </form>
+    <p class="auth-alt">Nhớ ra mật khẩu? <a href="/login">Đăng nhập</a></p>
+  </div>
+</div>
+<%- include('../partials/bottom') %>

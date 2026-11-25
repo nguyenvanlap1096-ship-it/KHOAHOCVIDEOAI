@@ -1,0 +1,19 @@
+<%- include('../partials/top') %>
+<div class="auth-wrap">
+  <div class="auth-card card pending-card">
+    <span class="pending-ico" aria-hidden="true"><svg class="i"><use href="#i-lock"/></svg></span>
+    <h1>Đã gửi yêu cầu!</h1>
+    <p>Yêu cầu đổi mật khẩu cho số <strong><%= h.contactOf(h.phoneEmail(phone)) %></strong> đang <strong>chờ quản trị viên xác nhận</strong>.</p>
+    <p class="muted">Sau khi được xác nhận, bạn đăng nhập bằng <strong>mật khẩu mới</strong> vừa đặt. Trong lúc chờ, mật khẩu cũ (nếu còn nhớ) vẫn dùng được.</p>
+    <% if (zalo) { %>
+      <div class="pending-zalo">
+        <strong>Nhắn Zalo để được xác nhận nhanh hơn</strong>
+        <% if (zalo.qr) { %><img src="<%= h.imageUrl(zalo.qr) %>" alt="Mã QR Zalo hỗ trợ" width="160" height="160"><% } %>
+        <% if (zalo.url) { %><a class="btn btn-primary" href="<%= zalo.url %>" target="_blank" rel="noopener noreferrer"><svg class="i"><use href="#i-message"/></svg>Nhắn Zalo<%= zalo.phoneDisplay ? ' ' + zalo.phoneDisplay : '' %></a><% } %>
+        <% if (zalo.hours) { %><small class="muted"><%= zalo.hours %></small><% } %>
+      </div>
+    <% } %>
+    <p class="auth-alt"><a href="/login">Về trang đăng nhập</a></p>
+  </div>
+</div>
+<%- include('../partials/bottom') %>

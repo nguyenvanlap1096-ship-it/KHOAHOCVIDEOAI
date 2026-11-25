@@ -15,7 +15,7 @@
         <input id="login" name="login" type="text" autocomplete="username" required placeholder="09xx xxx xxx" value="<%= values.login || '' %>" autofocus>
       </div>
       <div class="field">
-        <label for="password">Mật khẩu</label>
+        <span class="label-row"><label for="password">Mật khẩu</label><a class="label-link" href="/forgot">Quên mật khẩu?</a></span>
         <div class="password-wrap">
           <input id="password" name="password" type="password" autocomplete="current-password" required>
           <button type="button" class="pw-toggle" data-pw-toggle="password" aria-label="Hiện mật khẩu"><svg class="i"><use href="#i-eye"/></svg></button>

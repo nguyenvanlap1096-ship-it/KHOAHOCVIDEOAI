@@ -107,7 +107,7 @@ module.exports = function createApp() {
     res.locals.vnd = fmtVnd;
     res.locals.pendingOrders = req.user && req.user.role === 'admin' ? await countPendingOrders() : 0;
     res.locals.pendingUsers = req.user && req.user.role === 'admin'
-      ? Number((await db.get("SELECT COUNT(*) AS n FROM users WHERE status = 'pending'")).n) : 0;
+      ? Number((await db.get("SELECT COUNT(*) AS n FROM users WHERE status = 'pending' OR reset_hash IS NOT NULL")).n) : 0;
     next();
   });
   app.use(csrf);

@@ -57,4 +57,30 @@
     </section>
   <% } %>
 </div>
+<% if (user.role !== 'admin') { %>
+<div class="page page-tail">
+  <section class="section account-box card" id="account" aria-labelledby="accountTitle">
+    <div class="account-head">
+      <span class="pending-ico" aria-hidden="true"><svg class="i"><use href="#i-lock"/></svg></span>
+      <div>
+        <h2 id="accountTitle">Tài khoản & mật khẩu</h2>
+        <p class="muted"><%= user.name %> · <%= h.contactOf(user.email) %></p>
+      </div>
+    </div>
+    <form method="post" action="/account/password" class="form account-form" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <% [['current_password', 'Mật khẩu hiện tại', 'current-password'], ['password', 'Mật khẩu mới (ít nhất 8 ký tự)', 'new-password'], ['password_confirm', 'Nhập lại mật khẩu mới', 'new-password']].forEach(([n, label, ac]) => { %>
+        <div class="field">
+          <label for="acc-<%= n %>"><%= label %></label>
+          <div class="password-wrap">
+            <input id="acc-<%= n %>" name="<%= n %>" type="password" autocomplete="<%= ac %>" required>
+            <button type="button" class="pw-toggle" data-pw-toggle="acc-<%= n %>" aria-label="Hiện mật khẩu"><svg class="i"><use href="#i-eye"/></svg></button>
+          </div>
+        </div>
+      <% }) %>
+      <button class="btn btn-primary" type="submit">Đổi mật khẩu</button>
+    </form>
+  </section>
+</div>
+<% } %>
 <%- include('partials/bottom') %>

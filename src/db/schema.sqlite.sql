@@ -5,6 +5,9 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'student',
   status TEXT NOT NULL DEFAULT 'active',
+  reset_hash TEXT,
+  reset_at TEXT,
+  reset_open_until INTEGER,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

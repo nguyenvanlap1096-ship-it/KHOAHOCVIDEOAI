@@ -743,16 +743,61 @@ router.get('/users', async (req, res) => {
     if (digits.length >= 3) params.push(`%${digits.replace(/^84/, '0')}%`);
   }
   const users = await db.all(
-    `SELECT u.id, u.name, u.email, u.role, u.status, u.created_at, COUNT(p.lesson_id) AS lessons_started
+    `SELECT u.id, u.name, u.email, u.role, u.status, u.created_at, u.reset_at, u.reset_open_until,
+            CASE WHEN u.reset_hash IS NULL THEN 0 ELSE 1 END AS reset_requested, COUNT(p.lesson_id) AS lessons_started
        FROM users u LEFT JOIN progress p ON p.user_id = u.id
       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-      GROUP BY u.id, u.name, u.email, u.role, u.status, u.created_at
+      GROUP BY u.id, u.name, u.email, u.role, u.status, u.created_at, u.reset_at, u.reset_open_until, u.reset_hash
       ORDER BY u.id DESC`,
     params,
   );
   res.render('admin/users', {
-    title: 'Người dùng', q, pending: users.filter(u => u.status === 'pending'), users: users.filter(u => u.status !== 'pending'), ...nav('users'),
+    title: 'Người dùng', q, now: Date.now(), resets: users.filter(u => u.status !== 'pending' && Number(u.reset_requested)),
+    pending: users.filter(u => u.status === 'pending'), users: users.filter(u => u.status !== 'pending'), ...nav('users'),
   });
+});
+
+const RESET_WINDOW_MS = 24 * 60 * 60 * 1000;
+const usersBack = req => '/admin/users' + (req.body && req.body.q ? '?q=' + encodeURIComponent(String(req.body.q)) : '');
+async function studentFor(req, res) {
+  const target = await db.get('SELECT id, name, email, role, reset_hash FROM users WHERE id = ?', [Number(req.params.id) || 0]);
+  if (!target || target.role === 'admin' || target.id === req.user.id) {
+    req.flash('error', 'Chỉ áp dụng cho tài khoản học viên.');
+    res.redirect(usersBack(req));
+    return null;
+  }
+  return target;
+}
+
+// Cho học viên tự đặt lại mật khẩu: trong 24 giờ, học viên vào "Quên mật khẩu" đặt mật khẩu mới là dùng được ngay.
+router.post('/users/:id/allow-reset', async (req, res) => {
+  const target = await studentFor(req, res);
+  if (!target) return;
+  await db.run('UPDATE users SET reset_open_until = ? WHERE id = ?', [Date.now() + RESET_WINDOW_MS, target.id]);
+  const link = `${req.protocol}://${req.get('host')}/forgot`;
+  req.flash('success', `Đã cho “${target.name}” (${h.contactOf(target.email)}) tự đặt lại mật khẩu trong 24 giờ. Gửi học viên link: ${link} – nhập số điện thoại và mật khẩu mới là dùng được ngay.`);
+  res.redirect(usersBack(req));
+});
+
+// Học viên gửi yêu cầu "Quên mật khẩu" khi chưa được mở: admin xác nhận đúng người thì áp dụng mật khẩu mới học viên đã đặt.
+router.post('/users/:id/reset-approve', async (req, res) => {
+  const target = await studentFor(req, res);
+  if (!target) return;
+  if (!target.reset_hash) {
+    req.flash('error', 'Tài khoản này không có yêu cầu đổi mật khẩu.');
+  } else {
+    await db.run('UPDATE users SET password_hash = reset_hash, reset_hash = NULL, reset_at = NULL, reset_open_until = NULL WHERE id = ?', [target.id]);
+    req.flash('success', `Đã áp dụng mật khẩu mới cho “${target.name}”. Học viên đăng nhập bằng mật khẩu vừa tự đặt.`);
+  }
+  res.redirect(usersBack(req));
+});
+
+router.post('/users/:id/reset-reject', async (req, res) => {
+  const target = await studentFor(req, res);
+  if (!target) return;
+  await db.run('UPDATE users SET reset_hash = NULL, reset_at = NULL WHERE id = ?', [target.id]);
+  req.flash('success', `Đã từ chối yêu cầu đổi mật khẩu của “${target.name}”. Mật khẩu cũ giữ nguyên.`);
+  res.redirect(usersBack(req));
 });
 
 // Đặt lại mật khẩu học viên (mật khẩu cũ được mã hóa một chiều nên không xem được).
@@ -777,7 +822,7 @@ router.post('/users/:id/password', async (req, res) => {
     const ABC = 'abcdefghjkmnpqrstuvwxyz23456789'; // bỏ ký tự dễ nhầm: i, l, o, 0, 1
     password = Array.from(crypto.randomBytes(8), b => ABC[b % ABC.length]).join('');
   }
-  await db.run('UPDATE users SET password_hash = ? WHERE id = ?', [await bcrypt.hash(password, 12), target.id]);
+  await db.run('UPDATE users SET password_hash = ?, reset_hash = NULL, reset_at = NULL, reset_open_until = NULL WHERE id = ?', [await bcrypt.hash(password, 12), target.id]);
   req.flash('success', `Mật khẩu mới của “${target.name}” (${h.contactOf(target.email)}): ${password} — hãy gửi cho học viên qua Zalo. Mật khẩu này chỉ hiện một lần.`);
   res.redirect(back);
 });

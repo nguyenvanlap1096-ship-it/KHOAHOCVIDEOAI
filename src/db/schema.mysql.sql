@@ -5,6 +5,9 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash VARCHAR(100) NOT NULL,
   role VARCHAR(20) NOT NULL DEFAULT 'student',
   status VARCHAR(20) NOT NULL DEFAULT 'active',
+  reset_hash VARCHAR(100) NULL,
+  reset_at TIMESTAMP NULL,
+  reset_open_until BIGINT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
