@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const router = require('express').Router();
 const db = require('../db');
 const config = require('../config');
@@ -730,15 +732,54 @@ router.post('/muse/bulk', async (req, res) => {
 
 /* ---------- Người dùng ---------- */
 router.get('/users', async (req, res) => {
+  // Tìm theo tên, số điện thoại (gõ có / không dấu cách đều được) hoặc email.
+  const q = String(req.query.q || '').trim().slice(0, 80);
+  const digits = q.replace(/\D/g, '');
+  const where = [];
+  const params = [];
+  if (q) {
+    where.push(`(u.name LIKE ? OR u.email LIKE ?${digits.length >= 3 ? ' OR u.email LIKE ?' : ''})`);
+    params.push(`%${q}%`, `%${q.toLowerCase()}%`);
+    if (digits.length >= 3) params.push(`%${digits.replace(/^84/, '0')}%`);
+  }
   const users = await db.all(
     `SELECT u.id, u.name, u.email, u.role, u.status, u.created_at, COUNT(p.lesson_id) AS lessons_started
        FROM users u LEFT JOIN progress p ON p.user_id = u.id
+      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
       GROUP BY u.id, u.name, u.email, u.role, u.status, u.created_at
       ORDER BY u.id DESC`,
+    params,
   );
   res.render('admin/users', {
-    title: 'Người dùng', pending: users.filter(u => u.status === 'pending'), users: users.filter(u => u.status !== 'pending'), ...nav('users'),
+    title: 'Người dùng', q, pending: users.filter(u => u.status === 'pending'), users: users.filter(u => u.status !== 'pending'), ...nav('users'),
   });
+});
+
+// Đặt lại mật khẩu học viên (mật khẩu cũ được mã hóa một chiều nên không xem được).
+// Để trống ô → tạo mật khẩu ngẫu nhiên dễ đọc; mật khẩu mới chỉ hiện một lần để admin gửi cho học viên.
+router.post('/users/:id/password', async (req, res) => {
+  const target = await db.get('SELECT id, name, email, role FROM users WHERE id = ?', [Number(req.params.id) || 0]);
+  const back = '/admin/users' + (req.body.q ? '?q=' + encodeURIComponent(String(req.body.q)) : '');
+  if (!target) {
+    req.flash('error', 'Không tìm thấy người dùng.');
+    return res.redirect(back);
+  }
+  if (target.id === req.user.id || target.role === 'admin') {
+    req.flash('error', 'Chỉ đặt lại mật khẩu cho học viên. Mật khẩu quản trị viên đổi trong biến môi trường / trang tài khoản.');
+    return res.redirect(back);
+  }
+  let password = String(req.body.password || '').trim();
+  if (password && password.length < 8) {
+    req.flash('error', 'Mật khẩu mới cần ít nhất 8 ký tự (hoặc để trống để tạo ngẫu nhiên).');
+    return res.redirect(back);
+  }
+  if (!password) {
+    const ABC = 'abcdefghjkmnpqrstuvwxyz23456789'; // bỏ ký tự dễ nhầm: i, l, o, 0, 1
+    password = Array.from(crypto.randomBytes(8), b => ABC[b % ABC.length]).join('');
+  }
+  await db.run('UPDATE users SET password_hash = ? WHERE id = ?', [await bcrypt.hash(password, 12), target.id]);
+  req.flash('success', `Mật khẩu mới của “${target.name}” (${h.contactOf(target.email)}): ${password} — hãy gửi cho học viên qua Zalo. Mật khẩu này chỉ hiện một lần.`);
+  res.redirect(back);
 });
 
 // Duyệt học viên đăng ký bằng số điện thoại: cho phép đăng nhập và vào học.

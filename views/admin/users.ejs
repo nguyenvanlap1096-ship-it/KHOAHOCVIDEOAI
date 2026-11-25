@@ -2,6 +2,15 @@
 <div class="page">
   <h1 class="page-title">Người dùng <span class="chip"><%= users.length + pending.length %></span></h1>
 
+  <form class="user-search" action="/admin/users" method="get" role="search">
+    <label for="userQ" class="sr-only">Tìm học viên</label>
+    <svg class="i"><use href="#i-search"/></svg>
+    <input id="userQ" type="search" name="q" value="<%= q %>" placeholder="Tìm theo tên hoặc số điện thoại…" autocomplete="off">
+    <button class="btn btn-primary btn-sm" type="submit">Tìm</button>
+    <% if (q) { %><a class="btn btn-ghost btn-sm" href="/admin/users">Xóa lọc</a><% } %>
+  </form>
+  <% if (q) { %><p class="muted user-search-note">Kết quả cho “<strong><%= q %></strong>”: <%= users.length + pending.length %> tài khoản.</p><% } %>
+
   <section class="pending-users card <%= pending.length ? 'has-pending' : '' %>" aria-labelledby="pendingTitle">
     <div class="pending-users-head">
       <span class="pending-users-ico"><svg class="i"><use href="#i-clock"/></svg></span>
@@ -64,6 +73,17 @@
             <td>
               <div class="row-actions">
                 <% if (!self && u.role !== 'admin') { %>
+                  <details class="pw-reset">
+                    <summary class="btn btn-sm btn-outline"><svg class="i"><use href="#i-lock"/></svg>Đặt lại mật khẩu</summary>
+                    <form method="post" action="/admin/users/<%= u.id %>/password" class="pw-reset-form card">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <input type="hidden" name="q" value="<%= q %>">
+                      <label for="pw-<%= u.id %>">Mật khẩu mới cho <strong><%= u.name %></strong></label>
+                      <input id="pw-<%= u.id %>" name="password" type="text" minlength="8" autocomplete="off" placeholder="Để trống = tạo ngẫu nhiên">
+                      <small class="muted">Mật khẩu cũ được mã hóa nên không xem được. Mật khẩu mới hiện một lần để bạn gửi cho học viên.</small>
+                      <button class="btn btn-sm btn-primary" type="submit">Đặt mật khẩu mới</button>
+                    </form>
+                  </details>
                   <form method="post" action="/admin/users/<%= u.id %>/delete" data-confirm="Xóa học viên “<%= u.name %>” (<%= h.contactOf(u.email) %>)? Toàn bộ tiến độ học và khóa học đã lưu của người này sẽ bị xóa, không thể hoàn tác.">
                     <input type="hidden" name="_csrf" value="<%= csrf %>">
                     <button class="btn btn-sm btn-outline btn-danger" type="submit" aria-label="Xóa học viên <%= u.name %>"><svg class="i"><use href="#i-trash"/></svg>Xóa</button>
