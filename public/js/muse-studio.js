@@ -261,12 +261,14 @@ function tagOf(name){
 function dialogueText(says){
   if (!says.length) return "";
   const seen = new Set();
+  const narr = who => /người dẫn|người kể|dẫn chuyện|lời bình|narrator/i.test(who) && !tagOf(who);
   const lines = says.map((d, i) => {
     const first = !seen.has(d.who.toLowerCase()); seen.add(d.who.toLowerCase());
+    if (narr(d.who)) return (i + 1) + ") off-screen voice-over by " + d.who + (first && voiceOf(d.who) ? " (voice: " + voiceOf(d.who) + ")" : "") + ', nobody on screen moves their lips, in Vietnamese: "' + d.text + '"';
     const info = !first ? "" : [tagOf(d.who), voiceOf(d.who) && "voice: " + voiceOf(d.who)].filter(Boolean).join("; ");
     return (i + 1) + ") " + d.who + (info ? " (" + info + ")" : "") + (i ? " replies" : " says") + ' in Vietnamese: "' + d.text + '"';
   });
-  const many = new Set(says.map(d => d.who)).size > 1;
+  const many = new Set(says.filter(d => !narr(d.who)).map(d => d.who)).size > 1;
   return " Dialogue in this exact order" + (many ? ", only the character who is speaking moves their mouth while the others listen silently and react" : "") + ": " + lines.join(" ") + ".";
 }
 // Chú thích ảnh tham chiếu: "ảnh 1 là X, ảnh 2 là Y" — tránh muse lẫn nhân vật khi có nhiều ảnh.
@@ -928,6 +930,7 @@ async function init(){
       ${film.logline_vi ? `<div class="small muted" style="margin-top:6px">${esc(film.logline_vi)}</div>` : ""}
       <div class="small" style="margin-top:10px"><b>${hasProd ? "Nhân vật, sản phẩm & giọng" : "Nhân vật & giọng"} (giữ nguyên mọi cảnh):</b></div>
       ${film.characters.map(c => c.kind === "product" ? `<div class="small" style="margin-top:4px">📦 <b>${esc(c.name)}</b> — ${esc(c.look_en)}</div>` : `<div class="small" style="margin-top:4px">👤 <b>${esc(c.name)}</b> — ${esc(c.look_en)}<br><span class="muted">🎙 ${esc(c.voice_en)}</span></div>`).join("")}
+      ${F.voiceNote(film).split("\n").filter(l => F.isNarrator(l.split(":")[0], film.characters)).map(l => `<div class="small" style="margin-top:4px">🎙 <b>${esc(l.split(":")[0])}</b> <span class="muted">(giọng ngoài hình, cố định cả video) — ${esc(l.slice(l.indexOf(":") + 1).trim())}</span></div>`).join("")}
       <div class="small" style="margin-top:10px"><b>Các cảnh (mỗi cảnh mở đầu đúng chỗ cảnh trước kết thúc):</b></div>
       <div class="bitems" style="max-height:none">${film.scenes.map(c => `<div class="bitem" style="align-items:flex-start"><span class="muted">#${c.n}</span><span style="flex:1">${esc(c.summary_vi || c.action_en)}${c.dialogue.length ? `<br><span class="muted">💬 ${c.dialogue.map(d => esc(d.speaker) + ": “" + esc(d.text_vi) + "”").join(" · ")}</span>` : ""}</span></div>`).join("")}</div>
       <div class="row" style="margin-top:12px">

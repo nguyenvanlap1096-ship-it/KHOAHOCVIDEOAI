@@ -15,22 +15,22 @@
   ];
   // Loại video: mỗi loại có vai trò người viết, cấu trúc câu chuyện và cách viết lời thoại riêng.
   const GENRES = [
-    { key:"film", label:"🎬 Phim truyện", style:"pixar", scenes:4,
+    { key:"film", label:"🎬 Phim truyện", style:"pixar", scenes:4, narrator:"Gentle warm storyteller voice, medium pitch, soft timbre, slow soothing pace, speaks Vietnamese",
       role:"đạo diễn kiêm biên kịch phim ngắn", goal:"MỘT bộ phim liền mạch như quay một mạch, có ý nghĩa",
       cast:"tối đa 3 nhân vật chính",
       story:"CÂU CHUYỆN CÓ Ý NGHĨA: cảnh đầu giới thiệu nhân vật + mong muốn; giữa là trở ngại/xung đột tăng dần; cao trào; cảnh cuối giải quyết và để lại cảm xúc hoặc bài học. Mỗi cảnh phải đẩy câu chuyện tiến lên, không lặp lại.",
       talk:"LỜI THOẠI: tiếng Việt tự nhiên, mỗi cảnh 1–3 câu, TỔNG KHÔNG QUÁ 22 TỪ (vừa 10 giây). Nhiều nhân vật CÓ THỂ nói trong cùng một cảnh (đối đáp qua lại); mỗi câu chỉ MỘT người nói, ghi đúng tên người nói (tên trong hồ sơ hoặc \"Người kể chuyện\"), người nói phải CÓ MẶT trong cảnh đó; thứ tự câu khớp với diễn biến hành động; lời thoại nối tiếp nhau thành mạch truyện, đúng tính cách từng nhân vật." },
-    { key:"ad", label:"📢 Quảng cáo sản phẩm", style:"commercial", scenes:3, product:true,
+    { key:"ad", label:"📢 Quảng cáo sản phẩm", style:"commercial", scenes:3, product:true, narrator:"Warm confident female commercial announcer, medium-low pitch, smooth clear timbre, upbeat lively pace, speaks Vietnamese",
       role:"đạo diễn quảng cáo truyền hình (TVC) kiêm copywriter", goal:"MỘT video quảng cáo liền mạch, đẹp như quảng cáo truyền hình, khiến người xem muốn mua",
       cast:"tối đa 2 người dùng/người mẫu, cộng với SẢN PHẨM",
       story:"CẤU TRÚC QUẢNG CÁO: cảnh 1 là HOOK trong 2 giây đầu (hình ảnh bất ngờ, đẹp mắt hoặc một vấn đề quen thuộc khiến người xem dừng lướt); các cảnh giữa để SẢN PHẨM xuất hiện như người hùng (cận cảnh macro, ánh sáng lướt trên bề mặt, chuyển động chậm) và CHỨNG MINH CÔNG DỤNG bằng hình ảnh khi dùng thật, mỗi cảnh 1 lợi ích rõ ràng; cảnh cuối là hero shot sản phẩm đẹp nhất + lời kêu gọi hành động. Cảm xúc tích cực, khơi khát khao sở hữu. Chỉ nói điều đúng sự thật về sản phẩm, không hứa hẹn quá mức, không chê thương hiệu khác.",
       talk:"LỜI BÌNH/LỜI THOẠI: tiếng Việt, chủ yếu là \"Người dẫn\" (giọng lời bình truyền cảm) hoặc người đang dùng sản phẩm; mỗi cảnh 1–2 câu ngắn, TỔNG ≤ 20 từ, sắc gọn như slogan; nhắc TÊN SẢN PHẨM ít nhất 2 lần trong cả video; câu cuối là lời kêu gọi rõ ràng (vd \"Đặt ngay hôm nay!\"), kèm ưu đãi nếu người dùng có cung cấp." },
-    { key:"affiliate", label:"🛒 Video affiliate (review bán hàng)", style:"ugc", scenes:3, product:true, ratio:"9:16",
+    { key:"affiliate", label:"🛒 Video affiliate (review bán hàng)", style:"ugc", scenes:3, product:true, ratio:"9:16", narrator:"Friendly casual young female voice, medium pitch, bright natural timbre, chatty pace, speaks Vietnamese",
       role:"nhà sáng tạo nội dung TikTok/Shopee affiliate chuyên làm video review bán hàng chân thật", goal:"MỘT video review bán hàng liền mạch, chân thật như người thật quay bằng điện thoại, khiến người xem bấm vào giỏ hàng",
       cast:"1 người review chính (có thể thêm 1 người phụ), cộng với SẢN PHẨM",
       story:"CẤU TRÚC VIDEO AFFILIATE: cảnh 1 là HOOK: người review nhìn thẳng camera nói ra một nỗi khổ quen thuộc hoặc một kết quả gây tò mò; tiếp theo mở hộp/cầm sản phẩm khoe cận cảnh; dùng thử thật, cho thấy kết quả rõ ràng (trước – sau); nói 1–2 điểm thích nhất thật chân thành; cảnh cuối người review cầm sản phẩm mỉm cười và kêu gọi bấm giỏ hàng/link bên dưới. Kiểu điện thoại cầm tay, ánh sáng tự nhiên trong nhà, người thật việc thật. Chỉ nói điều có thật, không bịa công dụng chữa bệnh, không cam kết kết quả tuyệt đối.",
       talk:"LỜI THOẠI: người review nói trực tiếp với người xem bằng tiếng Việt đời thường, thân thiện, hào hứng vừa phải; mỗi cảnh 1–2 câu, TỔNG ≤ 22 từ; mỗi câu ghi đúng tên người nói; câu cuối là lời kêu gọi kiểu \"Link mình để ở giỏ hàng nha!\"." },
-    { key:"psa", label:"📣 Video tuyên truyền", style:"live", scenes:4,
+    { key:"psa", label:"📣 Video tuyên truyền", style:"live", scenes:4, narrator:"Calm sincere male narrator, low warm pitch, deep resonant timbre, steady unhurried pace, speaks Vietnamese",
       role:"đạo diễn phim tuyên truyền vì cộng đồng", goal:"MỘT video tuyên truyền liền mạch, cảm động, dễ nhớ, khiến người xem thay đổi hành vi",
       cast:"tối đa 3 nhân vật đời thường",
       story:"CẤU TRÚC VIDEO TUYÊN TRUYỀN: cảnh đầu là khoảnh khắc đời thường gần gũi với người xem; tiếp theo là hành vi chưa đúng hoặc nguy cơ, hậu quả được gợi ra nhẹ nhàng mà thấm (không ghê rợn, không máu me); bước ngoặt nhân vật nhận ra và làm đúng; cảnh cuối là kết quả tốt đẹp, đầy hy vọng + THÔNG ĐIỆP chính nói thật rõ. Nội dung tích cực, đúng sự thật, đúng pháp luật, không công kích cá nhân hay nhóm người nào.",
@@ -50,6 +50,7 @@
 
 QUY TẮC BẮT BUỘC:
 1. HỒ SƠ NHÂN VẬT CỐ ĐỊNH (${g.cast}): look_en tiếng Anh 22–32 từ, súc tích, chỉ nét nhận diện: loài/tuổi/giới tính, dáng người, khuôn mặt, mắt, tóc/lông, MÀU SẮC cụ thể, trang phục đặc trưng, 1 món đồ nhận diện. voice_en tiếng Anh tối đa 16 từ: giới tính, tuổi giọng, cao độ (high/medium/low), âm sắc, tốc độ nói, "speaks Vietnamese". Không bao giờ đổi ngoại hình hay giọng giữa các cảnh.${product}
+   GIỌNG NGƯỜI DẪN: nếu có lời của "Người dẫn" hoặc "Người kể chuyện" (giọng ngoài hình, không xuất hiện trên hình), viết narrator_voice_en tiếng Anh tối đa 16 từ theo cùng cách tả giọng ở trên, hợp với loại video; giọng này giữ nguyên cả video.
 2. BỐI CẢNH & ÁNH SÁNG LIÊN TỤC: setting_en tối đa 25 từ, tả 1 không gian chính (có thể đi dần sang chỗ kế bên nhưng phải hợp lý), thời gian trôi tự nhiên (sáng → trưa → chiều), ánh sáng đổi dần, không nhảy cóc.
 3. NỐI CẢNH: start_en của cảnh k PHẢI mô tả lại CHÍNH XÁC end_en của cảnh k-1 (cùng tư thế, vị trí, hướng nhìn, cỡ cảnh, góc máy). end_en tối đa 28 từ, tả thật cụ thể khung hình cuối cùng (ai ở đâu, tư thế gì, biểu cảm, máy quay ở đâu) để cảnh sau nối vào; start_en tối đa 28 từ. Cảnh 1 có start_en là khung mở đầu phim.
 4. MỖI CẢNH 10 GIÂY = 1 CÚ MÁY LIỀN, KHÔNG CẮT: action_en 45–70 từ tiếng Anh: hành động theo nhịp đầu–giữa–cuối, CẢM XÚC hiện trên mặt và cử chỉ (run rẩy, mắt rưng rưng, mỉm cười…), một chuyển động máy (dolly, tracking, pan, crane…), chỉ gọi nhân vật bằng TÊN. mood_en tối đa 8 từ: cảm xúc chủ đạo và sự chuyển biến (vd "lonely and scared, turning hopeful").
@@ -61,7 +62,7 @@ QUY TẮC BẮT BUỘC:
 10. Phong cách hình ảnh giữ nguyên cả phim. Khung hình ${ratio}. Không chèn chữ, phụ đề, logo hay watermark lên hình${g.product ? " (sản phẩm giữ đúng thiết kế bao bì của nó)" : ""}. Không nội dung nhạy cảm.
 
 ĐẦU RA: CHỈ MỘT KHỐI JSON hợp lệ, không markdown, không giải thích:
-{"title":"tên phim tiếng Việt","logline_vi":"tóm tắt 1–2 câu và ý nghĩa","style_en":"…","setting_en":"…","music_en":"…","characters":[{"name":"tên tiếng Việt","look_en":"…","voice_en":"…"}${g.product ? ',{"name":"tên sản phẩm","kind":"product","look_en":"…","voice_en":""}' : ""}],"scenes":[{"n":1,"summary_vi":"cảnh này kể gì (tiếng Việt)","start_en":"…","action_en":"…","end_en":"…","mood_en":"…","sound_en":"…","dialogue":[{"speaker":"tên","text_vi":"…"},{"speaker":"tên khác (nếu đối đáp)","text_vi":"…"}]}]}`;
+{"title":"tên phim tiếng Việt","logline_vi":"tóm tắt 1–2 câu và ý nghĩa","style_en":"…","setting_en":"…","music_en":"…","narrator_voice_en":"… (bỏ trống nếu không có người dẫn)","characters":[{"name":"tên tiếng Việt","look_en":"…","voice_en":"…"}${g.product ? ',{"name":"tên sản phẩm","kind":"product","look_en":"…","voice_en":""}' : ""}],"scenes":[{"n":1,"summary_vi":"cảnh này kể gì (tiếng Việt)","start_en":"…","action_en":"…","end_en":"…","mood_en":"…","sound_en":"…","dialogue":[{"speaker":"tên","text_vi":"…"},{"speaker":"tên khác (nếu đối đáp)","text_vi":"…"}]}]}`;
     const user = [
       `LOẠI VIDEO: ${g.label.replace(/^\S+\s/, "")}`,
       `Ý TƯỞNG: ${s(o.idea)}`,
@@ -90,7 +91,13 @@ QUY TẮC BẮT BUỘC:
       dialogue: (Array.isArray(c.dialogue) ? c.dialogue : []).map(d => ({ speaker: s(d.speaker) || "Người kể chuyện", text_vi: s(d.text_vi || d.text) })).filter(d => d.text_vi),
     })).filter(c => c.action_en);
     if (!scenes.length) throw new Error("AI chưa viết được cảnh nào. Thử viết rõ ý tưởng hơn.");
-    return { genre: find(GENRES, o && o.genre).key, ratio: (o && o.ratio) || "16:9", title: s(j.title), logline_vi: s(j.logline_vi), style_en: s(j.style_en) || st.en, setting_en: s(j.setting_en), music_en: s(j.music_en), characters, scenes };
+    const g = find(GENRES, o && o.genre);
+    const narrator = scenes.some(c => c.dialogue.some(d => isNarrator(d.speaker, characters))) ? (s(j.narrator_voice_en).replace(/^….*$/, "") || g.narrator) : "";
+    return { genre: g.key, narrator_voice_en: narrator, ratio: (o && o.ratio) || "16:9", title: s(j.title), logline_vi: s(j.logline_vi), style_en: s(j.style_en) || st.en, setting_en: s(j.setting_en), music_en: s(j.music_en), characters, scenes };
+  }
+  // Người dẫn / người kể chuyện: giọng ngoài hình, không phải nhân vật trong hồ sơ.
+  function isNarrator(name, characters) {
+    return !characters.some(c => c.name.toLowerCase() === s(name).toLowerCase()) && /người dẫn|người kể|dẫn chuyện|lời bình|narrator/i.test(s(name));
   }
   function parse(text, o) { return normalize(parseJson(text), o); }
 
@@ -138,7 +145,13 @@ QUY TẮC BẮT BUỘC:
   function toCanhThoai(film) {
     return film.scenes.map(c => ["CANH: " + scenePrompt(film, c, film.scenes.length), ...c.dialogue.map(d => "THOAI: " + d.speaker + ": " + d.text_vi)].join("\n")).join("\n\n");
   }
-  function voiceNote(film) { return film.characters.filter(c => c.voice_en).map(c => c.name + ": " + c.voice_en).join("\n"); }
+  function voiceNote(film) {
+    const lines = film.characters.filter(c => c.voice_en).map(c => c.name + ": " + c.voice_en);
+    const voice = film.narrator_voice_en || (film.genre && find(GENRES, film.genre).narrator);
+    const narr = [...new Set(film.scenes.flatMap(c => c.dialogue.map(d => d.speaker)).filter(n => isNarrator(n, film.characters)))];
+    if (voice) narr.forEach(n => lines.push(n + ": " + voice));
+    return lines.join("\n");
+  }
   function castSheet(film) {
     const cs = film.characters;
     if (!cs.length) return "";
@@ -184,10 +197,10 @@ QUY TẮC BẮT BUỘC:
       scenes.push({ n: i + 1, summary_vi: `${hero}: ${b[0]}.`, start_en: prevEnd, action_en: `${hero} ${act}.`, end_en: `${hero} ${named(b[2])}`, sound_en: "the same gentle ambience continues, soft footsteps", dialogue: o.dialogue === "none" ? [] : [{ speaker: g.key === "ad" ? "Người dẫn" : g.key === "psa" && i === n - 1 ? "Người kể chuyện" : hero, text_vi: b[3] }] });
     }
     if (productName) characters.push({ name: productName, kind:"product", look_en: `${s(String(o.product).replace(/^[^\n,:–-]*[\n,:–-]\s*/, "")).slice(0, 160) || "the product"}, exactly the same shape, colors and packaging in every shot`, voice_en: "" });
-    return { genre: g.key, ratio: o.ratio || g.ratio || "16:9", title: idea.slice(0, 60), logline_vi: idea, style_en: st.en, setting_en: "one consistent location that matches the story, natural light changing gradually", music_en: "one soft cinematic theme played throughout", characters, scenes, quick: true };
+    return { genre: g.key, narrator_voice_en: scenes.some(c => c.dialogue.some(d => isNarrator(d.speaker, characters))) ? g.narrator : "", ratio: o.ratio || g.ratio || "16:9", title: idea.slice(0, 60), logline_vi: idea, style_en: st.en, setting_en: "one consistent location that matches the story, natural light changing gradually", music_en: "one soft cinematic theme played throughout", characters, scenes, quick: true };
   }
 
-  const api = { STYLES, GENRES, buildBrief, parse, normalize, scenePrompt, toCanhThoai, voiceNote, castSheet, turnaround, quick };
+  const api = { STYLES, GENRES, isNarrator, buildBrief, parse, normalize, scenePrompt, toCanhThoai, voiceNote, castSheet, turnaround, quick };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.MuseFilm = api;
 })(typeof window !== "undefined" ? window : globalThis);
