@@ -54,6 +54,8 @@ if exist "%~dp0studio.html" (
   )
   rem Giải nén sẵn tiện ích lấy cookie muse.ai (dùng để thêm tài khoản) ra C:\muse2api-test\muse2api-extension.
   if not exist "%ROOT%\muse2api-extension\manifest.json" if exist "%APPDIR%\muse2api-extension.zip" tar -xf "%APPDIR%\muse2api-extension.zip" -C "%ROOT%" >nul 2>nul
+  rem Bản sửa tiện ích: muse.ai đã bỏ cookie hatch_gw, tiện ích gốc báo "còn thiếu" và không thêm được tài khoản.
+  if exist "%~dp0muse2api-extension-popup.js" if exist "%ROOT%\muse2api-extension\manifest.json" copy /y "%~dp0muse2api-extension-popup.js" "%ROOT%\muse2api-extension\popup.js" >nul
   if not defined MUSE_NOLAUNCH powershell -NoProfile -Command "$d=[Environment]::GetFolderPath('Desktop'); $l=Join-Path $d 'Muse Studio.lnk'; if(-not (Test-Path $l)){ $s=(New-Object -ComObject WScript.Shell).CreateShortcut($l); $s.TargetPath='%ROOT%\studio-moi\MO_MUSE_STUDIO.bat'; $s.WorkingDirectory='%ROOT%\studio-moi'; $s.IconLocation='%APPDIR%\Muse2API_Studio.exe,0'; $s.WindowStyle=7; $s.Save() }" >nul 2>nul
 )
 
