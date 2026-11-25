@@ -107,7 +107,7 @@ QUY TẮC BẮT BUỘC:
   // chỉ gắn nhân vật có mặt trong cảnh. Ngân sách tính cả lời thoại (giọng do Studio gắn thêm sau).
   const words = (t, n) => { const w = s(t).split(" "); return w.length > n ? w.slice(0, n).join(" ").replace(/[,;:]$/, "") + "…" : s(t); };
   const end = t => s(t).replace(/[.…]?$/, ".");
-  const BUDGET = 820; // Studio còn gắn thêm: chú thích ảnh tham chiếu, nhận diện + giọng ngay tại từng câu thoại
+  const BUDGET = 760; // Studio còn gắn thêm: chú thích ảnh tham chiếu, nhận diện + giọng ngay tại từng câu thoại
   function inScene(film, c) {
     const txt = [c.start_en, c.action_en, c.end_en, ...c.dialogue.map(d => d.speaker)].join(" ").toLowerCase();
     const hit = film.characters.filter(x => txt.includes(x.name.toLowerCase()));

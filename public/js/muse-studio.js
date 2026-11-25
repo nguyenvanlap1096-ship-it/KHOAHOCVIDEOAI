@@ -264,7 +264,7 @@ function dialogueText(says){
   const narr = who => /người dẫn|người kể|dẫn chuyện|lời bình|narrator/i.test(who) && !tagOf(who);
   const lines = says.map((d, i) => {
     const first = !seen.has(d.who.toLowerCase()); seen.add(d.who.toLowerCase());
-    if (narr(d.who)) return (i + 1) + ") off-screen voice-over by " + d.who + (first && voiceOf(d.who) ? " (voice: " + voiceOf(d.who) + ")" : "") + ', nobody on screen moves their lips, in Vietnamese: "' + d.text + '"';
+    if (narr(d.who)) return (i + 1) + ") off-screen voice-over by " + d.who + (first && voiceOf(d.who) ? " (voice: " + clip(voiceOf(d.who), 9) + ")" : "") + ', nobody on screen moves their lips, in Vietnamese: "' + d.text + '"';
     const info = !first ? "" : [tagOf(d.who), voiceOf(d.who) && "voice: " + voiceOf(d.who)].filter(Boolean).join("; ");
     return (i + 1) + ") " + d.who + (info ? " (" + info + ")" : "") + (i ? " replies" : " says") + ' in Vietnamese: "' + d.text + '"';
   });
