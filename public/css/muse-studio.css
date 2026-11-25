@@ -95,7 +95,7 @@ details summary:hover{color:var(--acc)}
 .check input{width:17px;height:17px;accent-color:var(--acc)}
 .theme-btn{margin-top:12px}
 .noacc{grid-column:1/-1;border-color:color-mix(in srgb,var(--acc) 45%,var(--line));background:var(--acc-soft);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
-.noacc .txt{flex:1;min-width:240px}.noacc b{display:block;font-size:15.5px;margin-bottom:2px}
+.noacc .txt{flex:1;min-width:240px}.noacc .txt>b{display:block;font-size:15.5px;margin-bottom:4px}.noacc .txt>span{display:block;line-height:1.6}
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:10px;border:2px solid var(--panel)}
 @media (max-width:1150px){.app{grid-template-columns:1fr;padding:14px}.side,.queue-col{position:static;max-height:none}}
 .refbadge{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px;padding:8px 10px;border-radius:12px;background:var(--acc-soft);border:1px solid color-mix(in srgb,var(--acc) 35%,var(--line));font-size:13px}
