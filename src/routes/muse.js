@@ -19,8 +19,8 @@ const INSTALLER = path.join(config.root, 'assets', 'muse', 'Muse-Studio-Cai-Dat.
 const MUSE_CSP = [
   "default-src 'self'",
   "script-src 'self'",
-  "style-src 'self' 'unsafe-inline'",
-  "font-src 'self' data:",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
   `img-src 'self' data: blob: ${RUNNER}`,
   `media-src 'self' blob: ${RUNNER}`,
   `connect-src 'self' ${RUNNER}`,

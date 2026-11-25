@@ -884,6 +884,7 @@ async function init(){
     $("pTitle").textContent = g.label;
     $("pHint").textContent = u.hint;
     $("pTabs").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.genre === g.key));
+    const onTab = $("pTabs").querySelector("button.on"); if (onTab) $("pTabs").scrollLeft = onTab.offsetLeft - 24; // điện thoại: tab đang chọn luôn trong tầm nhìn
     document.querySelectorAll(".nav button[data-genre]").forEach(b => b.classList.toggle("cur", b.dataset.genre === g.key));
     $("fIdea").placeholder = u.idea; $("fIdea").value = P.idea || "";
     $("fProduct").classList.toggle("hidden", !u.msg); $("fProduct").placeholder = u.msg || ""; $("fProduct").value = P.msg || "";
@@ -928,6 +929,13 @@ async function init(){
     const miss = P.cast.filter(c => !c.img).length;
     $("pGenAll").classList.toggle("hidden", !miss);
     $("pCastNote").textContent = miss ? miss + " thẻ chưa có ảnh." : "✓ Đủ ảnh tham chiếu — sang bước 2.";
+    steps();
+  }
+  // trạng thái 3 bước: xong → dấu ✓ + đường nối màu nhấn; bước đang làm → viền màu nhấn
+  function steps(){
+    const st = [P.cast.length > 0 && P.cast.every(c => c.img), !!P.film, false];
+    const cur = st.indexOf(false);
+    document.querySelectorAll("#scriptCard .pstep").forEach((el, i) => { el.classList.toggle("done", st[i]); el.classList.toggle("cur", i === cur); });
   }
   const cardOf = el => P.cast.find(c => c.id === el.closest(".castc").dataset.id);
   $("pCast").addEventListener("input", e => {
@@ -1119,6 +1127,7 @@ async function init(){
     const out = $("fOut"); out.innerHTML = "";
     const film = P.film;
     $("pRun").disabled = $("pEdit").disabled = !film;
+    steps();
     $("pRunInfo").textContent = film ? film.scenes.length + " cảnh × 10 giây = video " + film.scenes.length * 10 + " giây · " + P.cast.filter(c => c.img).length + " ảnh tham chiếu" : "Viết kịch bản ở bước 2 trước.";
     if (!film) return;
     const box = document.createElement("div"); box.className = "batch";
