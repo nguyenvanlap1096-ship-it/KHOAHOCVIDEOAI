@@ -58,7 +58,8 @@ router.post('/api/script', requireAuth, async (req, res) => {
   if (!q.unlimited && q.used + 1 > q.quota) return res.status(402).json({ error: `Bạn đã dùng hết ${q.quota} lượt AI tháng này.`, noAi: true });
   const b = req.body || {};
   const o = {
-    idea: String(b.idea || '').trim().slice(0, 3000), cast: String(b.cast || '').trim().slice(0, 1500),
+    idea: String(b.idea || '').trim().slice(0, 3000), cast: String(b.cast || '').trim().slice(0, 3000), castFixed: b.castFixed === true,
+    castNames: String(b.castNames || '').slice(0, 300), productName: String(b.productName || '').slice(0, 60),
     scenes: b.scenes, style: b.style, ratio: b.ratio, dialogue: b.dialogue === 'none' ? 'none' : 'talk',
     genre: ['film', 'ad', 'affiliate', 'psa'].includes(b.genre) ? b.genre : 'film', product: String(b.product || '').trim().slice(0, 1500), productPhoto: b.productPhoto === true,
   };
@@ -72,6 +73,43 @@ router.post('/api/script', requireAuth, async (req, res) => {
     res.json({ result, used: await studio.usedPoints(req.user.id) });
   } catch (err) {
     if (err.detail) console.warn('[muse] script', err.detail);
+    await db.run("UPDATE studio_jobs SET status = 'failed', error = ? WHERE id = ?", [String(err.message).slice(0, 480), insertId]);
+    res.status(err.status && err.status >= 400 && err.status < 600 ? err.status : 502).json({ error: err.message });
+  }
+});
+
+// AI khoá học (Gemini) xem ảnh tham chiếu ở bước 1 và tả ngoại hình bằng tiếng Anh, để kịch bản + video bám đúng ảnh.
+// Ảnh do trình duyệt thu nhỏ trước khi gửi; máy chủ không lưu ảnh.
+const DESCRIBE_SYSTEM = `You describe reference images for an AI video generator so it can recreate the exact same character or product in every shot.
+For each image write look_en: 25-40 English words, concrete and visual only. Person or animal: apparent age, gender, build, face shape, skin tone, eyes, exact hair (length, style, color), exact outfit with colors and materials, accessories, one signature detail. Product: product type, exact shape and proportions, exact colors, material and finish, packaging, label/logo colors and position, distinctive parts. Never invent details you cannot see. If the image shows several views of the same subject, describe the subject once.
+Return ONLY JSON: {"items":[{"name":"...","look_en":"..."}]} in the same order as the images.`;
+router.post('/api/describe', requireAuth, express.json({ limit: '6mb' }), async (req, res) => {
+  if (!(await museAccess(req.user)).allowed) return res.status(403).json({ error: 'Tài khoản chưa được mở Muse Studio.' });
+  const cfg = studio.studioConfig(await getSettings());
+  const q = await studio.quotaFor(req.user, cfg);
+  if (!q.allowed) return res.status(403).json({ error: 'AI của khoá học chưa bật cho bạn.', noAi: true });
+  if (!q.unlimited && q.used + 1 > q.quota) return res.status(402).json({ error: `Bạn đã dùng hết ${q.quota} lượt AI tháng này.`, noAi: true });
+  const items = (Array.isArray((req.body || {}).items) ? req.body.items : []).slice(0, 5);
+  const media = [], lines = [];
+  for (const [i, it] of items.entries()) {
+    const m = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(it.image || ''));
+    if (!m) return res.status(400).json({ error: 'Ảnh tham chiếu không hợp lệ (chỉ nhận JPG, PNG, WEBP).' });
+    const buffer = Buffer.from(m[2], 'base64');
+    if (buffer.length > 3 * 1024 * 1024) return res.status(400).json({ error: 'Ảnh tham chiếu quá lớn.' });
+    media.push({ mime: m[1], buffer });
+    lines.push(`Image ${i + 1}: ${it.kind === 'product' ? 'PRODUCT' : 'CHARACTER'} named "${String(it.name || '').slice(0, 40)}"${it.desc ? `. Owner's note (Vietnamese, trust it for things not visible): ${String(it.desc).slice(0, 300)}` : ''}`);
+  }
+  if (!media.length) return res.status(400).json({ error: 'Chưa có ảnh nào.' });
+  const { insertId } = await db.run('INSERT INTO studio_jobs (user_id, model_key, kind, points, status) VALUES (?, ?, ?, ?, ?)',
+    [req.user.id, 'muse-describe', 'musedesc', 1, 'processing']);
+  try {
+    const text = await studio.runText(cfg, DESCRIBE_SYSTEM, lines.join('\n'), media);
+    const j = JSON.parse(String(text).replace(/^```(?:json)?\s*|```\s*$/g, ''));
+    const out = (Array.isArray(j.items) ? j.items : []).slice(0, media.length).map(x => ({ name: String(x.name || '').slice(0, 40), look_en: String(x.look_en || '').replace(/\s+/g, ' ').trim().slice(0, 400) }));
+    await db.run("UPDATE studio_jobs SET status = 'completed' WHERE id = ?", [insertId]);
+    res.json({ items: out, used: await studio.usedPoints(req.user.id) });
+  } catch (err) {
+    if (err.detail) console.warn('[muse] describe', err.detail);
     await db.run("UPDATE studio_jobs SET status = 'failed', error = ? WHERE id = ?", [String(err.message).slice(0, 480), insertId]);
     res.status(err.status && err.status >= 400 && err.status < 600 ? err.status : 502).json({ error: err.message });
   }

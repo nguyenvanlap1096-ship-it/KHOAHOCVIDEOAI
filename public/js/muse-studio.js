@@ -816,72 +816,237 @@ async function init(){
 }
 (async () => { if (await connect()) init(); })();
 
-/* ---------- ✍ viết kịch bản phim liền mạch (public/js/muse-film.js) ----------
-   AI của khoá học (bản web) → Trình viết nhanh khi không có AI; hoặc nhờ Gemini/ChatGPT rồi dán kết quả.
-   Kết quả: hồ sơ nhân vật (ngoại hình + giọng), các cảnh nối khung cuối → khung đầu, đưa thẳng vào Hàng loạt nối cảnh. */
-(function filmWriter(){
+/* ---------- 🎬 Dự án video: Phim truyện · Quảng cáo · Affiliate · Tuyên truyền (public/js/muse-film.js) ----------
+   Mỗi loại video là 1 dự án riêng, đi theo 3 bước: ① ảnh tham chiếu (nhân vật / sản phẩm) → ② kịch bản viết DỰA TRÊN
+   đúng các ảnh đó (bản web: AI của khoá học xem ảnh để tả đúng ngoại hình) → ③ tạo video nối cảnh, tự ghép. */
+(function videoProject(){
   const F = window.MuseFilm; if (!F) return;
-  F.STYLES.forEach(st => { const o = document.createElement("option"); o.value = st.key; o.textContent = st.label; $("fStyle").append(o); });
-  F.GENRES.forEach(g => { const o = document.createElement("option"); o.value = g.key; o.textContent = g.label; $("fGenre").append(o); });
-  // Mỗi loại video: gợi ý ô ý tưởng, ô sản phẩm/thông điệp, phong cách + số cảnh + khung hình mặc định.
   const GUI = {
-    film: { hint:"Phim có câu chuyện, nhân vật, mở – thắt – mở nút.", idea:"Ý tưởng phim. Ví dụ: Chú sóc tinh nghịch lấy trộm hạt dẻ của bác nhím, bị phát hiện, cuối cùng biết xin lỗi và chia sẻ cho cả khu rừng." },
-    ad: { hint:"Hook 2 giây đầu → sản phẩm là người hùng, chứng minh công dụng → hero shot + kêu gọi mua.", idea:"Ý tưởng quảng cáo. Ví dụ: Cô gái văn phòng mệt mỏi buổi chiều, uống một ngụm trà sữa Mây Hồng và cả văn phòng bừng sáng.",
-      product:"Sản phẩm: tên, hình dáng, màu sắc, bao bì, công dụng nổi bật, ưu đãi (nếu có). Ví dụ:\nTrà sữa Mây Hồng - ly nhựa trong 500ml, nắp vòm, ống hút hồng, trân châu đen; ít ngọt, thơm trà; mua 1 tặng 1 cuối tuần", img:true },
-    affiliate: { hint:"Kiểu review chân thật quay điện thoại: nỗi khổ → mở hộp, dùng thử → kết quả → \"link ở giỏ hàng\".", idea:"Ý tưởng video review. Ví dụ: Mẹ bỉm review máy hút bụi cầm tay, dọn sạch vụn bánh con làm rơi trong 10 giây.",
-      product:"Sản phẩm bạn bán: tên, hình dáng, màu sắc, bao bì, công dụng thật, giá/ưu đãi. Ví dụ:\nMáy hút bụi cầm tay MiniVac - thân trắng, đầu hút xám, nút xanh dương, sạc USB-C; hút mạnh, nhẹ 600g; giảm 30% hôm nay", img:true },
-    psa: { hint:"Khoảnh khắc đời thường → nguy cơ, hậu quả (nhẹ nhàng) → làm đúng → thông điệp rõ ràng.", idea:"Ý tưởng tuyên truyền. Ví dụ: Bạn trẻ vừa lái xe máy vừa xem điện thoại, suýt va chạm, từ đó luôn tập trung khi lái.",
-      product:"Thông điệp cần truyền tải, người xem là ai, khẩu hiệu (nếu có). Ví dụ:\nAn toàn giao thông cho học sinh – sinh viên; khẩu hiệu: Đã lái xe – không cầm điện thoại", img:false },
+    film: { hint:"Phim có câu chuyện: mở – thắt – cao trào – mở nút. Nhân vật giữ nguyên ngoại hình và giọng ở mọi cảnh.",
+      idea:"Ý tưởng phim. Ví dụ: Chú sóc tinh nghịch lấy trộm hạt dẻ của bác nhím, bị phát hiện, cuối cùng biết xin lỗi và chia sẻ cho cả khu rừng." },
+    ad: { hint:"2 giây đầu gây chú ý → sản phẩm là người hùng, chứng minh công dụng → cảnh sản phẩm đẹp nhất + lời kêu gọi mua.",
+      idea:"Ý tưởng quảng cáo. Ví dụ: Cô gái văn phòng mệt mỏi buổi chiều, uống một ngụm trà sữa và cả buổi chiều bừng sáng." },
+    affiliate: { hint:"Review chân thật quay bằng điện thoại: nỗi khổ quen thuộc → mở hộp, dùng thử → kết quả → \"link ở giỏ hàng\".",
+      idea:"Ý tưởng video review. Ví dụ: Mẹ bỉm review máy hút bụi cầm tay, dọn sạch vụn bánh con làm rơi trên sofa trong 10 giây." },
+    psa: { hint:"Khoảnh khắc đời thường → nguy cơ, hậu quả (nhẹ nhàng) → làm đúng → thông điệp, khẩu hiệu rõ ràng.",
+      idea:"Ý tưởng tuyên truyền. Ví dụ: Bạn trẻ vừa lái xe máy vừa xem điện thoại, suýt va chạm, từ đó luôn tập trung khi lái.",
+      msg:"Thông điệp cần truyền tải, người xem là ai, khẩu hiệu (nếu có). Ví dụ: An toàn giao thông cho học sinh – sinh viên; khẩu hiệu: Đã lái xe – không cầm điện thoại" },
   };
-  function showGenre(setDefaults){
-    const key = $("fGenre").value, g = F.GENRES.find(x => x.key === key) || F.GENRES[0], u = GUI[g.key];
-    $("fGenreHint").textContent = u.hint;
-    $("fIdea").placeholder = u.idea;
-    $("fProdBox").classList.toggle("hidden", !u.product);
-    if (u.product) $("fProduct").placeholder = u.product;
-    $("fProdImgRow").classList.toggle("hidden", !u.img);
-    if (setDefaults){
-      $("fStyle").value = g.style; $("fScenes").value = String(g.scenes);
-      if (g.ratio === "9:16") $("sizeSel").value = "720x1280";
+  const DESC = {
+    person:"Tả nhân vật (không bắt buộc nếu đã có ảnh): tuổi, giới tính, tóc, trang phục, màu sắc, nét riêng…",
+    product:"Tên + loại sản phẩm, màu, chất liệu, công dụng THẬT, giá/ưu đãi. Ví dụ: Áo khoác nỉ hồng pastel có mũ, khoá kéo bạc; ấm, nhẹ; giảm 30% hôm nay",
+  };
+  const MAX_CHARS = 3;
+  const uid = () => Math.random().toString(36).slice(2, 9);
+  const blank = (kind, name) => ({ id: uid(), kind, name: name || "", desc: "", img: null, src: "", look_en: "", lookFor: "" });
+  function fresh(genre){
+    const g = F.GENRES.find(x => x.key === genre) || F.GENRES[0];
+    const cast = g.product ? [blank("product"), blank("person", genre === "affiliate" ? "Người review" : "")] : [blank("person")];
+    return { genre: g.key, cast, idea: "", msg: "", style: g.style, scenes: g.scenes, talk: "talk", ratio: g.ratio || "16:9", film: null };
+  }
+  const key = g => "muse_proj_" + g;
+  function load(g){
+    try{ const p = JSON.parse(LS.get(key(g)) || "null"); if (p && Array.isArray(p.cast)) return Object.assign(fresh(g), p); }catch{}
+    // dự án cũ (trước khi có từng mục): mang kịch bản đang có sang Phim truyện / đúng loại của nó
+    const p = fresh(g);
+    try{ const old = JSON.parse(LS.get("muse_film_last") || "null"); if (old && (old.genre || "film") === g){ p.film = old; } }catch{}
+    return p;
+  }
+  function save(){ try{ LS.set(key(P.genre), JSON.stringify(P)); LS.set("muse_proj_genre", P.genre); }catch{ toast("Bộ nhớ trình duyệt đầy — ảnh tham chiếu chỉ giữ trong phiên này.", true); } }
+
+  F.STYLES.forEach(st => { const o = document.createElement("option"); o.value = st.key; o.textContent = st.label; $("fStyle").append(o); });
+  F.GENRES.forEach(g => {
+    const o = document.createElement("option"); o.value = g.key; o.textContent = g.label; $("fGenre").append(o);
+    const b = document.createElement("button"); b.type = "button"; b.dataset.genre = g.key; b.textContent = g.label.replace(" (review bán hàng)", ""); $("pTabs").append(b);
+  });
+  let P = load(LS.get("muse_proj_genre") || "film");
+
+  /* ----- ảnh: thu nhỏ trước khi lưu (giữ bộ nhớ trình duyệt và gửi đi nhanh) ----- */
+  function shrink(data, max = 1280, q = 0.88){
+    return new Promise(res => {
+      const im = new Image();
+      im.onload = () => {
+        const k = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement("canvas");
+        c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
+        try{ res(c.toDataURL("image/jpeg", q)); }catch{ res(data); }
+      };
+      im.onerror = () => res(data); im.src = data;
+    });
+  }
+  const readFile = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+  const sig = d => d ? d.length + ":" + d.slice(-40) : "";
+
+  /* ----- giao diện từng loại video ----- */
+  function show(){
+    const g = F.GENRES.find(x => x.key === P.genre) || F.GENRES[0], u = GUI[g.key];
+    $("fGenre").value = g.key;
+    $("pTitle").textContent = g.label;
+    $("pHint").textContent = u.hint;
+    $("pTabs").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.genre === g.key));
+    document.querySelectorAll(".nav button[data-genre]").forEach(b => b.classList.toggle("cur", b.dataset.genre === g.key));
+    $("fIdea").placeholder = u.idea; $("fIdea").value = P.idea || "";
+    $("fProduct").classList.toggle("hidden", !u.msg); $("fProduct").placeholder = u.msg || ""; $("fProduct").value = P.msg || "";
+    $("fStyle").value = P.style; $("fScenes").value = String(P.scenes); $("fTalk").value = P.talk; $("pRatio").value = P.ratio;
+    $("pCastHint").textContent = g.product ? "Làm trước tiên: ảnh SẢN PHẨM thật (chụp hoặc ảnh shop) + nhân vật. Kịch bản sẽ bám đúng các ảnh này." : "Làm trước tiên: mỗi nhân vật 1 thẻ — tải ảnh thật hoặc tả rồi bấm Tạo ảnh. Kịch bản sẽ bám đúng các ảnh này.";
+    renderCast(); render();
+  }
+  function switchGenre(gk){
+    if (gk === P.genre) return;
+    save(); P = load(gk); save(); show();
+  }
+  $("pTabs").addEventListener("click", e => { const b = e.target.closest("button[data-genre]"); if (b) switchGenre(b.dataset.genre); });
+  document.querySelectorAll(".nav button[data-genre]").forEach(b => b.addEventListener("click", () => switchGenre(b.dataset.genre)));
+  $("fIdea").addEventListener("input", () => { P.idea = $("fIdea").value; save(); });
+  $("fProduct").addEventListener("input", () => { P.msg = $("fProduct").value; save(); });
+  $("fStyle").addEventListener("change", () => { P.style = $("fStyle").value; save(); });
+  $("fScenes").addEventListener("change", () => { P.scenes = Number($("fScenes").value); save(); });
+  $("fTalk").addEventListener("change", () => { P.talk = $("fTalk").value; save(); });
+  $("pRatio").addEventListener("change", () => { P.ratio = $("pRatio").value; if (P.film) P.film.ratio = P.ratio; save(); });
+  $("pNew").onclick = () => {
+    if (!confirm("Bắt đầu dự án " + $("pTitle").textContent + " mới?\nSẽ xoá ảnh tham chiếu, ý tưởng và kịch bản của loại video này. Video đã tạo trong Thư viện vẫn giữ nguyên.")) return;
+    P = fresh(P.genre); save(); show(); toast("Đã bắt đầu dự án mới.");
+  };
+
+  /* ----- bước 1: thẻ ảnh tham chiếu ----- */
+  function renderCast(){
+    const box = $("pCast"); box.innerHTML = "";
+    P.cast.forEach(c => {
+      const el = document.createElement("div"); el.className = "castc" + (c.kind === "product" ? " prod" : ""); el.dataset.id = c.id;
+      const st = c.img ? (c.src === "upload" ? "✓ Ảnh thật" : "✓ Ảnh AI tạo") + (c.look_en && c.lookFor === sig(c.img) ? " · AI đã xem ảnh" : "") : "Chưa có ảnh";
+      el.innerHTML = `
+        <label class="castc-img" title="Bấm để tải ảnh thật">${c.img ? `<img src="${c.img}" alt="">` : `<span>${c.kind === "product" ? "📦" : "👤"}<br>Bấm để tải ảnh</span>`}<input type="file" accept="image/*" hidden data-act="file"></label>
+        <div class="castc-body">
+          <div class="row"><span class="chip">${c.kind === "product" ? "📦 Sản phẩm" : "👤 Nhân vật"}</span><input type="text" data-act="name" maxlength="40" placeholder="${c.kind === "product" ? "Tên sản phẩm" : "Tên nhân vật"}" value="${esc(c.name)}">${c.kind === "person" && P.cast.filter(x => x.kind === "person").length > 1 ? '<button class="btn" type="button" data-act="del" title="Bỏ thẻ này">✕</button>' : ""}</div>
+          <textarea rows="2" data-act="desc" placeholder="${esc(DESC[c.kind])}">${esc(c.desc)}</textarea>
+          <div class="row"><button class="btn" type="button" data-act="gen">🖼 ${c.img ? "Tạo lại ảnh" : "Tạo ảnh từ mô tả"}</button>${c.img ? '<button class="btn" type="button" data-act="clear">Bỏ ảnh</button>' : ""}<span class="small ${c.img ? "ok" : "muted"} grow">${st}</span></div>
+        </div>`;
+      box.append(el);
+    });
+    const persons = P.cast.filter(x => x.kind === "person").length;
+    $("pAddChar").disabled = persons >= MAX_CHARS;
+    const miss = P.cast.filter(c => !c.img).length;
+    $("pGenAll").classList.toggle("hidden", !miss);
+    $("pCastNote").textContent = miss ? miss + " thẻ chưa có ảnh." : "✓ Đủ ảnh tham chiếu — sang bước 2.";
+  }
+  const cardOf = el => P.cast.find(c => c.id === el.closest(".castc").dataset.id);
+  $("pCast").addEventListener("input", e => {
+    const c = cardOf(e.target), a = e.target.dataset.act;
+    if (a === "name") c.name = e.target.value.trim();
+    if (a === "desc"){ c.desc = e.target.value; if (c.src !== "upload") c.lookFor = ""; }
+    save();
+  });
+  $("pCast").addEventListener("change", async e => {
+    if (e.target.dataset.act !== "file") return;
+    const c = cardOf(e.target), f = e.target.files[0]; e.target.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")){ toast("Chọn tệp ảnh (JPG, PNG, WEBP).", true); return; }
+    if (f.size > 15 * 1024 * 1024){ toast("Ảnh quá 15 MB.", true); return; }
+    c.img = await shrink(fixImageDataUrl(await readFile(f))); c.src = "upload"; c.look_en = ""; c.lookFor = "";
+    if (!c.name) c.name = c.kind === "product" ? f.name.replace(/\.[^.]+$/, "").slice(0, 40) : "";
+    save(); renderCast(); toast("Đã gắn ảnh thật cho " + (c.name || (c.kind === "product" ? "sản phẩm" : "nhân vật")) + ".");
+  });
+  $("pCast").addEventListener("click", async e => {
+    const b = e.target.closest("button[data-act]"); if (!b) return;
+    const c = cardOf(b), a = b.dataset.act;
+    if (a === "del"){ P.cast = P.cast.filter(x => x !== c); save(); renderCast(); }
+    if (a === "clear"){ c.img = null; c.src = ""; c.look_en = ""; c.lookFor = ""; save(); renderCast(); }
+    if (a === "gen") await genCard([c]);
+  });
+  $("pAddChar").onclick = () => { if (P.cast.filter(x => x.kind === "person").length < MAX_CHARS){ P.cast.push(blank("person")); save(); renderCast(); } };
+  $("pGenAll").onclick = () => genCard(P.cast.filter(c => !c.img));
+
+  // tạo 1 ảnh qua bộ chạy Muse2API (tài khoản muse của học viên) → dataURL
+  async function genImage(prompt, label){
+    const body = { prompt, ...commonBody(), generation_mode:"independent", continuity_notes:"", sequence_id:null, size:"1280x720", reference_images:[], reference_roles:[], reference_files:[] };
+    const d = await api("/v1/images/tasks", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) });
+    const id = d.id || d.task_id;
+    for (;;){
+      await sleep(4000);
+      let x; try{ x = await api("/v1/images/tasks/" + id); }catch{ continue; }
+      tasks.set(id, { id, kind:"image", prompt: label, status:x.status, progress:x.progress, error:x.error || null, elapsed:x.elapsed, url:taskUrl(x), result:x.result, created_at:x.created_at || Date.now() / 1000 }); renderQueue();
+      if (x.status === "completed"){
+        const url = taskUrl(x), blob = await (await fetch(url)).blob();
+        return { url, data: await shrink(fixImageDataUrl(await readFile(blob))) };
+      }
+      if (["failed", "cancelled", "interrupted"].includes(x.status)) throw new Error(viErr(x.error) || "Tạo ảnh thất bại");
     }
   }
-  const saved = (() => { try{ return JSON.parse(LS.get("muse_film_form") || "{}"); }catch{ return {}; } })();
-  for (const [id, k] of [["fGenre","genre"],["fIdea","idea"],["fCast","cast"],["fProduct","product"],["fStyle","style"],["fScenes","scenes"],["fTalk","dialogue"]]) if (saved[k]) $(id).value = saved[k];
-  showGenre(false);
-  const form = () => ({ productPhoto: refs.some(r => r.isProduct), genre: $("fGenre").value, idea: $("fIdea").value.trim(), cast: $("fCast").value.trim(), product: $("fProdBox").classList.contains("hidden") ? "" : $("fProduct").value.trim(), style: $("fStyle").value, scenes: Number($("fScenes").value), dialogue: $("fTalk").value,
-    ratio: $("sizeSel").value === "1024x1024" ? "1:1" : /^7|^10/.test($("sizeSel").value) ? "9:16" : "16:9" });
-  const keep = () => LS.set("muse_film_form", JSON.stringify(form()));
-  ["fIdea","fCast","fProduct","fStyle","fScenes","fTalk"].forEach(id => $(id).addEventListener("change", keep));
-  $("fGenre").addEventListener("change", () => { showGenre(true); keep(); });
-  // Ảnh sản phẩm thật → gắn vào tham chiếu (kèm tên sản phẩm), bước tạo ảnh sẽ bỏ qua sản phẩm này.
-  const prodName = () => ($("fProduct").value.split(/[\n,:–-]/)[0] || "").trim().slice(0, 40) || "Sản phẩm";
-  $("fProdImg").onchange = async e => {
-    const f = e.target.files[0]; e.target.value = "";
-    if (!f) return;
-    if (f.size > 5 * 1024 * 1024){ toast("Ảnh quá 5 MB — chọn ảnh nhỏ hơn.", true); return; }
-    const data = fixImageDataUrl(await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); }));
-    refs = refs.filter(r => !r.isProduct);
-    if (refs.filter(r => !r.isDoc).length >= 8){ toast("Đã đủ 8 ảnh tham chiếu — bỏ bớt ảnh rồi thêm lại.", true); return; }
-    refs.push({ data, role:"reference", name: f.name, charName: prodName(), isProduct:true, isDoc:false }); renderRefs();
-    $("fProdImgNote").textContent = "✓ Đã gắn ảnh sản phẩm thật: " + f.name + ". Bước tạo ảnh sẽ dùng luôn ảnh này.";
-    if (film) syncRefs(film);
-    toast($("fProduct").value.trim() ? "Đã gắn ảnh sản phẩm làm tham chiếu cho mọi cảnh." : "Đã gắn ảnh sản phẩm. Nên ghi thêm tên + loại sản phẩm vào ô Sản phẩm (vd: Áo khoác nỉ hồng có khoá kéo) để kịch bản tả đúng.");
-  };
-  const ai = CFG.ai || null;
-  $("fAiNote").textContent = "Viết bằng Chat Muse (tài khoản muse của bạn, khoảng 30–60 giây)." + (ai ? " Muse bận thì tự chuyển sang AI miễn phí của khoá học" + (ai.unlimited ? "" : " (còn " + ai.left + " lượt)") + "." : "") + " Có kịch bản viết sẵn ở ngoài? Mở mục bên dưới và dán vào.";
-  let film = (() => { try{ return JSON.parse(LS.get("muse_film_last") || "null"); }catch{ return null; } })();
-  // Ảnh tham chiếu phải khớp kịch bản: ảnh sản phẩm thật mang đúng tên sản phẩm của kịch bản; trả về các ảnh nhân vật
-  // của kịch bản khác (vd còn "Linh" từ kịch bản trước trong khi kịch bản này là "Hà").
-  function syncRefs(film){
-    if (!film) return [];
-    const prod = film.characters.find(c => c.kind === "product"), real = refs.find(r => r.isProduct);
-    if (prod && real && real.charName !== prod.name){ real.charName = prod.name; renderRefs(); }
-    const names = film.characters.map(c => c.name.toLowerCase());
-    return refs.filter(r => !r.isDoc && !r.isProduct && r.charName && !names.includes(r.charName.toLowerCase()));
+  let busy = false;
+  async function genCard(list){
+    if (busy){ toast("Đang tạo ảnh — đợi xong đã.", true); return false; }
+    const need = list.filter(c => (c.desc || "").trim().length >= 3 || c.name);
+    const bad = list.filter(c => !need.includes(c));
+    if (bad.length){ toast("Hãy ghi tên hoặc tả " + (bad[0].kind === "product" ? "sản phẩm" : "nhân vật") + " trước khi tạo ảnh.", true); return false; }
+    const style = (F.STYLES.find(s => s.key === P.style) || F.STYLES[0]).en;
+    busy = true; $("pGenAll").disabled = true;
+    try{
+      for (let i = 0; i < need.length; i++){
+        const c = need[i], name = c.name || (c.kind === "product" ? "Sản phẩm" : "Nhân vật " + (i + 1));
+        $("pCastNote").textContent = "🖼 Đang tạo ảnh " + name + " (" + (i + 1) + "/" + need.length + ")… khoảng 30–60 giây";
+        let out = null;
+        for (let attempt = 1; attempt <= 2 && !out; attempt++){
+          try{ out = await genImage(F.turnaround({ style_en: style }, { name, kind: c.kind, look_en: (c.desc || "").trim() || name }), "Ảnh tham chiếu " + name); }
+          catch(e){ if (attempt === 2) throw new Error(name + ": " + e.message); }
+        }
+        c.img = out.data; c.src = "ai"; c.look_en = ""; c.lookFor = ""; if (!c.name) c.name = name;
+        save(); renderCast(); playMedia(out.url, "image", "Ảnh tham chiếu: " + name, name);
+      }
+      toast("Đã tạo xong ảnh tham chiếu. Sang bước 2 — viết kịch bản.");
+      return true;
+    }catch(e){ toast("Tạo ảnh dừng: " + e.message, true); return false; }
+    finally{ busy = false; $("pGenAll").disabled = false; renderCast(); }
   }
-  const staleNote = st => "Ảnh tham chiếu đang gắn (" + st.map(r => r.charName).join(", ") + ") là nhân vật của kịch bản khác, không có trong kịch bản này (" + film.characters.filter(c => c.kind !== "product").map(c => c.name).join(", ") + ").";
 
-  // Chat Muse (model muse-spark) qua bộ chạy Muse2API trên máy — dùng tài khoản muse của học viên.
+  /* ----- bước 2: kịch bản dựa trên ảnh ----- */
+  const ai = CFG.ai || null;
+  $("fAiNote").textContent = (WEB && ai ? "AI của khoá học xem ảnh bước 1 để tả đúng nhân vật/sản phẩm (" + (ai.unlimited ? "không giới hạn" : "còn " + ai.left + " lượt") + "), rồi " : "") +
+    "Chat Muse (tài khoản muse của bạn) viết kịch bản trong khoảng 30–60 giây." + (WEB && ai ? " Muse bận thì AI khoá học viết thay." : "");
+  // bản web: AI khoá học (Gemini) nhìn ảnh, tả ngoại hình bằng tiếng Anh để muse giữ đúng nhân vật/sản phẩm.
+  async function describe(){
+    const todo = P.cast.filter(c => c.img && c.lookFor !== sig(c.img));
+    if (!todo.length || !WEB || !ai) return 0;
+    const items = await Promise.all(todo.map(async c => ({ name: c.name, kind: c.kind, desc: c.desc, image: await shrink(c.img, 768, 0.82) })));
+    const r = await fetch("/muse/api/describe", { method:"POST", credentials:"same-origin", headers:{ "Content-Type":"application/json", "X-CSRF-Token": CFG.csrf || "" }, body: JSON.stringify({ items }) });
+    let d = {}; try{ d = await r.json(); }catch{}
+    if (!r.ok) throw new Error(d.error || "AI không xem được ảnh (mã " + r.status + ").");
+    if (ai && !ai.unlimited) ai.left = Math.max(0, ai.left - 1);
+    todo.forEach((c, i) => { const it = (d.items || [])[i]; if (it && it.look_en){ c.look_en = it.look_en; c.lookFor = sig(c.img); } });
+    save(); renderCast();
+    return todo.length;
+  }
+  // gửi cho người viết: danh sách nhân vật/sản phẩm CỐ ĐỊNH lấy từ bước 1
+  function castText(){
+    return P.cast.map(c => {
+      const look = c.look_en && c.lookFor === sig(c.img) ? c.look_en : "";
+      return "- " + (c.kind === "product" ? "SẢN PHẨM" : "NHÂN VẬT") + " \"" + c.name + "\"" + (c.desc.trim() ? ": " + c.desc.trim() : "") +
+        (look ? " | LOOK_EN (tả từ ảnh thật, chép nguyên vào look_en): " + look : c.img ? " | có ảnh tham chiếu: không tự bịa màu sắc/kiểu dáng ngoài mô tả" : "");
+    }).join("\n");
+  }
+  const form = () => ({
+    genre: P.genre, idea: $("fIdea").value.trim(), cast: castText(), castFixed: true, castNames: P.cast.filter(c => c.kind === "person").map(c => c.name).join("\n"), productName: (P.cast.find(c => c.kind === "product") || {}).name || "", product: P.genre === "psa" ? $("fProduct").value.trim() : "",
+    productPhoto: P.cast.some(c => c.kind === "product" && c.img), style: P.style, scenes: P.scenes, dialogue: P.talk, ratio: P.ratio,
+  });
+  // kịch bản luôn dùng đúng tên + ngoại hình của bước 1 (AI có quên cũng được sửa lại ở đây)
+  function enforce(film){
+    film.genre = P.genre; film.ratio = P.ratio;
+    const used = new Set();
+    P.cast.forEach(c => {
+      let ch = film.characters.find(x => !used.has(x) && x.name.toLowerCase() === c.name.toLowerCase());
+      if (!ch) ch = film.characters.find(x => !used.has(x) && (x.kind === "product") === (c.kind === "product") && !P.cast.some(k => k.name.toLowerCase() === x.name.toLowerCase()));
+      const look = (c.look_en && c.lookFor === sig(c.img) && c.look_en) || "";
+      if (!ch){ ch = { name: c.name, look_en: look || c.desc || c.name, voice_en: c.kind === "product" ? "" : "a clear, warm, natural voice, speaks Vietnamese" }; film.characters.push(ch); }
+      else if (ch.name !== c.name){
+        const old = ch.name, re = new RegExp(old.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+        film.scenes.forEach(s => { ["start_en", "action_en", "end_en", "summary_vi"].forEach(k => { s[k] = (s[k] || "").replace(re, c.name); }); s.dialogue.forEach(d => { if (d.speaker === old) d.speaker = c.name; }); });
+        ch.name = c.name;
+      }
+      if (look) ch.look_en = look;
+      if (c.kind === "product"){ ch.kind = "product"; ch.voice_en = ""; } else delete ch.kind;
+      used.add(ch);
+    });
+    return film;
+  }
   async function viaMuse(o){
     const br = F.buildBrief(o);
     const d = await api("/v1/chat/completions", { method:"POST", headers:{ "Content-Type":"application/json" },
@@ -897,26 +1062,40 @@ async function init(){
     if (ai && !ai.unlimited && typeof d.used === "number") ai.left = Math.max(0, ai.left - 1);
     return d.result;
   }
+  function checkCast(){
+    P.cast.forEach((c, i) => { if (!c.name) c.name = c.kind === "product" ? "Sản phẩm" : "Nhân vật " + (i + 1); });
+    const names = P.cast.map(c => c.name.toLowerCase());
+    if (new Set(names).size !== names.length){ toast("Mỗi thẻ ở bước 1 cần một tên khác nhau.", true); return false; }
+    save(); renderCast(); return true;
+  }
   $("fGo").onclick = async () => {
-    const o = form(); keep();
-    if (o.idea.length < 5){ toast("Hãy viết ý tưởng phim trước (ít nhất vài chữ).", true); $("fIdea").focus(); return; }
+    P.idea = $("fIdea").value.trim(); P.msg = $("fProduct").value.trim(); save();
+    if (P.idea.length < 5){ toast("Hãy viết ý tưởng trước (ít nhất vài chữ).", true); $("fIdea").focus(); return; }
+    if (!checkCast()) return;
+    if (!P.cast.some(c => c.img) && !confirm("Bước 1 chưa có ảnh tham chiếu nào — nhân vật sẽ khó giữ giống nhau giữa các cảnh.\n\nVẫn viết kịch bản?")) return;
     const b = $("fGo"); b.disabled = true;
-    const t0 = Date.now(), tick = setInterval(() => { b.textContent = "Muse đang viết… " + Math.round((Date.now() - t0) / 1000) + "s"; }, 1000);
+    const t0 = Date.now(), tick = setInterval(() => { b.textContent = (b.dataset.phase || "Muse đang viết…") + " " + Math.round((Date.now() - t0) / 1000) + "s"; }, 1000);
+    let film;
     try{
+      b.dataset.phase = "AI đang xem ảnh…";
+      try{ await describe(); }catch(e){ toast(e.message + " — vẫn viết kịch bản theo mô tả của bạn.", true); }
+      b.dataset.phase = "Muse đang viết…";
+      const o = form();
       try{ film = await viaMuse(o); toast("Chat Muse đã viết xong kịch bản " + film.scenes.length + " cảnh."); }
       catch(e1){
-        if (WEB && ai){ b.textContent = "AI khoá học đang viết…"; film = Object.assign(await viaAI(o), { by:"ai" }); toast("Muse bận (" + e1.message + ") — AI của khoá học đã viết xong."); }
+        if (WEB && ai){ b.dataset.phase = "AI khoá học đang viết…"; film = Object.assign(await viaAI(o), { by:"ai" }); toast("Muse bận (" + e1.message + ") — AI của khoá học đã viết xong."); }
         else throw e1;
       }
-    }catch(e){ film = F.quick(o); toast((e.message || "AI đang bận.") + " Đã dùng Trình viết nhanh để bạn có ngay khung kịch bản.", true); }
-    finally{ clearInterval(tick); b.disabled = false; b.textContent = "✨ Viết kịch bản"; }
-    LS.set("muse_film_last", JSON.stringify(film)); render();
-    const st = syncRefs(film); if (st.length) toast(staleNote(st) + " Bấm 🖼 Tạo ảnh nhân vật (bước 2) để tạo ảnh đúng kịch bản.", true);
+    }catch(e){ film = F.quick(form()); toast((e.message || "AI đang bận.") + " Đã dùng Trình viết nhanh để bạn có ngay khung kịch bản.", true); }
+    finally{ clearInterval(tick); b.disabled = false; b.textContent = "✨ Viết kịch bản"; delete b.dataset.phase; }
+    P.film = enforce(film); save(); render();
+    $("fOut").scrollIntoView({ behavior:"smooth", block:"start" });
   };
   document.querySelectorAll("[data-fask]").forEach(btn => btn.onclick = async () => {
-    const o = form(); keep();
-    if (o.idea.length < 5){ toast("Hãy viết ý tưởng phim trước.", true); $("fIdea").focus(); return; }
-    const br = F.buildBrief(o), text = br.system + "\n\n=====\n\n" + br.user;
+    P.idea = $("fIdea").value.trim(); save();
+    if (P.idea.length < 5){ toast("Hãy viết ý tưởng trước.", true); $("fIdea").focus(); return; }
+    if (!checkCast()) return;
+    const br = F.buildBrief(form()), text = br.system + "\n\n=====\n\n" + br.user;
     let ok = false; try{ await navigator.clipboard.writeText(text); ok = true; }catch{}
     const w = window.open(btn.dataset.fask === "gemini" ? "https://gemini.google.com/app" : "https://chatgpt.com/", "_blank"); try{ if (w) w.opener = null; }catch{}
     toast(ok ? "Đã sao chép lệnh. Dán vào " + (btn.dataset.fask === "gemini" ? "Gemini" : "ChatGPT") + ", gửi đi, rồi sao chép câu trả lời dán vào ô bên dưới." : "Không tự sao chép được — thử lại bằng Chrome.", !ok);
@@ -932,89 +1111,57 @@ async function init(){
       toast("Đã đưa kịch bản CANH/THOAI vào Hàng loạt và bật Nối cảnh liền mạch. Nhớ điền 🎙 Giọng nhân vật rồi bấm ▶ Chạy hàng loạt.");
       return;
     }
-    try{ film = F.parse($("fPaste").value, form()); $("fPaste").value = ""; LS.set("muse_film_last", JSON.stringify(film)); render(); toast("Đã đọc kịch bản " + film.scenes.length + " cảnh."); }
+    try{ P.film = enforce(F.parse(txt, form())); $("fPaste").value = ""; save(); render(); toast("Đã đọc kịch bản " + P.film.scenes.length + " cảnh."); }
     catch(e){ toast(e.message, true); }
   };
 
   function render(){
     const out = $("fOut"); out.innerHTML = "";
+    const film = P.film;
+    $("pRun").disabled = $("pEdit").disabled = !film;
+    $("pRunInfo").textContent = film ? film.scenes.length + " cảnh × 10 giây = video " + film.scenes.length * 10 + " giây · " + P.cast.filter(c => c.img).length + " ảnh tham chiếu" : "Viết kịch bản ở bước 2 trước.";
     if (!film) return;
-    const sheet = F.castSheet(film), voice = F.voiceNote(film);
     const box = document.createElement("div"); box.className = "batch";
-    const gl = (F.GENRES.find(x => x.key === film.genre) || F.GENRES[0]).label, hasProd = film.characters.some(c => c.kind === "product");
-    box.innerHTML = `<div class="row"><b>${esc(gl.split(" ")[0])} ${esc(film.title || "Video")}</b><span class="chip">${esc(gl.replace(/^\S+\s/, ""))}</span>${film.quick ? '<span class="chip wait">Trình viết nhanh</span>' : film.by === "muse" ? '<span class="chip done">Chat Muse viết</span>' : film.by === "ai" ? '<span class="chip done">AI khoá học viết</span>' : '<span class="chip done">Dán từ ngoài</span>'}<span class="grow"></span><span class="small muted">${film.scenes.length} cảnh · ${film.scenes.length * 10} giây</span></div>
+    const hasProd = film.characters.some(c => c.kind === "product");
+    box.innerHTML = `<div class="row"><b>${esc(film.title || "Video")}</b>${film.quick ? '<span class="chip wait">Trình viết nhanh</span>' : film.by === "muse" ? '<span class="chip done">Chat Muse viết</span>' : film.by === "ai" ? '<span class="chip done">AI khoá học viết</span>' : '<span class="chip done">Dán từ ngoài</span>'}<span class="grow"></span><span class="small muted">${film.scenes.length} cảnh · ${film.scenes.length * 10} giây</span></div>
       ${film.logline_vi ? `<div class="small muted" style="margin-top:6px">${esc(film.logline_vi)}</div>` : ""}
       <div class="small" style="margin-top:10px"><b>${hasProd ? "Nhân vật, sản phẩm & giọng" : "Nhân vật & giọng"} (giữ nguyên mọi cảnh):</b></div>
-      ${film.characters.map(c => c.kind === "product" ? `<div class="small" style="margin-top:4px">📦 <b>${esc(c.name)}</b> — ${esc(c.look_en)}</div>` : `<div class="small" style="margin-top:4px">👤 <b>${esc(c.name)}</b> — ${esc(c.look_en)}<br><span class="muted">🎙 ${esc(c.voice_en)}</span></div>`).join("")}
-      ${F.voiceNote(film).split("\n").filter(l => F.isNarrator(l.split(":")[0], film.characters)).map(l => `<div class="small" style="margin-top:4px">🎙 <b>${esc(l.split(":")[0])}</b> <span class="muted">(giọng ngoài hình, cố định cả video) — ${esc(l.slice(l.indexOf(":") + 1).trim())}</span></div>`).join("")}
+      ${film.characters.map(c => { const card = P.cast.find(k => k.name.toLowerCase() === c.name.toLowerCase()); const th = card && card.img ? `<img class="thumb" src="${card.img}" alt="">` : ""; return c.kind === "product" ? `<div class="small cline">${th}<span>📦 <b>${esc(c.name)}</b> — ${esc(c.look_en)}</span></div>` : `<div class="small cline">${th}<span>👤 <b>${esc(c.name)}</b> — ${esc(c.look_en)}<br><span class="muted">🎙 ${esc(c.voice_en)}</span></span></div>`; }).join("")}
+      ${F.voiceNote(film).split("\n").filter(l => F.isNarrator(l.split(":")[0], film.characters)).map(l => `<div class="small cline"><span>🎙 <b>${esc(l.split(":")[0])}</b> <span class="muted">(giọng ngoài hình, cố định cả video) — ${esc(l.slice(l.indexOf(":") + 1).trim())}</span></span></div>`).join("")}
       <div class="small" style="margin-top:10px"><b>Các cảnh (mỗi cảnh mở đầu đúng chỗ cảnh trước kết thúc):</b></div>
       <div class="bitems" style="max-height:none">${film.scenes.map(c => `<div class="bitem" style="align-items:flex-start"><span class="muted">#${c.n}</span><span style="flex:1">${esc(c.summary_vi || c.action_en)}${c.dialogue.length ? `<br><span class="muted">💬 ${c.dialogue.map(d => esc(d.speaker) + ": “" + esc(d.text_vi) + "”").join(" · ")}</span>` : ""}</span></div>`).join("")}</div>
-      <div class="row" style="margin-top:12px">
-        ${sheet ? '<button class="btn" type="button" id="fSheet">' + (hasProd ? "🖼 Tạo ảnh nhân vật & sản phẩm (bước 2)" : "🖼 Tạo ảnh nhân vật (bước 2)") + '</button>' : ""}
-        <button class="btn primary" type="button" id="fUse">➡ Đưa vào Hàng loạt nối cảnh (bước 3)</button>
-        <button class="btn" type="button" id="fCopy">📋 Sao chép kịch bản</button>
-      </div>
-      <div class="small muted" style="margin-top:8px">Thứ tự gợi ý: tạo ảnh nhân vật → bấm 👤 Dùng làm nhân vật → Đưa vào Hàng loạt → ▶ Chạy hàng loạt. Studio tự nối cảnh, giữ giọng và ghép phim.</div>`;
+      <div class="row" style="margin-top:12px"><button class="btn" type="button" id="fCopy">📋 Sao chép kịch bản</button><span class="small muted grow">Ưng rồi thì sang bước 3 — bấm ▶ Tạo video.</span></div>`;
     out.append(box);
-    if (sheet) $("fSheet").onclick = () => makeCastRefs(film);
-    $("fUse").onclick = async () => {
-      const st = syncRefs(film);
-      if (st.length){
-        if (confirm(staleNote(st) + "\n\nOK = tạo ảnh nhân vật đúng kịch bản này rồi tự đưa vào Hàng loạt.\nHuỷ = bỏ các ảnh lệch, đưa vào luôn (không có ảnh nhân vật).")){ if (!(await makeCastRefs(film))) return; }
-        else { refs = refs.filter(r => !st.includes(r)); renderRefs(); }
-      }
-      $("batchPrompts").value = F.toCanhThoai(film); $("batchPrompts").dispatchEvent(new Event("input"));
-      if (voice){ $("voiceNote").value = voice; $("voiceNote").dispatchEvent(new Event("input")); }
-      $("chainMode").checked = true; $("chainMode").dispatchEvent(new Event("change"));
-      document.querySelector('#kindSeg [data-kind=video]').click();
-      $("durSel").value = "10";
-      // về đúng khung hình của phim (bước tạo ảnh nhân vật đã đổi sang 1:1)
-      $("sizeSel").value = film.ratio === "9:16" ? "720x1280" : film.ratio === "1:1" ? "1024x1024" : "1280x720";
-      $("batchCard").scrollIntoView({ behavior:"smooth", block:"start" });
-      toast("Đã đưa " + film.scenes.length + " cảnh vào Hàng loạt, bật Nối cảnh liền mạch và điền giọng nhân vật. Bấm ▶ Chạy hàng loạt.");
-    };
     $("fCopy").onclick = async () => { let ok = false; try{ await navigator.clipboard.writeText(F.toCanhThoai(film)); ok = true; }catch{} toast(ok ? "Đã sao chép kịch bản CANH/THOAI." : "Không tự sao chép được.", !ok); };
   }
-  // Mỗi nhân vật 1 ảnh tham chiếu nhiều góc (chính diện, 3/4, nghiêng, sau lưng, cận mặt), tạo lần lượt rồi tự gắn
-  // vào tham chiếu kèm tên — thay hết ảnh nhân vật cũ để không lẫn dự án trước.
-  let castBusy = false;
-  async function makeCastRefs(film){
-    if (castBusy){ toast("Đang tạo ảnh nhân vật — đợi xong đã.", true); return false; }
-    const chars = film.characters.slice(0, 6);
-    if (refs.some(r => !r.isDoc && r.role === "character") && !confirm("Thay các ảnh nhân vật đang gắn bằng ảnh nhân vật của phim này?")) return false;
-    castBusy = true; $("fSheet").disabled = true;
-    refs = refs.filter(r => r.isDoc || r.role !== "character"); renderRefs();
-    const say = t => { $("fSheet").textContent = t; };
-    try{
-      for (let i = 0; i < chars.length; i++){
-        const ch = chars[i]; let url = null;
-        const real = ch.kind === "product" && refs.find(r => r.isProduct);
-        if (real){ real.charName = ch.name; renderRefs(); continue; }
-        for (let attempt = 1; attempt <= 2 && !url; attempt++){
-          say("🖼 Đang tạo ảnh " + ch.name + " (" + (i + 1) + "/" + chars.length + ")…");
-          try{
-            const body = { prompt: F.turnaround(film, ch), ...commonBody(), generation_mode:"independent", continuity_notes:"", sequence_id:null, size:"1280x720", reference_images:[], reference_roles:[], reference_files:[] };
-            const d = await api("/v1/images/tasks", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) });
-            const id = d.id || d.task_id;
-            for (;;){
-              await sleep(4000);
-              let x; try{ x = await api("/v1/images/tasks/" + id); }catch{ continue; }
-              tasks.set(id, { id, kind:"image", prompt:"Ảnh nhân vật " + ch.name, status:x.status, progress:x.progress, error:x.error || null, elapsed:x.elapsed, url:taskUrl(x), result:x.result, created_at:x.created_at || Date.now() / 1000 }); renderQueue();
-              if (x.status === "completed"){ url = taskUrl(x); break; }
-              if (["failed", "cancelled", "interrupted"].includes(x.status)) throw new Error(viErr(x.error) || "Tạo ảnh thất bại");
-            }
-          }catch(e){ if (attempt === 2) throw new Error(ch.name + ": " + e.message); }
-        }
-        const blob = await (await fetch(url)).blob();
-        const data = fixImageDataUrl(await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); }));
-        refs.push({ data, role: ch.kind === "product" ? "reference" : "character", name: ch.name + ".webp", charName: ch.name, isDoc:false }); renderRefs();
-        playMedia(url, "image", "Ảnh tham chiếu nhân vật: " + ch.name, ch.name);
-      }
-      $("refBox").open = true;
-      toast("Đã gắn " + chars.length + " ảnh tham chiếu (mỗi nhân vật/sản phẩm 1 ảnh nhiều góc). Bấm ➡ Đưa vào Hàng loạt nối cảnh.");
-      return true;
-    }catch(e){ toast("Tạo ảnh nhân vật dừng: " + e.message, true); return false; }
-    finally{ castBusy = false; $("fSheet").disabled = false; $("fSheet").textContent = film.characters.some(c => c.kind === "product") ? "🖼 Tạo ảnh nhân vật & sản phẩm (bước 2)" : "🖼 Tạo ảnh nhân vật (bước 2)"; }
+
+  /* ----- bước 3: tạo video ----- */
+  // ảnh bước 1 → ảnh tham chiếu gửi kèm mọi cảnh (thay ảnh nhân vật/sản phẩm của dự án khác, giữ ảnh/tài liệu tự thêm)
+  function applyRefs(){
+    refs = refs.filter(r => r.isDoc || (!r.charName && !r.fromProj && r.role !== "character"));
+    P.cast.filter(c => c.img).forEach(c => refs.push({ data: c.img, role: c.kind === "product" ? "reference" : "character", name: c.name + ".jpg", charName: c.name, isProduct: c.kind === "product" && c.src === "upload", fromProj: true, isDoc: false }));
+    renderRefs();
   }
-  render();
+  function loadBatch(){
+    const film = P.film;
+    LS.set("muse_film_last", JSON.stringify(film)); // nhận diện nhân vật tại từng câu thoại đọc từ đây
+    applyRefs();
+    $("batchPrompts").value = F.toCanhThoai(film); $("batchPrompts").dispatchEvent(new Event("input"));
+    const voice = F.voiceNote(film); $("voiceNote").value = voice; $("voiceNote").dispatchEvent(new Event("input"));
+    $("chainMode").checked = true; $("chainMode").dispatchEvent(new Event("change"));
+    document.querySelector('#kindSeg [data-kind=video]').click();
+    $("durSel").value = "10"; $("modeSel").value = "independent";
+    $("sizeSel").value = P.ratio === "9:16" ? "720x1280" : P.ratio === "1:1" ? "1024x1024" : "1280x720";
+    $("sizeSel").dispatchEvent(new Event("change"));
+  }
+  $("pEdit").onclick = () => { if (!P.film) return; loadBatch(); $("batchCard").scrollIntoView({ behavior:"smooth", block:"start" }); toast("Kịch bản đã ở Hàng loạt — sửa từng cảnh rồi bấm ▶ Chạy hàng loạt."); };
+  $("pRun").onclick = () => {
+    if (!P.film) return;
+    if (!P.cast.some(c => c.img) && !confirm("Chưa có ảnh tham chiếu nào ở bước 1 — nhân vật/sản phẩm có thể khác nhau giữa các cảnh.\n\nVẫn tạo video?")) return;
+    loadBatch();
+    $("batchBtn").click();
+    $("batchCard").scrollIntoView({ behavior:"smooth", block:"start" });
+  };
+
+  show();
 })();

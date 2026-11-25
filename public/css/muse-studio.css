@@ -102,3 +102,29 @@ details summary:hover{color:var(--acc)}
 .refbadge-imgs{display:flex;gap:4px}.refbadge-imgs img{width:34px;height:34px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
 .refbadge .btn{padding:5px 10px;font-size:12.5px}
 .chain-stop{border-color:var(--bad)!important;background:color-mix(in srgb,var(--bad) 7%,var(--panel))!important}
+
+/* dự án video 3 bước: ảnh tham chiếu → kịch bản → tạo video */
+.nav-h{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);font-weight:700;padding:10px 12px 2px}
+.ptabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.ptabs button{border:1px solid var(--line);background:var(--panel2);color:var(--muted);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:600}
+.ptabs button:hover{color:var(--fg)}
+.ptabs button.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-color:transparent}
+.pstep{border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px;background:var(--sunk)}
+.pstep-h{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.pstep-h b{font-size:15.5px}
+.pnum{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.cast{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.castc{display:flex;gap:12px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--panel)}
+.castc.prod{border-color:color-mix(in srgb,var(--acc) 45%,var(--line))}
+.castc-img{flex:none;width:124px;height:124px;border-radius:10px;border:1.5px dashed var(--line2);display:grid;place-items:center;text-align:center;font-size:12px;line-height:1.6;color:var(--muted);cursor:pointer;overflow:hidden;background:var(--panel2)}
+.castc-img:hover{border-color:var(--acc)}
+.castc-img img{width:100%;height:100%;object-fit:contain;background:#fff}
+.castc-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.castc-body .row{gap:8px;flex-wrap:wrap;align-items:center}
+.castc-body input[type=text]{flex:1;min-width:120px}
+.castc-body textarea{min-height:58px}
+.castc .btn{padding:6px 10px;font-size:12.5px}
+.castc .ok{color:var(--ok);font-weight:600}
+.cline{display:flex;gap:8px;align-items:flex-start;margin-top:6px}
+.cline .thumb{width:46px;height:46px;object-fit:cover;border-radius:8px;flex:none;border:1px solid var(--line)}
+@media (max-width:700px){.castc{flex-direction:column}.castc-img{width:100%;height:170px}.cast{grid-template-columns:1fr}}

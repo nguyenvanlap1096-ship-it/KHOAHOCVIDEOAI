@@ -67,8 +67,8 @@ QUY TẮC BẮT BUỘC:
       `LOẠI VIDEO: ${g.label.replace(/^\S+\s/, "")}`,
       `Ý TƯỞNG: ${s(o.idea)}`,
       o.product ? (g.product ? `SẢN PHẨM / THƯƠNG HIỆU (tả sản phẩm đúng như sau, không bịa thêm công dụng): ${s(o.product)}` : `THÔNG ĐIỆP CẦN TRUYỀN TẢI: ${s(o.product)}`) : "",
-      o.productPhoto && g.product ? `NGƯỜI DÙNG CÓ ẢNH SẢN PHẨM THẬT (đính kèm khi tạo video): look_en của sản phẩm CHỈ được ghi những gì người dùng tả ở trên; phần nào người dùng không tả thì ghi "exactly as shown in the real product photo". TUYỆT ĐỐI không tự bịa màu sắc, kiểu dáng, chất liệu của sản phẩm.` : "",
-      o.cast ? `NHÂN VẬT NGƯỜI DÙNG MUỐN (giữ đúng tên/đặc điểm, bổ sung phần thiếu): ${s(o.cast)}` : "",
+      o.productPhoto && g.product ? `NGƯỜI DÙNG CÓ ẢNH SẢN PHẨM THẬT (đính kèm khi tạo video): look_en của sản phẩm CHỈ được ghi những gì người dùng tả (hoặc LOOK_EN đã có); phần nào người dùng không tả thì ghi "exactly as shown in the real product photo". TUYỆT ĐỐI không tự bịa màu sắc, kiểu dáng, chất liệu của sản phẩm.` : "",
+      o.cast ? (o.castFixed ? `NHÂN VẬT / SẢN PHẨM CỐ ĐỊNH (đã có ảnh tham chiếu thật — dùng ĐÚNG những mục này, giữ nguyên TÊN, không thêm nhân vật chính nào khác; mục có LOOK_EN thì chép nguyên LOOK_EN vào look_en; sản phẩm có "kind":"product"):\n${String(o.cast).trim()}` : `NHÂN VẬT NGƯỜI DÙNG MUỐN (giữ đúng tên/đặc điểm, bổ sung phần thiếu): ${s(o.cast)}`) : "",
       `PHONG CÁCH HÌNH ẢNH: ${st.label} — style_en bắt đầu bằng: "${st.en}"`,
       `SỐ CẢNH: ${n} cảnh × 10 giây (video ${n * 10} giây)`,
       `KHUNG HÌNH: ${ratio}`,
@@ -180,9 +180,9 @@ QUY TẮC BẮT BUỘC:
   };
   function quick(o) {
     const g = find(GENRES, o.genre), st = find(STYLES, o.style || g.style), n = clampN(o.scenes, 2, 12, g.scenes), idea = s(o.idea) || "một ngày phiêu lưu";
-    const names = String(o.cast || "").split(/[,;\n]/).map(x => s(x.split(/[-–:]/)[0])).filter(Boolean).slice(0, 3);
+    const names = (o.castNames != null ? String(o.castNames).split("\n").map(s) : String(o.cast || "").split(/[,;\n]/).map(x => s(x.split(/[-–:]/)[0]))).filter(Boolean).slice(0, 3);
     const hero = names[0] || (g.key === "affiliate" ? "Người review" : g.key === "ad" ? "Người dùng" : "Nhân vật chính");
-    const productName = g.product && s(String(o.product || "").split(/[\n,:–-]/)[0]).slice(0, 40);
+    const productName = g.product && (s(o.productName) || s(String(o.product || "").split(/[\n,:–-]/)[0])).slice(0, 40);
     const characters = (names.length ? names : [hero]).map(nm => ({ name: nm, look_en: `${nm}, the main character of "${idea}", with a distinctive face, consistent hairstyle and one signature outfit in a single recognizable color, always the same in every scene`, voice_en: "a clear, warm, medium-pitched voice, natural pace, speaks Vietnamese" }));
     const beats = QUICK[g.key] ? QUICK[g.key].concat([QUICK[g.key][2]]) : [
       ["giới thiệu nhân vật và mong muốn", "is introduced in a calm wide shot, notices something important and decides to go after it", "walks forward toward the camera, determined, in a medium shot", "Hôm nay mình nhất định phải làm được!"],

@@ -68,7 +68,8 @@ module.exports = function createApp() {
   // Ảnh do admin upload (lưu trong CSDL): tên file ngẫu nhiên nên cache lâu được.
   app.get('/uploads/images/:name', serveImage);
   app.use(express.urlencoded({ extended: false, limit: '1mb' }));
-  app.use(express.json({ limit: '100kb' }));
+  const jsonSmall = express.json({ limit: '100kb' });
+  app.use((req, res, next) => (req.path === '/muse/api/describe' ? next() : jsonSmall(req, res, next)));
 
   app.use(session({
     name: 'demia.sid',
