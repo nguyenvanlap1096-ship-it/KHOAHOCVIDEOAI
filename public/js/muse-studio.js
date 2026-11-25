@@ -885,7 +885,7 @@ async function init(){
     $("pHint").textContent = u.hint;
     $("pTabs").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.genre === g.key));
     const onTab = $("pTabs").querySelector("button.on"); if (onTab) $("pTabs").scrollLeft = onTab.offsetLeft - 24; // điện thoại: tab đang chọn luôn trong tầm nhìn
-    document.querySelectorAll(".nav button[data-genre]").forEach(b => b.classList.toggle("cur", b.dataset.genre === g.key));
+    document.querySelectorAll(".nav button[data-tab]").forEach(b => b.classList.toggle("on", b.dataset.genre === g.key)); // menu trái tô đúng loại video đang làm
     $("fIdea").placeholder = u.idea; $("fIdea").value = P.idea || "";
     $("fProduct").classList.toggle("hidden", !u.msg); $("fProduct").placeholder = u.msg || ""; $("fProduct").value = P.msg || "";
     $("fStyle").value = P.style; $("fScenes").value = String(P.scenes); $("fTalk").value = P.talk; $("pRatio").value = P.ratio;
