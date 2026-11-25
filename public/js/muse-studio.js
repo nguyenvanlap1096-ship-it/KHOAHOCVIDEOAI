@@ -274,10 +274,14 @@ function dialogueText(says){
 // Chú thích ảnh tham chiếu: "ảnh 1 là X, ảnh 2 là Y" — tránh muse lẫn nhân vật khi có nhiều ảnh.
 function refLegend(){
   const imgs = refs.filter(r => !r.isDoc);
-  const named = imgs.map((r, i) => r.charName ? "image " + (i + 1) + " is " + r.charName : "").filter(Boolean);
-  return named.length ? "Reference images: " + named.join(", ") + "; keep each character exactly as in their image. " : "";
+  const named = imgs.map((r, i) => r.charName ? "image " + (i + 1) + " is " + (r.isProduct ? "the REAL product " : "") + r.charName : "").filter(Boolean);
+  const real = imgs.findIndex(r => r.isProduct);
+  return named.length ? "Reference images: " + named.join(", ") + "; keep each character exactly as in their image" +
+    (real >= 0 ? "; the product must look exactly like the real product photo (image " + (real + 1) + "): same design, color, shape and details, follow the photo over any text" : "") + ". " : "";
 }
 function withVoice(p){
+  // Có ảnh sản phẩm thật: bỏ phần chữ tả sản phẩm (AI có thể tả sai) — để muse bám theo ảnh.
+  if (refs.some(r => r.isProduct && !r.isDoc)) p = p.replace(/Product, identical shape, colors and label in every shot: ([^(]+?) \([^)]*\)\./g, "Product, identical in every shot: $1, exactly as in the real product photo.");
   p = refLegend() + p;
   if (/\(.*voice: /.test(p)) return p; // giọng đã gắn ngay tại từng câu thoại
   const all = $("voiceNote").value.split("\n").map(s => s.trim()).filter(s => s && !/^Tên nhân vật:/i.test(s));
@@ -844,7 +848,7 @@ async function init(){
   const saved = (() => { try{ return JSON.parse(LS.get("muse_film_form") || "{}"); }catch{ return {}; } })();
   for (const [id, k] of [["fGenre","genre"],["fIdea","idea"],["fCast","cast"],["fProduct","product"],["fStyle","style"],["fScenes","scenes"],["fTalk","dialogue"]]) if (saved[k]) $(id).value = saved[k];
   showGenre(false);
-  const form = () => ({ genre: $("fGenre").value, idea: $("fIdea").value.trim(), cast: $("fCast").value.trim(), product: $("fProdBox").classList.contains("hidden") ? "" : $("fProduct").value.trim(), style: $("fStyle").value, scenes: Number($("fScenes").value), dialogue: $("fTalk").value,
+  const form = () => ({ productPhoto: refs.some(r => r.isProduct), genre: $("fGenre").value, idea: $("fIdea").value.trim(), cast: $("fCast").value.trim(), product: $("fProdBox").classList.contains("hidden") ? "" : $("fProduct").value.trim(), style: $("fStyle").value, scenes: Number($("fScenes").value), dialogue: $("fTalk").value,
     ratio: $("sizeSel").value === "1024x1024" ? "1:1" : /^7|^10/.test($("sizeSel").value) ? "9:16" : "16:9" });
   const keep = () => LS.set("muse_film_form", JSON.stringify(form()));
   ["fIdea","fCast","fProduct","fStyle","fScenes","fTalk"].forEach(id => $(id).addEventListener("change", keep));
@@ -860,11 +864,22 @@ async function init(){
     if (refs.filter(r => !r.isDoc).length >= 8){ toast("Đã đủ 8 ảnh tham chiếu — bỏ bớt ảnh rồi thêm lại.", true); return; }
     refs.push({ data, role:"reference", name: f.name, charName: prodName(), isProduct:true, isDoc:false }); renderRefs();
     $("fProdImgNote").textContent = "✓ Đã gắn ảnh sản phẩm thật: " + f.name + ". Bước tạo ảnh sẽ dùng luôn ảnh này.";
-    toast("Đã gắn ảnh sản phẩm làm tham chiếu cho mọi cảnh.");
+    if (film) syncRefs(film);
+    toast($("fProduct").value.trim() ? "Đã gắn ảnh sản phẩm làm tham chiếu cho mọi cảnh." : "Đã gắn ảnh sản phẩm. Nên ghi thêm tên + loại sản phẩm vào ô Sản phẩm (vd: Áo khoác nỉ hồng có khoá kéo) để kịch bản tả đúng.");
   };
   const ai = CFG.ai || null;
   $("fAiNote").textContent = "Viết bằng Chat Muse (tài khoản muse của bạn, khoảng 30–60 giây)." + (ai ? " Muse bận thì tự chuyển sang AI miễn phí của khoá học" + (ai.unlimited ? "" : " (còn " + ai.left + " lượt)") + "." : "") + " Có kịch bản viết sẵn ở ngoài? Mở mục bên dưới và dán vào.";
   let film = (() => { try{ return JSON.parse(LS.get("muse_film_last") || "null"); }catch{ return null; } })();
+  // Ảnh tham chiếu phải khớp kịch bản: ảnh sản phẩm thật mang đúng tên sản phẩm của kịch bản; trả về các ảnh nhân vật
+  // của kịch bản khác (vd còn "Linh" từ kịch bản trước trong khi kịch bản này là "Hà").
+  function syncRefs(film){
+    if (!film) return [];
+    const prod = film.characters.find(c => c.kind === "product"), real = refs.find(r => r.isProduct);
+    if (prod && real && real.charName !== prod.name){ real.charName = prod.name; renderRefs(); }
+    const names = film.characters.map(c => c.name.toLowerCase());
+    return refs.filter(r => !r.isDoc && !r.isProduct && r.charName && !names.includes(r.charName.toLowerCase()));
+  }
+  const staleNote = st => "Ảnh tham chiếu đang gắn (" + st.map(r => r.charName).join(", ") + ") là nhân vật của kịch bản khác, không có trong kịch bản này (" + film.characters.filter(c => c.kind !== "product").map(c => c.name).join(", ") + ").";
 
   // Chat Muse (model muse-spark) qua bộ chạy Muse2API trên máy — dùng tài khoản muse của học viên.
   async function viaMuse(o){
@@ -896,6 +911,7 @@ async function init(){
     }catch(e){ film = F.quick(o); toast((e.message || "AI đang bận.") + " Đã dùng Trình viết nhanh để bạn có ngay khung kịch bản.", true); }
     finally{ clearInterval(tick); b.disabled = false; b.textContent = "✨ Viết kịch bản"; }
     LS.set("muse_film_last", JSON.stringify(film)); render();
+    const st = syncRefs(film); if (st.length) toast(staleNote(st) + " Bấm 🖼 Tạo ảnh nhân vật (bước 2) để tạo ảnh đúng kịch bản.", true);
   };
   document.querySelectorAll("[data-fask]").forEach(btn => btn.onclick = async () => {
     const o = form(); keep();
@@ -941,7 +957,12 @@ async function init(){
       <div class="small muted" style="margin-top:8px">Thứ tự gợi ý: tạo ảnh nhân vật → bấm 👤 Dùng làm nhân vật → Đưa vào Hàng loạt → ▶ Chạy hàng loạt. Studio tự nối cảnh, giữ giọng và ghép phim.</div>`;
     out.append(box);
     if (sheet) $("fSheet").onclick = () => makeCastRefs(film);
-    $("fUse").onclick = () => {
+    $("fUse").onclick = async () => {
+      const st = syncRefs(film);
+      if (st.length){
+        if (confirm(staleNote(st) + "\n\nOK = tạo ảnh nhân vật đúng kịch bản này rồi tự đưa vào Hàng loạt.\nHuỷ = bỏ các ảnh lệch, đưa vào luôn (không có ảnh nhân vật).")){ if (!(await makeCastRefs(film))) return; }
+        else { refs = refs.filter(r => !st.includes(r)); renderRefs(); }
+      }
       $("batchPrompts").value = F.toCanhThoai(film); $("batchPrompts").dispatchEvent(new Event("input"));
       if (voice){ $("voiceNote").value = voice; $("voiceNote").dispatchEvent(new Event("input")); }
       $("chainMode").checked = true; $("chainMode").dispatchEvent(new Event("change"));
@@ -958,9 +979,9 @@ async function init(){
   // vào tham chiếu kèm tên — thay hết ảnh nhân vật cũ để không lẫn dự án trước.
   let castBusy = false;
   async function makeCastRefs(film){
-    if (castBusy){ toast("Đang tạo ảnh nhân vật — đợi xong đã.", true); return; }
+    if (castBusy){ toast("Đang tạo ảnh nhân vật — đợi xong đã.", true); return false; }
     const chars = film.characters.slice(0, 6);
-    if (refs.some(r => !r.isDoc && r.role === "character") && !confirm("Thay các ảnh nhân vật đang gắn bằng ảnh nhân vật của phim này?")) return;
+    if (refs.some(r => !r.isDoc && r.role === "character") && !confirm("Thay các ảnh nhân vật đang gắn bằng ảnh nhân vật của phim này?")) return false;
     castBusy = true; $("fSheet").disabled = true;
     refs = refs.filter(r => r.isDoc || r.role !== "character"); renderRefs();
     const say = t => { $("fSheet").textContent = t; };
@@ -991,7 +1012,8 @@ async function init(){
       }
       $("refBox").open = true;
       toast("Đã gắn " + chars.length + " ảnh tham chiếu (mỗi nhân vật/sản phẩm 1 ảnh nhiều góc). Bấm ➡ Đưa vào Hàng loạt nối cảnh.");
-    }catch(e){ toast("Tạo ảnh nhân vật dừng: " + e.message, true); }
+      return true;
+    }catch(e){ toast("Tạo ảnh nhân vật dừng: " + e.message, true); return false; }
     finally{ castBusy = false; $("fSheet").disabled = false; $("fSheet").textContent = film.characters.some(c => c.kind === "product") ? "🖼 Tạo ảnh nhân vật & sản phẩm (bước 2)" : "🖼 Tạo ảnh nhân vật (bước 2)"; }
   }
   render();

@@ -67,6 +67,7 @@ QUY TẮC BẮT BUỘC:
       `LOẠI VIDEO: ${g.label.replace(/^\S+\s/, "")}`,
       `Ý TƯỞNG: ${s(o.idea)}`,
       o.product ? (g.product ? `SẢN PHẨM / THƯƠNG HIỆU (tả sản phẩm đúng như sau, không bịa thêm công dụng): ${s(o.product)}` : `THÔNG ĐIỆP CẦN TRUYỀN TẢI: ${s(o.product)}`) : "",
+      o.productPhoto && g.product ? `NGƯỜI DÙNG CÓ ẢNH SẢN PHẨM THẬT (đính kèm khi tạo video): look_en của sản phẩm CHỈ được ghi những gì người dùng tả ở trên; phần nào người dùng không tả thì ghi "exactly as shown in the real product photo". TUYỆT ĐỐI không tự bịa màu sắc, kiểu dáng, chất liệu của sản phẩm.` : "",
       o.cast ? `NHÂN VẬT NGƯỜI DÙNG MUỐN (giữ đúng tên/đặc điểm, bổ sung phần thiếu): ${s(o.cast)}` : "",
       `PHONG CÁCH HÌNH ẢNH: ${st.label} — style_en bắt đầu bằng: "${st.en}"`,
       `SỐ CẢNH: ${n} cảnh × 10 giây (video ${n * 10} giây)`,
