@@ -1,6 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap");
-/* Muse Studio — phòng dựng phim: nền xám lạnh, một màu nhấn xanh lục lam cho hành động chính,
-   hổ phách chỉ cho việc đang chạy. Khung xem luôn tối như màn chiếu. */
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
+/* Muse Studio — bố cục và thành phần chung; màu, chữ, nút theo kiểu Google (Material Design 3) ở cuối file.
+   Khung xem luôn tối như màn chiếu. */
 :root{
   --bg:#eef0f3;--panel:#ffffff;--panel2:#f4f5f7;--sunk:#f7f8fa;--line:#e1e4e9;--line2:#cfd4dc;
   --fg:#16181d;--muted:#5c6370;--dim:#8b919c;
@@ -201,3 +201,114 @@ details summary:hover{color:var(--acc)}
   .pstep-h>.small{flex-basis:100%}
   .proj>.head h2{font-size:19px}
 }
+
+/* ================= Giao diện kiểu Google (Material Design 3 — như Google Drive / Gmail) ================= */
+:root{
+  --bg:#f8fafd;--panel:#ffffff;--panel2:#f0f4f9;--sunk:#f0f4f9;--line:#e1e3e1;--line2:#c4c7c5;
+  --fg:#1f1f1f;--muted:#444746;--dim:#5e5e5e;
+  --acc:#0b57d0;--acc-h:#0842a0;--acc-soft:#d3e3fd;--on-acc:#ffffff;--on-soft:#041e49;--nav-on:#c2e7ff;
+  --run:#b06000;--ok:#146c2e;--bad:#b3261e;--r:16px;--r-in:8px;--shadow:none;--stage:#000000;
+}
+:root[data-theme="dark"]{
+  --bg:#131314;--panel:#1e1f20;--panel2:#282a2c;--sunk:#282a2c;--line:#3c4043;--line2:#5e5e5e;
+  --fg:#e3e3e3;--muted:#c4c7c5;--dim:#a3a3a3;
+  --acc:#a8c7fa;--acc-h:#d3e3fd;--acc-soft:#0842a0;--on-acc:#062e6f;--on-soft:#d3e3fd;--nav-on:#004a77;
+  --run:#ffb68b;--ok:#6dd58c;--bad:#f2b8b5;--shadow:none;--stage:#000000;
+}
+body{font-family:"Google Sans","Google Sans Text",Roboto,Arial,sans-serif;font-size:14px;letter-spacing:.1px}
+
+/* khung trang như Google Drive: nền xám xanh, vùng làm việc trắng bo lớn */
+.app{gap:16px;padding:16px 16px 24px 8px;max-width:1640px}
+.card{border:0;border-radius:16px;box-shadow:none;padding:20px 24px}
+.side>.card{padding:0 4px}
+.brand{margin:4px 0 20px 12px}
+.logo{width:40px;height:40px;border-radius:50%;background:var(--acc);color:var(--on-acc);font-size:18px}
+.brand b{font-size:22px;font-weight:400;letter-spacing:0}
+.brand small{font-size:12px}
+
+/* menu: viên thuốc tô xanh nhạt như mục đang mở của Drive */
+.nav{gap:0}
+.nav button,.nav a{border-radius:999px;padding:0 16px 0 20px;height:36px;display:flex;align-items:center;font-size:14px;font-weight:500;color:var(--fg)}
+.nav button:hover,.nav a:hover{background:color-mix(in srgb,var(--fg) 8%,transparent);color:var(--fg)}
+.nav button.on{background:var(--nav-on);color:var(--on-soft);font-weight:700;box-shadow:none}
+.nav button.on::before{display:none}
+.nav-h{font-size:14px;font-weight:500;color:var(--fg);padding:18px 20px 6px}
+.sub{border:0;border-radius:16px;background:var(--panel);margin:0 4px}
+.label{font-size:12px;font-weight:500;color:var(--muted)}
+
+/* ô nhập: viền mảnh, góc 8, viền dày màu xanh khi gõ */
+select,input[type=text],input[type=password],textarea{border:1px solid var(--line2);border-radius:8px;background:var(--panel);padding:11px 14px}
+select:hover,input[type=text]:hover,textarea:hover{border-color:var(--fg)}
+select:focus,input:focus,textarea:focus{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+
+/* nút: viên thuốc — nút chính tô đầy xanh, nút phụ viền */
+.btn{border-radius:999px;height:40px;padding:0 20px;font-weight:500;font-size:14px;border:1px solid var(--line2);background:transparent;color:var(--acc)}
+.btn:hover{background:color-mix(in srgb,var(--acc) 8%,transparent);border-color:var(--line2);color:var(--acc)}
+.btn:active{transform:none;background:color-mix(in srgb,var(--acc) 12%,transparent)}
+.btn:disabled:hover{background:transparent;border-color:var(--line2);color:var(--acc)}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.btn.primary:hover{background:var(--acc);color:var(--on-acc);box-shadow:0 1px 3px 1px #00000026,0 1px 2px #0000004d}
+.btn.primary:disabled{background:color-mix(in srgb,var(--fg) 12%,transparent);border-color:transparent;color:color-mix(in srgb,var(--fg) 38%,transparent);opacity:1}
+.btn.big{height:48px;padding:0 24px;font-size:14px}
+.seg{border-radius:999px;border:1px solid var(--line2);padding:0;background:none;overflow:hidden}
+.seg button{border-radius:0;padding:0 18px;height:38px;color:var(--fg);font-weight:500}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button.on{background:var(--acc-soft);color:var(--on-soft);box-shadow:none}
+.seg button.on::before{content:"✓ "}
+h2{font-size:22px;font-weight:400;letter-spacing:0}
+.head .hint{color:var(--muted)}
+details summary{color:var(--acc);font-weight:500}
+
+/* chip kiểu Material: góc 8, viền */
+.chip{border-radius:8px;font-weight:500;font-size:12px;padding:3px 10px;background:none;border:1px solid var(--line2);color:var(--muted)}
+.chip.done{background:color-mix(in srgb,var(--ok) 12%,transparent);border-color:transparent;color:var(--ok)}
+.chip.run{background:color-mix(in srgb,var(--run) 14%,transparent);border-color:transparent;color:var(--run)}
+.chip.err{background:color-mix(in srgb,var(--bad) 12%,transparent);border-color:transparent;color:var(--bad)}
+
+/* dự án video */
+.proj{padding:24px 28px}
+.proj>.head h2{font-size:24px}
+.ptabs{gap:0;border-bottom:1px solid var(--line)}
+.ptabs button{font-weight:500;font-size:14px;color:var(--muted);padding:14px 16px}
+.ptabs button::after{left:8px;right:8px;height:3px;border-radius:3px 3px 0 0}
+.ptabs button.on{color:var(--acc)}
+.ptabs button:hover{background:color-mix(in srgb,var(--fg) 6%,transparent)}
+.pnum{border:0;background:var(--panel2);color:var(--muted);font-weight:500;font-size:13px;width:28px;height:28px;top:4px;left:2px}
+.pstep.cur .pnum{background:var(--acc);color:var(--on-acc)}
+.pstep.done .pnum{background:var(--acc);color:var(--on-acc)}
+.pstep::before{left:15px;width:1px;background:var(--line2)}
+.pstep.done::before{background:var(--acc)}
+.pstep-h b{font-size:16px;font-weight:500}
+.castc{border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.castc.prod{background:var(--panel)}
+.castc:focus-within{box-shadow:none;border-color:var(--acc)}
+.castc-img{border-radius:8px;border:1px dashed var(--line2);background:var(--panel2);color:var(--muted)}
+.castc-img:hover{background:var(--acc-soft);color:var(--on-soft);border-color:var(--acc)}
+.castc .btn{height:32px;padding:0 14px;font-size:13px}
+.batch,.proj .batch{border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.bitem{border:0;background:var(--panel2);border-radius:8px}
+
+/* khung xem + hàng đợi */
+.stagebox{border-radius:16px}
+.badge{background:#202124e6;border:0;border-radius:8px}
+.qitem{padding:14px 4px}
+.bar{height:4px;background:var(--acc-soft)}
+.bar i{background:var(--acc)}
+.tile{border:1px solid var(--line);border-radius:12px}
+.tile:hover{box-shadow:0 1px 3px 1px #00000026,0 1px 2px #0000004d;border-color:var(--line)}
+.refbadge{border-radius:8px;border:0;background:var(--acc-soft);color:var(--on-soft)}
+.noacc{background:var(--acc-soft);color:var(--on-soft);border:0}
+
+/* thông báo kiểu snackbar */
+.toast{background:#313033;color:#f4eff4;border-radius:4px;box-shadow:0 2px 6px 2px #00000026,0 1px 2px #0000004d}
+:root[data-theme="dark"] .toast{background:#e6e1e5;color:#313033}
+.toast::before{display:none}
+::-webkit-scrollbar-thumb{border-radius:8px;background:var(--line2);border:3px solid var(--bg)}
+@media (max-width:700px){
+  .app{padding:12px}
+  .proj{padding:18px 14px}.card{padding:16px}
+  .ptabs button{padding:12px 10px;font-size:13.5px}
+  .pstep{padding-left:40px}.pstep::before{left:13px;top:34px}.pnum{left:0}
+  .btn.big{height:44px;padding:0 18px}
+}
+@media (max-width:700px){.ctrls select{flex:1 1 100%;min-width:0}.ctrls .grow{display:none}.ctrls .btn.big{flex:1}}

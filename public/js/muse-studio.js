@@ -896,6 +896,8 @@ async function init(){
     if (gk === P.genre) return;
     save(); P = load(gk); save(); show();
   }
+  // trang chỉ hiện sau khi kết nối xong: khi thanh tab lộ ra mới cuộn được tab đang chọn vào tầm nhìn (điện thoại)
+  new IntersectionObserver(es => { if (es[0].isIntersecting){ const b = $("pTabs").querySelector("button.on"); if (b) $("pTabs").scrollLeft = b.offsetLeft - 24; } }).observe($("pTabs"));
   $("pTabs").addEventListener("click", e => { const b = e.target.closest("button[data-genre]"); if (b) switchGenre(b.dataset.genre); });
   document.querySelectorAll(".nav button[data-genre]").forEach(b => b.addEventListener("click", () => switchGenre(b.dataset.genre)));
   $("fIdea").addEventListener("input", () => { P.idea = $("fIdea").value; save(); });
