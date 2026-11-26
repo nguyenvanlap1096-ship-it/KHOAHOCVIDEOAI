@@ -19,7 +19,7 @@
       role:"đạo diễn kiêm biên kịch phim ngắn", goal:"MỘT bộ phim liền mạch như quay một mạch, có ý nghĩa",
       cast:"tối đa 3 nhân vật chính",
       story:"CÂU CHUYỆN CÓ Ý NGHĨA: cảnh đầu giới thiệu nhân vật + mong muốn; giữa là trở ngại/xung đột tăng dần; cao trào; cảnh cuối giải quyết và để lại cảm xúc hoặc bài học. Mỗi cảnh phải đẩy câu chuyện tiến lên, không lặp lại.",
-      talk:"LỜI THOẠI: tiếng Việt tự nhiên, mỗi cảnh 1–3 câu, TỔNG KHÔNG QUÁ 22 TỪ (vừa 10 giây). Nhiều nhân vật CÓ THỂ nói trong cùng một cảnh (đối đáp qua lại); mỗi câu chỉ MỘT người nói, ghi đúng tên người nói (tên trong hồ sơ hoặc \"Người kể chuyện\"), người nói phải CÓ MẶT trong cảnh đó; thứ tự câu khớp với diễn biến hành động; lời thoại nối tiếp nhau thành mạch truyện, đúng tính cách từng nhân vật." },
+      talk:"LỜI THOẠI: tiếng Việt tự nhiên, mỗi cảnh 1–3 câu, TỔNG KHÔNG QUÁ 22 TỪ (vừa 10 giây). Nhiều nhân vật CÓ THỂ nói trong cùng một cảnh (đối đáp qua lại); mỗi câu chỉ MỘT người nói, ghi đúng tên người nói (tên trong hồ sơ hoặc \"Người kể chuyện\"), người nói phải CÓ MẶT và được nhắc tên trong action_en của cảnh đó; KHÔNG câu nào lặp lại hay na ná câu ở cảnh khác; thứ tự câu khớp với diễn biến hành động; lời thoại nối tiếp nhau thành mạch truyện, đúng tính cách từng nhân vật." },
     { key:"ad", label:"📢 Quảng cáo sản phẩm", style:"commercial", scenes:3, product:true, narrator:"Warm confident female commercial announcer, medium-low pitch, smooth clear timbre, upbeat lively pace, speaks Vietnamese",
       role:"đạo diễn quảng cáo truyền hình (TVC) kiêm copywriter", goal:"MỘT video quảng cáo liền mạch, đẹp như quảng cáo truyền hình, khiến người xem muốn mua",
       cast:"tối đa 2 người dùng/người mẫu, cộng với SẢN PHẨM",
@@ -94,7 +94,28 @@ QUY TẮC BẮT BUỘC:
     if (!scenes.length) throw new Error("AI chưa viết được cảnh nào. Thử viết rõ ý tưởng hơn.");
     const g = find(GENRES, o && o.genre);
     const narrator = scenes.some(c => c.dialogue.some(d => isNarrator(d.speaker, characters))) ? (s(j.narrator_voice_en).replace(/^….*$/, "") || g.narrator) : "";
-    return { genre: g.key, narrator_voice_en: narrator, ratio: (o && o.ratio) || "16:9", title: s(j.title), logline_vi: s(j.logline_vi), style_en: s(j.style_en) || st.en, setting_en: s(j.setting_en), music_en: s(j.music_en), characters, scenes };
+    return tidy({ genre: g.key, narrator_voice_en: narrator, ratio: (o && o.ratio) || "16:9", title: s(j.title), logline_vi: s(j.logline_vi), style_en: s(j.style_en) || st.en, setting_en: s(j.setting_en), music_en: s(j.music_en), characters, scenes });
+  }
+  // Dọn lời thoại cho cả video: người nói phải là nhân vật thật (không để sản phẩm "nói", tên lệch → tên đúng trong hồ sơ)
+  // hoặc người dẫn; bỏ câu lặp lại ở cảnh khác; mỗi cảnh tối đa ~30 từ để vừa 10 giây.
+  const key = t => s(t).toLowerCase().normalize("NFC").replace(/[^\p{L}\p{N} ]/gu, "").replace(/\s+/g, " ").trim();
+  function tidy(film) {
+    const people = film.characters.filter(c => c.kind !== "product");
+    const fallback = film.genre === "ad" ? "Người dẫn" : film.genre === "psa" ? "Người kể chuyện" : (people[0] && people[0].name) || "Người kể chuyện";
+    const seen = new Set();
+    film.scenes.forEach(c => {
+      let words = 0;
+      c.dialogue = c.dialogue.map(d => {
+        const who = people.find(p => p.name.toLowerCase() === s(d.speaker).toLowerCase());
+        return { speaker: who ? who.name : isNarrator(d.speaker, film.characters) ? s(d.speaker) : fallback, text_vi: s(d.text_vi) };
+      }).filter(d => {
+        const k = key(d.text_vi), n = d.text_vi.split(" ").length;
+        if (!k || seen.has(k) || (words && words + n > 30)) return false;
+        seen.add(k); words += n; return true;
+      });
+    });
+    if (film.scenes.some(c => c.dialogue.some(d => isNarrator(d.speaker, film.characters))) && !film.narrator_voice_en) film.narrator_voice_en = find(GENRES, film.genre).narrator;
+    return film;
   }
   // Người dẫn / người kể chuyện: giọng ngoài hình, không phải nhân vật trong hồ sơ.
   function isNarrator(name, characters) {
@@ -201,7 +222,7 @@ QUY TẮC BẮT BUỘC:
     return { genre: g.key, narrator_voice_en: scenes.some(c => c.dialogue.some(d => isNarrator(d.speaker, characters))) ? g.narrator : "", ratio: o.ratio || g.ratio || "16:9", title: idea.slice(0, 60), logline_vi: idea, style_en: st.en, setting_en: "one consistent location that matches the story, natural light changing gradually", music_en: "one soft cinematic theme played throughout", characters, scenes, quick: true };
   }
 
-  const api = { STYLES, GENRES, isNarrator, buildBrief, parse, normalize, scenePrompt, toCanhThoai, voiceNote, castSheet, turnaround, quick };
+  const api = { STYLES, GENRES, isNarrator, tidy, buildBrief, parse, normalize, scenePrompt, toCanhThoai, voiceNote, castSheet, turnaround, quick };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.MuseFilm = api;
 })(typeof window !== "undefined" ? window : globalThis);

@@ -1055,7 +1055,7 @@ async function init(){
       if (c.kind === "product"){ ch.kind = "product"; ch.voice_en = ""; } else delete ch.kind;
       used.add(ch);
     });
-    return film;
+    return F.tidy(film);
   }
   async function viaMuse(o){
     const br = F.buildBrief(o);
