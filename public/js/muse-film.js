@@ -72,7 +72,8 @@ QUY TẮC BẮT BUỘC:
       `PHONG CÁCH HÌNH ẢNH: ${st.label} — style_en bắt đầu bằng: "${st.en}"`,
       `SỐ CẢNH: ${n} cảnh × 10 giây (video ${n * 10} giây)`,
       `KHUNG HÌNH: ${ratio}`,
-      "", `Viết đủ ${n} cảnh nối liền theo đúng quy tắc. Trả về đúng JSON.`,
+      "", `ĐÂY LÀ YÊU CẦU MỚI, độc lập: viết HOÀN TOÀN MỚI theo đúng ý tưởng trên (đủ mọi chi tiết trong ý tưởng), không dùng lại câu chữ, lời thoại hay tình tiết của bất kỳ kịch bản nào trước đó. Mã yêu cầu: ${Date.now().toString(36)}.`,
+      `Viết đủ ${n} cảnh nối liền theo đúng quy tắc. Trả về đúng JSON.`,
     ].filter(Boolean).join("\n");
     return { system, user, n };
   }
