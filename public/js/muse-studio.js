@@ -269,7 +269,7 @@ function dialogueText(says){
     return (i + 1) + ") " + d.who + (info ? " (" + info + ")" : "") + (i ? " replies" : " says") + ' in Vietnamese: "' + d.text + '"';
   });
   const many = new Set(says.filter(d => !narr(d.who)).map(d => d.who)).size > 1;
-  return " Dialogue in this exact order" + (many ? ", only the character who is speaking moves their mouth while the others listen silently and react" : "") + ": " + lines.join(" ") + ".";
+  return " Dialogue in this exact order" + (many ? ", only the character who is speaking moves their mouth while the others listen silently and react" : "") + ": " + lines.join(" ") + ". Speak only these exact lines once each, word for word, no extra words, fillers or ad-libs.";
 }
 // Chú thích ảnh tham chiếu: "ảnh 1 là X, ảnh 2 là Y" — tránh muse lẫn nhân vật khi có nhiều ảnh.
 function refLegend(){
