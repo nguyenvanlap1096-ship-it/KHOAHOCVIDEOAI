@@ -674,7 +674,7 @@ async function runChain(prompts, resume, opt = {}){
     if (urls.length){ mark(i, "running", ' <span class="small muted">đang lấy khung cuối của cảnh trước…</span>'); frame = await lastFrame(urls[urls.length - 1]); }
     for (; i < prompts.length; i++){
       tabTitle("⏳ Cảnh " + (i + 1) + "/" + prompts.length);
-      const prompt = (frame ? "Continue seamlessly from the first-frame image (the exact last frame of the previous shot), same place, light and camera. " : "") + withVoice(prompts[i]) + (note ? " " + note : "");
+      const prompt = (frame ? "Start exactly on image " + (baseImgs.length + 1) + " (the last frame of the previous shot): the first frame of this video must match it exactly — same framing, camera distance, character poses, place and light — then continue the action from there with no cut, no zoom jump, no new angle. " : "") + withVoice(prompts[i]) + (note ? " " + note : "");
       let url = null;
       for (let attempt = 1; attempt <= 3 && !url; attempt++){
         mark(i, "running", attempt > 1 ? ` <span class="small muted">thử lại lần ${attempt}</span>` : "");
